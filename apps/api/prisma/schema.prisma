@@ -8,10 +8,325 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model customers {
-  id         Int       @id @default(autoincrement())
-  name       String    @db.VarChar(100)
-  email      String    @unique @db.VarChar(150)
-  phone      String?   @db.VarChar(20)
-  created_at DateTime? @default(now()) @db.Timestamp(6)
+// Enums
+enum WorkspaceVisibility {
+  public
+  private
+}
+
+enum WorkspaceMemberRole {
+  owner
+  manager
+  member
+  guest
+}
+
+// Models
+model User {
+  id           String  @id @default(cuid())
+  email        String  @unique
+  passwordHash String  @map("password_hash")
+  fullname     String?
+  publicName   String? @map("public_name")
+  jobTitle     String? @map("job_title")
+  organization String?
+  location     String?
+  avatarUrl    String? @map("avatar_url")
+  emailVerify  Boolean @default(false) @map("email_verify")
+  language     String  @default("en")
+  enable       Boolean @default(true)
+  timezone     String  @default("UTC")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  workspaceMembers    WorkspaceMember[]
+  invitedMembers      WorkspaceMember[] @relation("InvitedBy")
+  createdTasks        Task[]            @relation("CreatedBy")
+  assignedTasks       Task[]            @relation("AssignedTo")
+  reviewingTasks      Task[]            @relation("ReviewedBy")
+  baTasks             Task[]            @relation("BAUser")
+  taskMembers         TaskMember[]
+  taskHistoryChanges  TaskHistory[]
+  taskComments        TaskComment[]
+  commentReactions    CommentReaction[]
+  commentMentions     CommentMention[]
+
+  @@map("users")
+}
+
+model Workspace {
+  id                 String              @id @default(cuid())
+  name               String
+  description        String?
+  visibility         WorkspaceVisibility @default(private)
+  icon               String?
+  notifyTaskDueSoon  Boolean             @default(true) @map("notify_task_due_soon")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  members WorkspaceMember[]
+  boards  Board[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String              @id @default(cuid())
+  workspaceId String              @map("workspace_id")
+  userId      String              @map("user_id")
+  action      String?
+  role        WorkspaceMemberRole @default(member)
+  invitedBy   String?             @map("invited_by")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inviter   User?     @relation("InvitedBy", fields: [invitedBy], references: [id])
+
+  @@unique([workspaceId, userId])
+  @@map("workspace_member")
+}
+
+model Board {
+  id          String  @id @default(cuid())
+  workspaceId String  @map("workspace_id")
+  title       String
+  subtitle    String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  workspace       Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tasks           Task[]
+  taskStatuses    TaskStatus[]
+  taskPriorities  TaskPriority[]
+  taskInitiatives TaskInitiative[]
+
+  @@map("boards")
+}
+
+model TaskStatus {
+  id        String   @id @default(cuid())
+  boardId   String   @map("board_id")
+  title     String
+  position  Int      @map("positition")
+  color     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  @@map("task_status")
+}
+
+model TaskPriority {
+  id        String   @id @default(cuid())
+  boardId   String   @map("board_id")
+  name      String
+  color     String
+  position  Int      @map("positition")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  @@map("task_priority")
+}
+
+model TaskInitiative {
+  id        String   @id @default(cuid())
+  boardId   String   @map("board_id")
+  name      String
+  color     String
+  position  Int      @map("positition")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  @@map("task_initiative")
+}
+
+model TaskMember {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  taskId    String   @map("task_id")
+  position  Int      @map("positition")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId])
+  @@map("task_members")
+}
+
+model Task {
+  id                 String    @id @default(cuid())
+  boardId            String    @map("board_id")
+  title              String
+  dueDate            DateTime? @map("due_date") @db.Date
+  taskStatusId       String?   @map("task_status_id")
+  taskInitiativeId   String?   @map("task_initiative_id")
+  taskPriorityId     String?   @map("task_priority_id")
+  okr                String?
+  assigneeId         String?   @map("assignee_id")
+  reviewerId         String?   @map("reviewer_id")
+  storyPoint         Int?      @map("story_point")
+  sizeCard           String?   @map("size_card")
+  testCase           String?   @map("test_case")
+  goLive             DateTime? @map("go_live") @db.Date
+  devMr              String?   @map("dev_mr")
+  baId               String?   @map("ba_id")
+  staging            String?
+  note               String?
+  createdById        String    @map("created_by_id")
+  createdTime        DateTime  @map("created_time")
+  sprint             String?
+  featureCategories  String?   @map("feature_categories")
+  sprintGoal         String?   @map("sprint_goal")
+  descriptionJson    Json?     @map("description_json")
+  descriptionPlain   String?   @map("description_plain")
+  noteJson           Json?     @map("note_json")
+  notePlain          String?   @map("note_plain")
+  attachments        Json?
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  board           Board            @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  taskStatus      TaskStatus?      @relation(fields: [taskStatusId], references: [id])
+  taskInitiative  TaskInitiative?  @relation(fields: [taskInitiativeId], references: [id])
+  taskPriority    TaskPriority?    @relation(fields: [taskPriorityId], references: [id])
+  assignee        User?            @relation("AssignedTo", fields: [assigneeId], references: [id])
+  reviewer        User?            @relation("ReviewedBy", fields: [reviewerId], references: [id])
+  baUser          User?            @relation("BAUser", fields: [baId], references: [id])
+  createdBy       User             @relation("CreatedBy", fields: [createdById], references: [id])
+  taskMembers     TaskMember[]
+  taskHistory     TaskHistory[]
+  taskComments    TaskComment[]
+
+  @@map("tasks")
+}
+
+model TaskHistory {
+  id                 String    @id @default(cuid())
+  taskId             String    @map("task_id")
+  version            Int
+  changedById        String    @map("changed_by_id")
+  changedAt          DateTime  @map("changed_at")
+  title              String?
+  dueDate            DateTime? @map("due_date") @db.Date
+  taskStatusId       String?   @map("task_status_id")
+  taskInitiativeId   String?   @map("task_initiative_id")
+  taskPriorityId     String?   @map("task_priority_id")
+  okr                String?
+  assigneeId         String?   @map("assignee_id")
+  reviewerId         String?   @map("reviewer_id")
+  storyPoint         Int?      @map("story_point")
+  sizeCard           String?   @map("size_card")
+  testCase           String?   @map("test_case")
+  goLive             DateTime? @map("go_live") @db.Date
+  devMr              String?   @map("dev_mr")
+  baId               String?   @map("ba_id")
+  staging            String?
+  note               String?
+  createdById        String?   @map("created_by_id")
+  createdTime        DateTime? @map("created_time")
+  sprint             String?
+  featureCategories  String?   @map("feature_categories")
+  sprintGoal         String?   @map("sprint_goal")
+  descriptionJson    Json?     @map("description_json")
+  descriptionPlain   String?   @map("description_plain")
+  noteJson           Json?     @map("note_json")
+  notePlain          String?   @map("note_plain")
+  attachments        Json?
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  task      Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  changedBy User @relation(fields: [changedById], references: [id])
+
+  @@map("task_history")
+}
+
+model TaskComment {
+  id           String   @id @default(cuid())
+  taskId       String   @map("task_id")
+  authorId     String   @map("author_id")
+  contentJson  Json     @map("content_json")
+  contentPlain String   @map("content_plain")
+  isEdited     Boolean  @default(false) @map("is_edited")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  task                Task                 @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author              User                 @relation(fields: [authorId], references: [id])
+  commentAttachments  CommentAttachment[]
+  commentReactions    CommentReaction[]
+  commentMentions     CommentMention[]
+
+  @@map("task_comments")
+}
+
+model CommentAttachment {
+  id        String   @id @default(cuid())
+  commentId String   @map("comment_id")
+  fileName  String   @map("file_name")
+  fileUrl   String   @map("file_url")
+  fileSize  Int      @map("file_size")
+  fileType  String   @map("file_type")
+  mimeType  String   @map("mime_type")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  comment TaskComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@map("comment_attachments")
+}
+
+model CommentReaction {
+  id        String   @id @default(cuid())
+  commentId String   @map("comment_id")
+  userId    String   @map("user_id")
+  emoji     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  comment TaskComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId, emoji])
+  @@map("comment_reactions")
+}
+
+model CommentMention {
+  id              String   @id @default(cuid())
+  commentId       String   @map("comment_id")
+  mentionedUserId String   @map("mentioned_user_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  comment       TaskComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  mentionedUser User        @relation(fields: [mentionedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, mentionedUserId])
+  @@map("comment_mentions")
 }
