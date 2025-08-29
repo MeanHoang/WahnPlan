@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '../../../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class PrismaService
@@ -22,9 +22,9 @@ export class PrismaService
     `;
 
     const tableNames = tables
-      .map(({ tablename }) => tablename)
-      .filter((name) => name !== '_prisma_migrations')
-      .map((name) => `"public"."${name}"`)
+      .map(({ tablename }: { tablename: string }) => tablename)
+      .filter((name: string) => name !== '_prisma_migrations')
+      .map((name: string) => `"public"."${name}"`)
       .join(', ');
 
     try {
