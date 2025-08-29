@@ -20,10 +20,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { registerSchema, type RegisterFormData } from "@/lib/validations";
 import { useAuth } from "@/contexts/auth-context";
+import { EmailVerificationModal } from "@/components/auth/email-verification-modal";
 
 export default function RegisterPage(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
   const router = useRouter();
   const { toast } = useToast();
   const { register: registerUser } = useAuth();
@@ -39,13 +42,23 @@ export default function RegisterPage(): JSX.Element {
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
-      await registerUser(data);
-      toast({
-        title: "Registration successful!",
-        description:
-          "Welcome to WahnPlan. Please check your email to verify your account.",
-      });
-      router.push("/dashboard");
+      const authData = await registerUser(data);
+
+      // Check if user needs email verification
+      if (!authData.user.emailVerify) {
+        setUserEmail(data.email);
+        setShowVerificationModal(true);
+        toast({
+          title: "Registration successful!",
+          description: "Please verify your email to access all features.",
+        });
+      } else {
+        toast({
+          title: "Registration successful!",
+          description: "Welcome to WahnPlan!",
+        });
+        router.push("/dashboard");
+      }
     } catch (error: any) {
       toast({
         title: "Registration failed",
@@ -163,6 +176,16 @@ export default function RegisterPage(): JSX.Element {
           </form>
         </CardContent>
       </Card>
+
+      <EmailVerificationModal
+        isOpen={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        email={userEmail}
+        onVerified={() => {
+          setShowVerificationModal(false);
+          router.push("/dashboard");
+        }}
+      />
     </div>
   );
 }

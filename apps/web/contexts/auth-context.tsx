@@ -7,8 +7,8 @@ import { apiService } from "@/lib/api";
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: any) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (data: any) => Promise<AuthResponse>;
   logout: () => void;
   refreshAuth: () => Promise<void>;
 }
@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const authData = await apiService.login({ email, password });
       saveAuthData(authData);
+      return authData.user as User; // Cast to User type
     } catch (error) {
       throw error;
     }
@@ -59,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const authData = await apiService.register(data);
       saveAuthData(authData);
+      return authData;
     } catch (error) {
       throw error;
     }

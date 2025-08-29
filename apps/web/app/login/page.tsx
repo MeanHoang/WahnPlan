@@ -20,10 +20,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { loginSchema, type LoginFormData } from "@/lib/validations";
 import { useAuth } from "@/contexts/auth-context";
+import { EmailVerificationModal } from "@/components/auth/email-verification-modal";
 
 export default function LoginPage(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
   const router = useRouter();
   const { toast } = useToast();
   const { login } = useAuth();
@@ -39,12 +42,23 @@ export default function LoginPage(): JSX.Element {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      await login(data.email, data.password);
-      toast({
-        title: "Login successful!",
-        description: "Welcome back to WahnPlan.",
-      });
-      router.push("/dashboard");
+      const user = await login(data.email, data.password);
+
+      // Check if email is verified
+      if (!user.emailVerify) {
+        setUserEmail(data.email);
+        setShowVerificationModal(true);
+        toast({
+          title: "Email verification required",
+          description: "Please verify your email to access all features.",
+        });
+      } else {
+        toast({
+          title: "Login successful!",
+          description: "Welcome back to WahnPlan.",
+        });
+        router.push("/dashboard");
+      }
     } catch (error: any) {
       toast({
         title: "Login failed",
@@ -54,6 +68,14 @@ export default function LoginPage(): JSX.Element {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleEmailVerified = () => {
+    toast({
+      title: "Email verified!",
+      description: "Your account is now fully activated.",
+    });
+    router.push("/dashboard");
   };
 
   return (
@@ -141,6 +163,13 @@ export default function LoginPage(): JSX.Element {
           </form>
         </CardContent>
       </Card>
+
+      <EmailVerificationModal
+        isOpen={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        email={userEmail}
+        onVerified={handleEmailVerified}
+      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import { EmailService } from '../../shared/email/email.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
@@ -19,9 +20,12 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private emailService: EmailService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
+    console.log('Starting registration for email:', registerDto.email);
+
     const {
       email,
       password,
@@ -68,6 +72,19 @@ export class AuthService {
         emailVerify: true,
       },
     });
+
+    // Generate verification token and send email
+    try {
+      const verificationToken = await this.generateEmailVerificationToken(
+        user.id,
+      );
+      console.log('Generated verification token for user:', user.id);
+
+      await this.emailService.sendVerificationEmail(email, verificationToken);
+      console.log('Verification email sent successfully to:', email);
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+    }
 
     // Generate tokens
     const tokens = await this.generateTokens(user.id);
@@ -183,8 +200,11 @@ export class AuthService {
       throw new BadRequestException('Email already verified');
     }
 
-    // TODO: Send verification email
-    // This will be implemented when email service is set up
+    // Generate and send verification token
+    const verificationToken = await this.generateEmailVerificationToken(
+      user.id,
+    );
+    await this.emailService.sendVerificationEmail(email, verificationToken);
 
     return { message: 'Verification email sent successfully' };
   }
@@ -225,5 +245,9 @@ export class AuthService {
       secret: this.configService.get<string>('JWT_EMAIL_VERIFICATION_SECRET'),
       expiresIn: '24h',
     });
+  }
+
+  private generateVerificationCode(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
   }
 }

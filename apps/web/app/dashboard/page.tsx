@@ -20,6 +20,11 @@ export default function DashboardPage(): JSX.Element {
     if (!isLoading && !user) {
       router.push("/login");
     }
+
+    // Check if user is not verified
+    if (!isLoading && user && !user.emailVerify) {
+      router.push("/login");
+    }
   }, [user, isLoading, router]);
 
   if (isLoading) {

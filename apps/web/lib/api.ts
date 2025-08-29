@@ -64,7 +64,7 @@ class ApiService {
     token: string
   ): Promise<{ message: string; verified: boolean }> {
     return this.request<{ message: string; verified: boolean }>(
-      `/auth/verify-email?token=${token}`
+      `/auth/verify-email?token=${encodeURIComponent(token)}`
     );
   }
 
