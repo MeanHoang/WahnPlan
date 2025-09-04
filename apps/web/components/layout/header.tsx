@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
 import { UserDropdown } from "@/components/layout/user-dropdown";
+import { CreateWorkspaceModal } from "@/components/workspaces/create-workspace-modal";
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -63,6 +64,7 @@ export function Header({ onSearch, onCreateClick }: HeaderProps): JSX.Element {
 
         {/* Right side icons */}
         <div className="flex items-center space-x-2">
+          <CreateWorkspaceModal onWorkspaceCreated={onCreateClick} />
           <Button variant="ghost" size="sm" className="p-2">
             <Bell className="h-5 w-5 text-gray-600" />
           </Button>

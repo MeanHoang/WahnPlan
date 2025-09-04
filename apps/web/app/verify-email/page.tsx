@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { apiService } from "@/lib/api";
+import { apiService } from "@/lib/api-service";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 
 export default function VerifyEmailPage(): JSX.Element {

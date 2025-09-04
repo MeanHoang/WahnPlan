@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { apiService } from "@/lib/api";
+import { apiService } from "@/lib/api-service";
 import { Loader2, Mail, RefreshCw } from "lucide-react";
 
 interface EmailVerificationModalProps {

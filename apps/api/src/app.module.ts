@@ -6,6 +6,7 @@ import { PrismaModule } from './shared/prisma/prisma.module';
 import { EmailModule } from './shared/email/email.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { UsersModule } from './modules/users/users.module';
     EmailModule,
     AuthModule,
     UsersModule,
+    WorkspacesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
