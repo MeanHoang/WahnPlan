@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/contexts/auth-context";
 
 export default function DashboardPage(): JSX.Element {
@@ -43,9 +44,12 @@ export default function DashboardPage(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
+    <DashboardLayout
+      onSearch={(query: string) => console.log("Search:", query)}
+      onCreateClick={() => console.log("Create clicked")}
+    >
+      <div className="max-w-4xl mx-auto p-4">
+        {/* Welcome Section */}
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
@@ -149,6 +153,6 @@ export default function DashboardPage(): JSX.Element {
           </Card>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
