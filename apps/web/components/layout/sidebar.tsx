@@ -1,13 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
-  ChevronDown,
-  ChevronRight,
-  Users,
-  Settings,
-  Layout,
-  Plus,
   RefreshCw,
   X,
   ChevronLeft,
@@ -16,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { Workspace } from "@/types/workspace-core";
+import { WorkspaceItems } from "@/components/workspaces/workspace-items";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -30,6 +26,7 @@ export function Sidebar({
   onToggle,
   onRefresh,
 }: SidebarProps): JSX.Element {
+  const router = useRouter();
   const {
     data: workspaces,
     loading,
@@ -51,8 +48,23 @@ export function Sidebar({
   };
 
   const handleWorkspaceItemClick = (workspaceId: string, item: string) => {
-    console.log(`Navigate to ${item} for workspace ${workspaceId}`);
-    // TODO: Implement navigation logic
+    // Close sidebar on mobile after navigation
+    onClose();
+
+    // Navigate to the appropriate page
+    switch (item) {
+      case "boards":
+        router.push(`/workspace/${workspaceId}/boards`);
+        break;
+      case "members":
+        router.push(`/workspace/${workspaceId}/members`);
+        break;
+      case "settings":
+        router.push(`/workspace/${workspaceId}/settings`);
+        break;
+      default:
+        console.log(`Unknown item: ${item}`);
+    }
   };
 
   return (
@@ -148,77 +160,13 @@ export function Sidebar({
                   const isExpanded = expandedWorkspaces.has(workspace.id);
 
                   return (
-                    <div key={workspace.id}>
-                      {/* Workspace Header */}
-                      <button
-                        onClick={() => toggleWorkspace(workspace.id)}
-                        className="w-full p-2 text-left hover:bg-gray-50 rounded transition-colors"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            {workspace.icon ? (
-                              <div className="w-8 h-8 bg-green-500 rounded flex items-center justify-center">
-                                <span className="text-white text-sm font-medium">
-                                  {workspace.icon}
-                                </span>
-                              </div>
-                            ) : (
-                              <div className="w-8 h-8 bg-green-500 rounded flex items-center justify-center">
-                                <span className="text-white text-sm font-medium">
-                                  {workspace.name.charAt(0).toUpperCase()}
-                                </span>
-                              </div>
-                            )}
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {workspace.name}
-                              </p>
-                            </div>
-                          </div>
-                          {isExpanded ? (
-                            <ChevronDown className="h-4 w-4 text-gray-500" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4 text-gray-500" />
-                          )}
-                        </div>
-                      </button>
-
-                      {/* Workspace Items */}
-                      {isExpanded && (
-                        <div className="ml-4 space-y-1">
-                          <button
-                            onClick={() =>
-                              handleWorkspaceItemClick(workspace.id, "boards")
-                            }
-                            className="w-full flex items-center space-x-3 p-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors"
-                          >
-                            <Layout className="h-4 w-4 text-gray-500" />
-                            <span>Boards</span>
-                          </button>
-
-                          <button
-                            onClick={() =>
-                              handleWorkspaceItemClick(workspace.id, "members")
-                            }
-                            className="w-full flex items-center space-x-3 p-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors"
-                          >
-                            <Users className="h-4 w-4 text-gray-500" />
-                            <span>Members</span>
-                            <Plus className="h-4 w-4 text-gray-500 ml-auto" />
-                          </button>
-
-                          <button
-                            onClick={() =>
-                              handleWorkspaceItemClick(workspace.id, "settings")
-                            }
-                            className="w-full flex items-center space-x-3 p-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors"
-                          >
-                            <Settings className="h-4 w-4 text-gray-500" />
-                            <span>Settings</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <WorkspaceItems
+                      key={workspace.id}
+                      workspace={workspace}
+                      isExpanded={isExpanded}
+                      onToggle={toggleWorkspace}
+                      onItemClick={handleWorkspaceItemClick}
+                    />
                   );
                 })}
               </div>
