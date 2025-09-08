@@ -26,7 +26,7 @@ export async function apiRequest<T>(
   }
 
   // Get auth token
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
 
   const config: RequestInit = {
     method,

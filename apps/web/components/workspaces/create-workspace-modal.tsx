@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,22 +21,18 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import {
-  useCreateWorkspace,
-  CreateWorkspaceData,
-  Workspace,
-} from "@/hooks/use-workspaces";
+import { useCreateApi } from "@/hooks/use-create-api";
+import { CreateWorkspaceData } from "@/types/workspace-requests";
+import { Workspace } from "@/types/workspace-core";
 
 interface CreateWorkspaceModalProps {
   onWorkspaceCreated?: () => void;
 }
 
-interface WorkspaceFormData extends CreateWorkspaceData {
+interface WorkspaceFormData {
   name: string;
   description: string;
   visibility: "public" | "private";
-  icon: string;
-  notifyTaskDueSoon: boolean;
 }
 
 export function CreateWorkspaceModal({
@@ -47,11 +43,12 @@ export function CreateWorkspaceModal({
     name: "",
     description: "",
     visibility: "private",
-    icon: "",
-    notifyTaskDueSoon: true,
   });
   const { toast } = useToast();
-  const { mutate: createWorkspace, loading } = useCreateWorkspace();
+  const { mutate: createWorkspace, loading } = useCreateApi<
+    CreateWorkspaceData,
+    Workspace
+  >("/workspaces");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,8 +74,6 @@ export function CreateWorkspaceModal({
         name: "",
         description: "",
         visibility: "private",
-        icon: "",
-        notifyTaskDueSoon: true,
       });
 
       setOpen(false);
@@ -92,10 +87,7 @@ export function CreateWorkspaceModal({
     }
   };
 
-  const handleInputChange = (
-    field: keyof WorkspaceFormData,
-    value: string | boolean
-  ) => {
+  const handleInputChange = (field: keyof WorkspaceFormData, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -105,9 +97,8 @@ export function CreateWorkspaceModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Create Workspace
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          Create
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
@@ -154,31 +145,6 @@ export function CreateWorkspaceModal({
                 <SelectItem value="public">Public</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="icon">Icon (Optional)</Label>
-            <Input
-              id="icon"
-              placeholder="Enter icon URL or emoji"
-              value={formData.icon}
-              onChange={(e) => handleInputChange("icon", e.target.value)}
-            />
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="notifyTaskDueSoon"
-              checked={formData.notifyTaskDueSoon}
-              onChange={(e) =>
-                handleInputChange("notifyTaskDueSoon", e.target.checked)
-              }
-              className="rounded border-gray-300"
-            />
-            <Label htmlFor="notifyTaskDueSoon" className="text-sm">
-              Notify when tasks are due soon
-            </Label>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Bell, HelpCircle, Grid3X3 } from "lucide-react";
+import { Search, Bell, HelpCircle, Grid3X3, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
@@ -11,9 +11,14 @@ import { CreateWorkspaceModal } from "@/components/workspaces/create-workspace-m
 interface HeaderProps {
   onSearch?: (query: string) => void;
   onCreateClick?: () => void;
+  onSidebarToggle?: () => void;
 }
 
-export function Header({ onSearch, onCreateClick }: HeaderProps): JSX.Element {
+export function Header({
+  onSearch,
+  onCreateClick,
+  onSidebarToggle,
+}: HeaderProps): JSX.Element {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -37,6 +42,16 @@ export function Header({ onSearch, onCreateClick }: HeaderProps): JSX.Element {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo and App Launcher */}
         <div className="flex items-center space-x-4">
+          {/* Sidebar Toggle Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="p-2 lg:hidden"
+            onClick={onSidebarToggle}
+          >
+            <Menu className="h-5 w-5 text-gray-600" />
+          </Button>
+
           <Button variant="ghost" size="sm" className="p-2">
             <Grid3X3 className="h-5 w-5 text-gray-600" />
           </Button>
@@ -50,21 +65,23 @@ export function Header({ onSearch, onCreateClick }: HeaderProps): JSX.Element {
 
         {/* Search Bar */}
         <div className="flex-1 max-w-2xl mx-8">
-          <form onSubmit={handleSearch} className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-blue-500"
-            />
-          </form>
+          <div className="flex items-center space-x-2">
+            <form onSubmit={handleSearch} className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-blue-500"
+              />
+            </form>
+            <CreateWorkspaceModal onWorkspaceCreated={onCreateClick} />
+          </div>
         </div>
 
         {/* Right side icons */}
         <div className="flex items-center space-x-2">
-          <CreateWorkspaceModal onWorkspaceCreated={onCreateClick} />
           <Button variant="ghost" size="sm" className="p-2">
             <Bell className="h-5 w-5 text-gray-600" />
           </Button>
