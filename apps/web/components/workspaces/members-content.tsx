@@ -114,7 +114,7 @@ export function MembersContent({
   const getRoleDisplayName = (role: string) => {
     switch (role) {
       case "owner":
-        return "Admin";
+        return "Owner";
       case "manager":
         return "Manager";
       case "member":
