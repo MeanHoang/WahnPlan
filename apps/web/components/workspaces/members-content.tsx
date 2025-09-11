@@ -15,7 +15,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useFetchApi } from "@/hooks/use-fetch-api";
+import { useCreateApi } from "@/hooks/use-create-api";
+import { apiRequest } from "@/lib/api-request";
 import { Workspace } from "@/types/workspace-core";
+import { InviteMemberModal } from "./invite-member-modal";
 
 interface WorkspaceMember {
   id: string;
@@ -42,7 +45,9 @@ interface MembersContentProps {
   workspaceId: string;
 }
 
-export function MembersContent({ workspaceId }: MembersContentProps) {
+export function MembersContent({
+  workspaceId,
+}: MembersContentProps): JSX.Element {
   const [searchTerm, setSearchTerm] = useState("");
   const [showInviteModal, setShowInviteModal] = useState(false);
 
@@ -55,6 +60,41 @@ export function MembersContent({ workspaceId }: MembersContentProps) {
     loading,
     error,
   } = useFetchApi<WorkspaceMember[]>(`/workspaces/${workspaceId}/members`);
+
+  // Get current user info
+  const { data: currentUser } = useFetchApi<any>("/auth/me");
+
+  // Find current user's role in this workspace
+  const currentUserMember = members?.find(
+    (member) => member.user.id === currentUser?.id
+  );
+  const currentUserRole = currentUserMember?.role;
+
+  // Debug: Log current user role
+  console.log("Current user:", currentUser);
+  console.log("Current user role in workspace:", currentUserRole);
+  console.log("Members:", members);
+
+  const { mutate: leaveWorkspace, loading: isLeaving } = useCreateApi(
+    `/workspaces/${workspaceId}/members/leave`,
+    {
+      onSuccess: () => {
+        // Redirect to dashboard after leaving
+        window.location.href = "/dashboard";
+      },
+    }
+  );
+
+  const handleRemoveMember = async (memberId: string) => {
+    try {
+      await apiRequest(`/workspaces/${workspaceId}/members/${memberId}`, {
+        method: "DELETE",
+      });
+      window.location.reload();
+    } catch (error) {
+      console.error("Error removing member:", error);
+    }
+  };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -243,20 +283,52 @@ export function MembersContent({ workspaceId }: MembersContentProps) {
                     <Shield className="h-3 w-3 mr-1" />
                     {getRoleDisplayName(member.role)}
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs text-red-600 hover:text-red-700"
-                  >
-                    <X className="h-3 w-3 mr-1" />
-                    Leave...
-                  </Button>
+                  {/* Show appropriate action based on user role and current user */}
+                  {currentUser && (
+                    <>
+                      {/* If current user is admin/owner and this is not themselves, show Remove button */}
+                      {(currentUserRole === "owner" ||
+                        currentUserRole === "manager") &&
+                        member.user.id !== currentUser?.id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs text-red-600 hover:text-red-700"
+                            onClick={() => handleRemoveMember(member.id)}
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            Remove
+                          </Button>
+                        )}
+
+                      {/* If this is current user themselves, show Leave button */}
+                      {member.user.id === currentUser?.id && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs text-red-600 hover:text-red-700"
+                          onClick={() => leaveWorkspace({})}
+                          disabled={isLeaving}
+                        >
+                          <X className="h-3 w-3 mr-1" />
+                          {isLeaving ? "Leaving..." : "Leave workspace"}
+                        </Button>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Invite Member Modal */}
+      <InviteMemberModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        workspaceId={workspaceId}
+      />
     </div>
   );
 }
