@@ -15,6 +15,7 @@ interface WorkspaceItemsProps {
   isExpanded: boolean;
   onToggle: (workspaceId: string) => void;
   onItemClick: (workspaceId: string, item: string) => void;
+  currentUserRole?: string;
 }
 
 export function WorkspaceItems({
@@ -22,6 +23,7 @@ export function WorkspaceItems({
   isExpanded,
   onToggle,
   onItemClick,
+  currentUserRole,
 }: WorkspaceItemsProps): JSX.Element {
   return (
     <div>
@@ -77,13 +79,15 @@ export function WorkspaceItems({
             <Plus className="h-4 w-4 text-gray-500 ml-auto" />
           </button>
 
-          <button
-            onClick={() => onItemClick(workspace.id, "settings")}
-            className="w-full flex items-center space-x-3 p-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors"
-          >
-            <Settings className="h-4 w-4 text-gray-500" />
-            <span>Settings</span>
-          </button>
+          {currentUserRole === "owner" && (
+            <button
+              onClick={() => onItemClick(workspace.id, "settings")}
+              className="w-full flex items-center space-x-3 p-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors"
+            >
+              <Settings className="h-4 w-4 text-gray-500" />
+              <span>Settings</span>
+            </button>
+          )}
         </div>
       )}
     </div>

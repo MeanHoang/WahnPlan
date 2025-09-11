@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   RefreshCw,
@@ -33,9 +33,44 @@ export function Sidebar({
     error,
     refetch,
   } = useFetchApi<Workspace[]>("/workspaces");
+
+  // Get current user info
+  const { data: currentUser } = useFetchApi<any>("/auth/me");
   const [expandedWorkspaces, setExpandedWorkspaces] = useState<Set<string>>(
     new Set()
   );
+  const [userRoles, setUserRoles] = useState<Record<string, string>>({});
+
+  // Fetch user roles for each workspace
+  useEffect(() => {
+    if (workspaces && currentUser) {
+      const fetchUserRoles = async () => {
+        const roles: Record<string, string> = {};
+        for (const workspace of workspaces) {
+          try {
+            const response = await fetch(
+              `/api/workspaces/${workspace.id}/members`
+            );
+            if (response.ok) {
+              const members = await response.json();
+              const currentUserMember = members.find(
+                (member: any) => member.user.id === currentUser.id
+              );
+              roles[workspace.id] = currentUserMember?.role || "member";
+            }
+          } catch (error) {
+            console.error(
+              `Error fetching role for workspace ${workspace.id}:`,
+              error
+            );
+            roles[workspace.id] = "member";
+          }
+        }
+        setUserRoles(roles);
+      };
+      fetchUserRoles();
+    }
+  }, [workspaces, currentUser]);
 
   const toggleWorkspace = (workspaceId: string) => {
     const newExpanded = new Set(expandedWorkspaces);
@@ -166,6 +201,7 @@ export function Sidebar({
                       isExpanded={isExpanded}
                       onToggle={toggleWorkspace}
                       onItemClick={handleWorkspaceItemClick}
+                      currentUserRole={userRoles[workspace.id]}
                     />
                   );
                 })}
