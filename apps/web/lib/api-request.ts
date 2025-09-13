@@ -28,14 +28,19 @@ export async function apiRequest<T>(
   // Get auth token
   const token = localStorage.getItem("accessToken");
 
+  // Check if body is FormData
+  const isFormData = body instanceof FormData;
+
   const config: RequestInit = {
     method,
     headers: {
-      "Content-Type": "application/json",
+      ...(!isFormData && { "Content-Type": "application/json" }),
       ...(token && { Authorization: `Bearer ${token}` }),
       ...headers,
     },
-    ...(body && { body: JSON.stringify(body) }),
+    ...(body && {
+      body: isFormData ? body : JSON.stringify(body),
+    }),
   };
 
   const response = await fetch(fullUrl, config);

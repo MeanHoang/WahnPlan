@@ -9,6 +9,7 @@ import { UsersModule } from './modules/users/users.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { WorkspaceMembersModule } from './modules/workspace-members/workspace-members.module';
 import { BoardsModule } from './modules/boards/boards.module';
+import { UploadModule } from './modules/upload/upload.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { BoardsModule } from './modules/boards/boards.module';
     WorkspacesModule,
     WorkspaceMembersModule,
     BoardsModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

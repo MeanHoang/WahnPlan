@@ -16,6 +16,8 @@ import {
 import { useUpdateApi } from "@/hooks/use-update-api";
 import { useToast } from "@/hooks/use-toast";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { AvatarUpload } from "@/components/ui/upload";
+import { useAvatarUpload } from "@/hooks/use-upload-api";
 import {
   User,
   Mail,
@@ -40,6 +42,7 @@ export default function ProfilePage(): JSX.Element {
   const { user, refreshAuth } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const { uploadAvatar, deleteAvatar } = useAvatarUpload();
   const [formData, setFormData] = useState<ProfileUpdateData>({
     fullname: user?.fullname || "",
     publicName: user?.publicName || "",
@@ -162,19 +165,17 @@ export default function ProfilePage(): JSX.Element {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="flex flex-col items-center text-center">
-                    {user.avatarUrl ? (
-                      <img
-                        src={user.avatarUrl}
-                        alt={user.fullname || user.email}
-                        className="w-24 h-24 rounded-full object-cover mb-4"
-                      />
-                    ) : (
-                      <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center mb-4">
-                        <span className="text-white text-2xl font-medium">
-                          {getInitials(user.fullname || user.email || "U")}
-                        </span>
-                      </div>
-                    )}
+                    <AvatarUpload
+                      currentAvatar={user.avatarUrl || undefined}
+                      onUpload={async (file) => {
+                        const result = await uploadAvatar(file);
+                        await refreshAuth(); // Refresh user data
+                      }}
+                      onRemove={async () => {
+                        await deleteAvatar();
+                        await refreshAuth(); // Refresh user data
+                      }}
+                    />
                     <h3 className="text-lg font-semibold text-gray-900">
                       {user.fullname || user.email}
                     </h3>
