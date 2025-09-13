@@ -29,6 +29,23 @@ import { useCreateApi } from "@/hooks/use-create-api";
 import { useUpdateApi } from "@/hooks/use-update-api";
 import { useDeleteApi } from "@/hooks/use-delete-api";
 import { Board } from "@/types/board-core";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface TaskStatus {
   id: string;
@@ -54,6 +71,77 @@ interface TaskInitiative {
   _count: { tasks: number };
 }
 
+// Sortable Item Component
+function SortableItem({
+  item,
+  activeTab,
+  onEdit,
+  onDelete,
+}: {
+  item: TaskStatus | TaskPriority | TaskInitiative;
+  activeTab: "status" | "priority" | "initiative";
+  onEdit: (item: any) => void;
+  onDelete: (item: any) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+    >
+      <div className="flex items-center gap-3">
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing"
+        >
+          <GripVertical className="h-4 w-4 text-gray-400" />
+        </div>
+        <div
+          className="w-4 h-4 rounded-full"
+          style={{ backgroundColor: item.color }}
+        />
+        <div>
+          <p className="font-medium">
+            {activeTab === "status"
+              ? (item as TaskStatus).title
+              : (item as TaskPriority | TaskInitiative).name}
+          </p>
+          <p className="text-sm text-gray-500">{item._count.tasks} tasks</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={() => onEdit(item)}>
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onDelete(item)}
+          className="text-red-600 hover:text-red-700"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function BoardSettingsPage(): JSX.Element {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
@@ -75,6 +163,14 @@ export default function BoardSettingsPage(): JSX.Element {
     name: "",
     color: "#3B82F6",
   });
+
+  // Drag & Drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const { data: boardData, loading: boardLoading } = useBoard(boardId);
 
@@ -109,27 +205,24 @@ export default function BoardSettingsPage(): JSX.Element {
       onSuccess: () => refetchInitiatives(),
     });
 
-  // Update APIs - using apiRequest directly
+  // Update APIs - will be created dynamically with ID
   const updateStatus = async (data: any) => {
-    const { apiRequest } = await import("@/lib/api-request");
-    return apiRequest<TaskStatus>(`/task-status/${editingItem.id}`, {
-      method: "PATCH",
-      body: data,
-    });
+    const { mutate } = useUpdateApi<any, TaskStatus>(
+      `/task-status/${editingItem.id}`
+    );
+    return mutate(data);
   };
   const updatePriority = async (data: any) => {
-    const { apiRequest } = await import("@/lib/api-request");
-    return apiRequest<TaskPriority>(`/task-priority/${editingItem.id}`, {
-      method: "PATCH",
-      body: data,
-    });
+    const { mutate } = useUpdateApi<any, TaskPriority>(
+      `/task-priority/${editingItem.id}`
+    );
+    return mutate(data);
   };
   const updateInitiative = async (data: any) => {
-    const { apiRequest } = await import("@/lib/api-request");
-    return apiRequest<TaskInitiative>(`/task-initiative/${editingItem.id}`, {
-      method: "PATCH",
-      body: data,
-    });
+    const { mutate } = useUpdateApi<any, TaskInitiative>(
+      `/task-initiative/${editingItem.id}`
+    );
+    return mutate(data);
   };
 
   // Delete APIs - using apiRequest directly
@@ -260,6 +353,74 @@ export default function BoardSettingsPage(): JSX.Element {
     }
   };
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    let currentItems: (TaskStatus | TaskPriority | TaskInitiative)[] = [];
+    if (activeTab === "status") {
+      currentItems = taskStatuses || [];
+    } else if (activeTab === "priority") {
+      currentItems = taskPriorities || [];
+    } else {
+      currentItems = taskInitiatives || [];
+    }
+
+    const oldIndex = currentItems.findIndex((item) => item.id === active.id);
+    const newIndex = currentItems.findIndex((item) => item.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+
+    const newItems = arrayMove(currentItems, oldIndex, newIndex);
+
+    // Update positions in the database
+    try {
+      const { apiRequest } = await import("@/lib/api-request");
+
+      for (let i = 0; i < newItems.length; i++) {
+        const item = newItems[i];
+        if (!item) continue;
+
+        const newPosition = i;
+
+        if (item.position !== newPosition) {
+          if (activeTab === "status") {
+            await apiRequest(`/task-status/${item.id}`, {
+              method: "PATCH",
+              body: { position: newPosition },
+            });
+          } else if (activeTab === "priority") {
+            await apiRequest(`/task-priority/${item.id}`, {
+              method: "PATCH",
+              body: { position: newPosition },
+            });
+          } else {
+            await apiRequest(`/task-initiative/${item.id}`, {
+              method: "PATCH",
+              body: { position: newPosition },
+            });
+          }
+        }
+      }
+
+      // Refetch data to get updated positions
+      if (activeTab === "status") {
+        refetchStatuses();
+      } else if (activeTab === "priority") {
+        refetchPriorities();
+      } else {
+        refetchInitiatives();
+      }
+    } catch (error) {
+      console.error("Error updating positions:", error);
+    }
+  };
+
   if (
     authLoading ||
     boardLoading ||
@@ -368,60 +529,39 @@ export default function BoardSettingsPage(): JSX.Element {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {currentItems.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-                >
-                  <div className="flex items-center gap-3">
-                    <GripVertical className="h-4 w-4 text-gray-400" />
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: item.color }}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={currentItems.map((item) => item.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-3">
+                  {currentItems.map((item, index) => (
+                    <SortableItem
+                      key={item.id}
+                      item={item}
+                      activeTab={activeTab}
+                      onEdit={openEditDialog}
+                      onDelete={handleDelete}
                     />
-                    <div>
-                      <p className="font-medium">
-                        {activeTab === "status"
-                          ? (item as TaskStatus).title
-                          : (item as TaskPriority | TaskInitiative).name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {item._count.tasks} tasks
-                      </p>
+                  ))}
+                  {currentItems.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      No{" "}
+                      {activeTab === "status"
+                        ? "statuses"
+                        : activeTab === "priority"
+                          ? "priorities"
+                          : "initiatives"}{" "}
+                      found. Create your first one above.
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openEditDialog(item)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(item)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  )}
                 </div>
-              ))}
-              {currentItems.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  No{" "}
-                  {activeTab === "status"
-                    ? "statuses"
-                    : activeTab === "priority"
-                      ? "priorities"
-                      : "initiatives"}{" "}
-                  found. Create your first one above.
-                </div>
-              )}
-            </div>
+              </SortableContext>
+            </DndContext>
           </CardContent>
         </Card>
 
