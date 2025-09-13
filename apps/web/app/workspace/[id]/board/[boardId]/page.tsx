@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, BarChart3, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/contexts/auth-context";
 import { useBoard } from "@/hooks/use-board-api";
 import { useFetchApi } from "@/hooks/use-fetch-api";
@@ -168,10 +167,10 @@ export default function BoardDetailPage(): JSX.Element {
   }
 
   return (
-    <DashboardLayout onSearch={(query: string) => {}} onCreateClick={() => {}}>
-      <div className="px-12 py-8">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Header Section */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
@@ -187,7 +186,7 @@ export default function BoardDetailPage(): JSX.Element {
                 {board.title}
               </h1>
               {board.subtitle && (
-                <p className="text-gray-600 mt-2">{board.subtitle}</p>
+                <p className="text-gray-600 mt-1">{board.subtitle}</p>
               )}
             </div>
           </div>
@@ -206,9 +205,14 @@ export default function BoardDetailPage(): JSX.Element {
             </Button>
           </div>
         </div>
+      </div>
 
-        {/* Kanban Board */}
-        <div className="flex gap-6 overflow-x-auto pb-4">
+      {/* Kanban Board */}
+      <div className="flex-1 p-6 bg-gray-50">
+        <div
+          className="flex gap-6 overflow-x-auto pb-4 h-full"
+          style={{ alignItems: "flex-start" }}
+        >
           {statuses?.map((status) => (
             <StatusColumn
               key={status.id}
@@ -219,19 +223,19 @@ export default function BoardDetailPage(): JSX.Element {
             />
           ))}
         </div>
-
-        {/* Create Task Modal */}
-        <CreateTaskModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          boardId={boardId}
-          statusId={selectedStatusId}
-          statuses={statuses || []}
-          priorities={priorities || []}
-          initiatives={initiatives || []}
-          onSuccess={handleCreateSuccess}
-        />
       </div>
-    </DashboardLayout>
+
+      {/* Create Task Modal */}
+      <CreateTaskModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        boardId={boardId}
+        statusId={selectedStatusId}
+        statuses={statuses || []}
+        priorities={priorities || []}
+        initiatives={initiatives || []}
+        onSuccess={handleCreateSuccess}
+      />
+    </div>
   );
 }

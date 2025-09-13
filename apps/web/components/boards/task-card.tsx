@@ -53,12 +53,12 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
       onClick={() => onClick?.(task)}
     >
       {/* Title */}
-      <h3 className="font-medium text-gray-900 mb-3 line-clamp-2">
+      <h3 className="font-medium text-gray-900 mb-3 line-clamp-2 text-sm leading-5">
         {task.title}
       </h3>
 
       {/* Tags */}
-      <div className="flex flex-wrap gap-2 mb-3">
+      <div className="flex flex-wrap gap-1 mb-3">
         {task.taskPriority && (
           <span
             className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.taskPriority)}`}
@@ -77,8 +77,8 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
 
       {/* Date */}
       {task.dueDate && (
-        <div className="flex items-center gap-2 mb-3 text-sm text-gray-500">
-          <Calendar className="h-4 w-4" />
+        <div className="flex items-center gap-2 mb-3 text-xs text-gray-500">
+          <Calendar className="h-3 w-3" />
           <span>{formatDate(task.dueDate)}</span>
         </div>
       )}
@@ -113,8 +113,8 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
 
         {/* Comments */}
         {task._count.taskComments > 0 && (
-          <div className="flex items-center gap-1 text-sm text-gray-500">
-            <MessageCircle className="h-4 w-4" />
+          <div className="flex items-center gap-1 text-xs text-gray-500">
+            <MessageCircle className="h-3 w-3" />
             <span>{task._count.taskComments}</span>
           </div>
         )}

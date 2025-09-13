@@ -11,7 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/contexts/auth-context";
 import { useBoard } from "@/hooks/use-board-api";
 import { useFetchApi } from "@/hooks/use-fetch-api";
@@ -357,10 +356,10 @@ export default function BoardSettingsPage(): JSX.Element {
   const currentItems = getCurrentItems();
 
   return (
-    <DashboardLayout onSearch={(query: string) => {}} onCreateClick={() => {}}>
-      <div className="px-12 py-8">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header Section */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
@@ -378,7 +377,10 @@ export default function BoardSettingsPage(): JSX.Element {
             </div>
           </div>
         </div>
+      </div>
 
+      {/* Content */}
+      <div className="p-6">
         {/* Tabs */}
         <div className="flex gap-2 mb-6">
           <Button
@@ -401,7 +403,7 @@ export default function BoardSettingsPage(): JSX.Element {
           </Button>
         </div>
 
-        {/* Content */}
+        {/* Content Card */}
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
@@ -482,6 +484,6 @@ export default function BoardSettingsPage(): JSX.Element {
           editingItem={editingItem}
         />
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
