@@ -112,7 +112,70 @@ export class TaskMembersService {
     });
   }
 
-  async findAll(taskId: string, userId: string) {
+  async findAll(
+    taskId: string | undefined,
+    userId: string,
+    filterUserId?: string,
+  ) {
+    // If filtering by userId, get all tasks where user is a member
+    if (filterUserId && !taskId) {
+      return this.prisma.taskMember.findMany({
+        where: {
+          userId: filterUserId,
+          task: {
+            board: {
+              workspace: {
+                members: {
+                  some: {
+                    userId,
+                  },
+                },
+              },
+            },
+          },
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              fullname: true,
+              publicName: true,
+              avatarUrl: true,
+            },
+          },
+          task: {
+            select: {
+              id: true,
+              title: true,
+              board: {
+                select: {
+                  id: true,
+                  title: true,
+                  workspace: {
+                    select: {
+                      id: true,
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          position: 'asc',
+        },
+      });
+    }
+
+    // Original logic for getting members of a specific task
+    if (!taskId) {
+      throw new BadRequestException(
+        'taskId is required when not filtering by userId',
+      );
+    }
+
     // Check if user has access to the task
     const task = await this.prisma.task.findFirst({
       where: {

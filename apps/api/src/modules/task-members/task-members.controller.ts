@@ -26,11 +26,15 @@ export class TaskMembersController {
   }
 
   @Get()
-  findAll(@Query('taskId') taskId: string, @Req() req: any) {
-    if (!taskId) {
-      throw new Error('taskId query parameter is required');
+  findAll(
+    @Req() req: any,
+    @Query('taskId') taskId?: string,
+    @Query('userId') userId?: string,
+  ) {
+    if (!taskId && !userId) {
+      throw new Error('Either taskId or userId query parameter is required');
     }
-    return this.taskMembersService.findAll(taskId, req.user.id);
+    return this.taskMembersService.findAll(taskId, req.user.id, userId);
   }
 
   @Get(':id')

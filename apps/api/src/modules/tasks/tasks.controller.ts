@@ -13,6 +13,7 @@ import {
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { TaskFiltersDto } from './dto/task-filters.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('tasks')
@@ -26,11 +27,16 @@ export class TasksController {
   }
 
   @Get()
-  findAll(@Query('boardId') boardId: string, @Req() req: any) {
+  findAll(
+    @Query('boardId') boardId: string,
+    @Query() filters: TaskFiltersDto,
+    @Req() req: any,
+  ) {
     if (!boardId) {
       throw new Error('boardId query parameter is required');
     }
-    return this.tasksService.findAll(boardId, req.user.id);
+
+    return this.tasksService.findAll(boardId, req.user.id, filters);
   }
 
   @Get(':id')
@@ -41,6 +47,15 @@ export class TasksController {
   @Get('stats/:boardId')
   getStats(@Param('boardId') boardId: string, @Req() req: any) {
     return this.tasksService.getTaskStats(boardId, req.user.id);
+  }
+
+  @Get('user/:userId')
+  findByUser(
+    @Param('userId') userId: string,
+    @Query() filters: TaskFiltersDto,
+    @Req() req: any,
+  ) {
+    return this.tasksService.findByUser(userId, req.user.id, filters);
   }
 
   @Patch(':id')

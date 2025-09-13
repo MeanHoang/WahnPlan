@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Users, BarChart3, Plus } from "lucide-react";
+import { ArrowLeft, Users, BarChart3, Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,

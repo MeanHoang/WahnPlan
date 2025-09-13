@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { TaskFiltersDto } from './dto/task-filters.dto';
 import { WorkspaceMemberRole } from '@prisma/client';
 
 @Injectable()
@@ -255,18 +256,18 @@ export class TasksService {
         sprint: task.sprint,
         featureCategories: task.featureCategories,
         sprintGoal: task.sprintGoal,
-        descriptionJson: task.descriptionJson,
+        descriptionJson: task.descriptionJson as any,
         descriptionPlain: task.descriptionPlain,
-        noteJson: task.noteJson,
+        noteJson: task.noteJson as any,
         notePlain: task.notePlain,
-        attachments: task.attachments,
+        attachments: task.attachments as any,
       },
     });
 
     return task;
   }
 
-  async findAll(boardId: string, userId: string) {
+  async findAll(boardId: string, userId: string, filters: TaskFiltersDto = {}) {
     // Check if user has access to the board
     const board = await this.prisma.board.findFirst({
       where: {
@@ -285,10 +286,64 @@ export class TasksService {
       throw new ForbiddenException('Access denied to board');
     }
 
+    // Build where clause with filters
+    const whereClause: any = {
+      boardId,
+    };
+
+    // Add filters if provided
+    if (filters.assigneeId) {
+      whereClause.assigneeId = filters.assigneeId;
+    }
+
+    if (filters.reviewerId) {
+      whereClause.reviewerId = filters.reviewerId;
+    }
+
+    if (filters.baId) {
+      whereClause.baId = filters.baId;
+    }
+
+    if (filters.taskStatusId) {
+      whereClause.taskStatusId = filters.taskStatusId;
+    }
+
+    if (filters.taskPriorityId) {
+      whereClause.taskPriorityId = filters.taskPriorityId;
+    }
+
+    if (filters.taskInitiativeId) {
+      whereClause.taskInitiativeId = filters.taskInitiativeId;
+    }
+
+    if (filters.sprint) {
+      whereClause.sprint = filters.sprint;
+    }
+
+    if (filters.featureCategories) {
+      whereClause.featureCategories = filters.featureCategories;
+    }
+
+    if (filters.createdById) {
+      whereClause.createdById = filters.createdById;
+    }
+
+    // Handle overdue filter
+    if (filters.isOverdue) {
+      whereClause.dueDate = {
+        lt: new Date(),
+      };
+      whereClause.taskStatus = {
+        title: {
+          not: {
+            contains: 'Done',
+          },
+        },
+      };
+    }
+
     return this.prisma.task.findMany({
-      where: {
-        boardId,
-      },
+      where: whereClause,
       include: {
         taskStatus: true,
         taskPriority: true,
@@ -494,6 +549,174 @@ export class TasksService {
     }
 
     return task;
+  }
+
+  async findByUser(
+    targetUserId: string,
+    currentUserId: string,
+    filters: TaskFiltersDto = {},
+  ) {
+    // Check if current user has access to any workspace where target user is a member
+    const hasAccess = await this.prisma.workspaceMember.findFirst({
+      where: {
+        userId: currentUserId,
+        workspace: {
+          members: {
+            some: {
+              userId: targetUserId,
+            },
+          },
+        },
+      },
+    });
+
+    if (!hasAccess) {
+      throw new ForbiddenException('Access denied to user tasks');
+    }
+
+    // Build where clause with filters
+    const whereClause: any = {
+      OR: [
+        { assigneeId: targetUserId },
+        { reviewerId: targetUserId },
+        { baId: targetUserId },
+        { createdById: targetUserId },
+        {
+          taskMembers: {
+            some: {
+              userId: targetUserId,
+            },
+          },
+        },
+      ],
+      board: {
+        workspace: {
+          members: {
+            some: {
+              userId: currentUserId,
+            },
+          },
+        },
+      },
+    };
+
+    // Add additional filters if provided
+    if (filters.taskStatusId) {
+      whereClause.taskStatusId = filters.taskStatusId;
+    }
+
+    if (filters.taskPriorityId) {
+      whereClause.taskPriorityId = filters.taskPriorityId;
+    }
+
+    if (filters.taskInitiativeId) {
+      whereClause.taskInitiativeId = filters.taskInitiativeId;
+    }
+
+    if (filters.sprint) {
+      whereClause.sprint = filters.sprint;
+    }
+
+    if (filters.featureCategories) {
+      whereClause.featureCategories = filters.featureCategories;
+    }
+
+    // Handle overdue filter
+    if (filters.isOverdue) {
+      whereClause.dueDate = {
+        lt: new Date(),
+      };
+      whereClause.taskStatus = {
+        title: {
+          not: {
+            contains: 'Done',
+          },
+        },
+      };
+    }
+
+    return this.prisma.task.findMany({
+      where: whereClause,
+      include: {
+        board: {
+          select: {
+            id: true,
+            title: true,
+            workspace: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        taskStatus: true,
+        taskPriority: true,
+        taskInitiative: true,
+        assignee: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        reviewer: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        baUser: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        taskMembers: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                fullname: true,
+                publicName: true,
+                avatarUrl: true,
+              },
+            },
+          },
+          orderBy: {
+            position: 'asc',
+          },
+        },
+        _count: {
+          select: {
+            taskMembers: true,
+            taskComments: true,
+            taskHistory: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
   }
 
   async update(id: string, updateTaskDto: UpdateTaskDto, userId: string) {
@@ -745,11 +968,11 @@ export class TasksService {
         sprint: task.sprint,
         featureCategories: task.featureCategories,
         sprintGoal: task.sprintGoal,
-        descriptionJson: task.descriptionJson,
+        descriptionJson: task.descriptionJson as any,
         descriptionPlain: task.descriptionPlain,
-        noteJson: task.noteJson,
+        noteJson: task.noteJson as any,
         notePlain: task.notePlain,
-        attachments: task.attachments,
+        attachments: task.attachments as any,
       },
     });
 
