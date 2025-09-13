@@ -91,16 +91,30 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
             <div
               key={member.id}
               className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs font-medium text-gray-700"
-              title={member.user.name}
+              title={
+                member.user.publicName ||
+                member.user.fullname ||
+                member.user.email
+              }
             >
-              {member.user.avatar ? (
+              {member.user.avatarUrl ? (
                 <img
-                  src={member.user.avatar}
-                  alt={member.user.name}
+                  src={member.user.avatarUrl}
+                  alt={
+                    member.user.publicName ||
+                    member.user.fullname ||
+                    member.user.email
+                  }
                   className="w-6 h-6 rounded-full"
                 />
               ) : (
-                member.user.name.charAt(0).toUpperCase()
+                (
+                  member.user.publicName ||
+                  member.user.fullname ||
+                  member.user.email
+                )
+                  .charAt(0)
+                  .toUpperCase()
               )}
             </div>
           ))}

@@ -149,8 +149,7 @@ export default function BoardDetailPage(): JSX.Element {
   };
 
   const handleTaskClick = (task: Task) => {
-    // TODO: Open task detail modal or navigate to task page
-    console.log("Task clicked:", task);
+    router.push(`/workspace/${workspaceId}/task/${task.id}`);
   };
 
   const handleAddTask = (statusId: string) => {

@@ -1,20 +1,67 @@
 export interface Task {
   id: string;
   title: string;
-  description?: string;
   dueDate?: Date;
+  taskStatusId?: string;
+  taskInitiativeId?: string;
+  taskPriorityId?: string;
+  okr?: string;
+  assigneeId?: string;
+  reviewerId?: string;
+  storyPoint?: number;
+  sizeCard?: string;
+  testCase?: string;
+  goLive?: Date;
+  devMr?: string;
+  baId?: string;
+  staging?: string;
+  note?: string;
+  createdById: string;
+  createdTime: Date;
+  sprint?: string;
+  featureCategories?: string;
+  sprintGoal?: string;
+  descriptionJson?: any;
+  descriptionPlain?: string;
+  noteJson?: any;
+  notePlain?: string;
+  attachments?: any;
   createdAt: Date;
   updatedAt: Date;
   boardId: string;
-  taskStatusId: string;
-  taskPriorityId?: string;
-  taskInitiativeId?: string;
-  position: number;
 
   // Relations
-  taskStatus: TaskStatus;
+  taskStatus?: TaskStatus;
   taskPriority?: TaskPriority;
   taskInitiative?: TaskInitiative;
+  assignee?: {
+    id: string;
+    email: string;
+    fullname?: string;
+    publicName?: string;
+    avatarUrl?: string;
+  };
+  reviewer?: {
+    id: string;
+    email: string;
+    fullname?: string;
+    publicName?: string;
+    avatarUrl?: string;
+  };
+  baUser?: {
+    id: string;
+    email: string;
+    fullname?: string;
+    publicName?: string;
+    avatarUrl?: string;
+  };
+  createdBy: {
+    id: string;
+    email: string;
+    fullname?: string;
+    publicName?: string;
+    avatarUrl?: string;
+  };
   taskMembers: TaskMember[];
   _count: {
     taskMembers: number;
@@ -51,11 +98,13 @@ export interface TaskMember {
   id: string;
   taskId: string;
   userId: string;
+  position: number;
   user: {
     id: string;
-    name: string;
     email: string;
-    avatar?: string;
+    fullname?: string;
+    publicName?: string;
+    avatarUrl?: string;
   };
 }
 
