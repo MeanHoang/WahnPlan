@@ -8,6 +8,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { WorkspaceMembersModule } from './modules/workspace-members/workspace-members.module';
+import { BoardsModule } from './modules/boards/boards.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { WorkspaceMembersModule } from './modules/workspace-members/workspace-me
     UsersModule,
     WorkspacesModule,
     WorkspaceMembersModule,
+    BoardsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
