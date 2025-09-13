@@ -82,6 +82,20 @@ export default function BoardDetailPage(): JSX.Element {
               )}
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() =>
+                router.push(
+                  `/workspace/${workspaceId}/board/${boardId}/settings`
+                )
+              }
+              className="flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Settings
+            </Button>
+          </div>
         </div>
 
         {/* Board Info */}
