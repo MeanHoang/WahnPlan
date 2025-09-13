@@ -1,0 +1,892 @@
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
+import { PrismaService } from '../../shared/prisma/prisma.service';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
+import { WorkspaceMemberRole } from '@prisma/client';
+
+@Injectable()
+export class TasksService {
+  constructor(private prisma: PrismaService) {}
+
+  async create(createTaskDto: CreateTaskDto, userId: string) {
+    // Check if user has permission to create task in board
+    const board = await this.prisma.board.findFirst({
+      where: {
+        id: createTaskDto.boardId,
+        workspace: {
+          members: {
+            some: {
+              userId,
+              role: {
+                in: [
+                  WorkspaceMemberRole.owner,
+                  WorkspaceMemberRole.manager,
+                  WorkspaceMemberRole.member,
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!board) {
+      throw new ForbiddenException('Insufficient permissions to create task');
+    }
+
+    // Validate related entities if provided
+    if (createTaskDto.taskStatusId) {
+      const taskStatus = await this.prisma.taskStatus.findFirst({
+        where: {
+          id: createTaskDto.taskStatusId,
+          boardId: createTaskDto.boardId,
+        },
+      });
+      if (!taskStatus) {
+        throw new BadRequestException('Invalid task status for this board');
+      }
+    }
+
+    if (createTaskDto.taskPriorityId) {
+      const taskPriority = await this.prisma.taskPriority.findFirst({
+        where: {
+          id: createTaskDto.taskPriorityId,
+          boardId: createTaskDto.boardId,
+        },
+      });
+      if (!taskPriority) {
+        throw new BadRequestException('Invalid task priority for this board');
+      }
+    }
+
+    if (createTaskDto.taskInitiativeId) {
+      const taskInitiative = await this.prisma.taskInitiative.findFirst({
+        where: {
+          id: createTaskDto.taskInitiativeId,
+          boardId: createTaskDto.boardId,
+        },
+      });
+      if (!taskInitiative) {
+        throw new BadRequestException('Invalid task initiative for this board');
+      }
+    }
+
+    // Validate assignee, reviewer, and BA if provided
+    if (createTaskDto.assigneeId) {
+      const assignee = await this.prisma.workspaceMember.findFirst({
+        where: {
+          workspaceId: board.workspaceId,
+          userId: createTaskDto.assigneeId,
+        },
+      });
+      if (!assignee) {
+        throw new BadRequestException(
+          'Assignee is not a member of the workspace',
+        );
+      }
+    }
+
+    if (createTaskDto.reviewerId) {
+      const reviewer = await this.prisma.workspaceMember.findFirst({
+        where: {
+          workspaceId: board.workspaceId,
+          userId: createTaskDto.reviewerId,
+        },
+      });
+      if (!reviewer) {
+        throw new BadRequestException(
+          'Reviewer is not a member of the workspace',
+        );
+      }
+    }
+
+    if (createTaskDto.baId) {
+      const baUser = await this.prisma.workspaceMember.findFirst({
+        where: {
+          workspaceId: board.workspaceId,
+          userId: createTaskDto.baId,
+        },
+      });
+      if (!baUser) {
+        throw new BadRequestException(
+          'BA user is not a member of the workspace',
+        );
+      }
+    }
+
+    const task = await this.prisma.task.create({
+      data: {
+        boardId: createTaskDto.boardId,
+        title: createTaskDto.title,
+        dueDate: createTaskDto.dueDate ? new Date(createTaskDto.dueDate) : null,
+        taskStatusId: createTaskDto.taskStatusId,
+        taskInitiativeId: createTaskDto.taskInitiativeId,
+        taskPriorityId: createTaskDto.taskPriorityId,
+        okr: createTaskDto.okr,
+        assigneeId: createTaskDto.assigneeId,
+        reviewerId: createTaskDto.reviewerId,
+        storyPoint: createTaskDto.storyPoint,
+        sizeCard: createTaskDto.sizeCard,
+        testCase: createTaskDto.testCase,
+        goLive: createTaskDto.goLive ? new Date(createTaskDto.goLive) : null,
+        devMr: createTaskDto.devMr,
+        baId: createTaskDto.baId,
+        staging: createTaskDto.staging,
+        note: createTaskDto.note,
+        createdById: userId,
+        createdTime: new Date(),
+        sprint: createTaskDto.sprint,
+        featureCategories: createTaskDto.featureCategories,
+        sprintGoal: createTaskDto.sprintGoal,
+        descriptionJson: createTaskDto.descriptionJson,
+        descriptionPlain: createTaskDto.descriptionPlain,
+        noteJson: createTaskDto.noteJson,
+        notePlain: createTaskDto.notePlain,
+        attachments: createTaskDto.attachments,
+      },
+      include: {
+        board: {
+          select: {
+            id: true,
+            title: true,
+            workspace: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        taskStatus: true,
+        taskPriority: true,
+        taskInitiative: true,
+        assignee: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        reviewer: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        baUser: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        taskMembers: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                fullname: true,
+                publicName: true,
+                avatarUrl: true,
+              },
+            },
+          },
+          orderBy: {
+            position: 'asc',
+          },
+        },
+        _count: {
+          select: {
+            taskMembers: true,
+            taskComments: true,
+            taskHistory: true,
+          },
+        },
+      },
+    });
+
+    // Create initial history record
+    await this.prisma.taskHistory.create({
+      data: {
+        taskId: task.id,
+        version: 1,
+        changedById: userId,
+        changedAt: new Date(),
+        title: task.title,
+        dueDate: task.dueDate,
+        taskStatusId: task.taskStatusId,
+        taskInitiativeId: task.taskInitiativeId,
+        taskPriorityId: task.taskPriorityId,
+        okr: task.okr,
+        assigneeId: task.assigneeId,
+        reviewerId: task.reviewerId,
+        storyPoint: task.storyPoint,
+        sizeCard: task.sizeCard,
+        testCase: task.testCase,
+        goLive: task.goLive,
+        devMr: task.devMr,
+        baId: task.baId,
+        staging: task.staging,
+        note: task.note,
+        createdById: task.createdById,
+        createdTime: task.createdTime,
+        sprint: task.sprint,
+        featureCategories: task.featureCategories,
+        sprintGoal: task.sprintGoal,
+        descriptionJson: task.descriptionJson,
+        descriptionPlain: task.descriptionPlain,
+        noteJson: task.noteJson,
+        notePlain: task.notePlain,
+        attachments: task.attachments,
+      },
+    });
+
+    return task;
+  }
+
+  async findAll(boardId: string, userId: string) {
+    // Check if user has access to the board
+    const board = await this.prisma.board.findFirst({
+      where: {
+        id: boardId,
+        workspace: {
+          members: {
+            some: {
+              userId,
+            },
+          },
+        },
+      },
+    });
+
+    if (!board) {
+      throw new ForbiddenException('Access denied to board');
+    }
+
+    return this.prisma.task.findMany({
+      where: {
+        boardId,
+      },
+      include: {
+        taskStatus: true,
+        taskPriority: true,
+        taskInitiative: true,
+        assignee: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        reviewer: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        baUser: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        taskMembers: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                fullname: true,
+                publicName: true,
+                avatarUrl: true,
+              },
+            },
+          },
+          orderBy: {
+            position: 'asc',
+          },
+        },
+        _count: {
+          select: {
+            taskMembers: true,
+            taskComments: true,
+            taskHistory: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async findOne(id: string, userId: string) {
+    const task = await this.prisma.task.findFirst({
+      where: {
+        id,
+        board: {
+          workspace: {
+            members: {
+              some: {
+                userId,
+              },
+            },
+          },
+        },
+      },
+      include: {
+        board: {
+          select: {
+            id: true,
+            title: true,
+            workspace: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        taskStatus: true,
+        taskPriority: true,
+        taskInitiative: true,
+        assignee: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        reviewer: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        baUser: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        taskMembers: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                fullname: true,
+                publicName: true,
+                avatarUrl: true,
+              },
+            },
+          },
+          orderBy: {
+            position: 'asc',
+          },
+        },
+        taskHistory: {
+          include: {
+            changedBy: {
+              select: {
+                id: true,
+                email: true,
+                fullname: true,
+                publicName: true,
+                avatarUrl: true,
+              },
+            },
+          },
+          orderBy: {
+            version: 'desc',
+          },
+        },
+        taskComments: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                email: true,
+                fullname: true,
+                publicName: true,
+                avatarUrl: true,
+              },
+            },
+            _count: {
+              select: {
+                commentReactions: true,
+                commentMentions: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
+        _count: {
+          select: {
+            taskMembers: true,
+            taskComments: true,
+            taskHistory: true,
+          },
+        },
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    return task;
+  }
+
+  async update(id: string, updateTaskDto: UpdateTaskDto, userId: string) {
+    // First get the task to check board access
+    const existingTask = await this.prisma.task.findFirst({
+      where: {
+        id,
+        board: {
+          workspace: {
+            members: {
+              some: {
+                userId,
+              },
+            },
+          },
+        },
+      },
+      include: {
+        board: true,
+      },
+    });
+
+    if (!existingTask) {
+      throw new NotFoundException('Task not found');
+    }
+
+    // Check if user has permission to update task
+    const member = await this.prisma.workspaceMember.findFirst({
+      where: {
+        workspaceId: existingTask.board.workspaceId,
+        userId,
+        role: {
+          in: [
+            WorkspaceMemberRole.owner,
+            WorkspaceMemberRole.manager,
+            WorkspaceMemberRole.member,
+          ],
+        },
+      },
+    });
+
+    if (!member) {
+      throw new ForbiddenException('Insufficient permissions to update task');
+    }
+
+    // Validate related entities if provided
+    if (updateTaskDto.taskStatusId) {
+      const taskStatus = await this.prisma.taskStatus.findFirst({
+        where: {
+          id: updateTaskDto.taskStatusId,
+          boardId: existingTask.boardId,
+        },
+      });
+      if (!taskStatus) {
+        throw new BadRequestException('Invalid task status for this board');
+      }
+    }
+
+    if (updateTaskDto.taskPriorityId) {
+      const taskPriority = await this.prisma.taskPriority.findFirst({
+        where: {
+          id: updateTaskDto.taskPriorityId,
+          boardId: existingTask.boardId,
+        },
+      });
+      if (!taskPriority) {
+        throw new BadRequestException('Invalid task priority for this board');
+      }
+    }
+
+    if (updateTaskDto.taskInitiativeId) {
+      const taskInitiative = await this.prisma.taskInitiative.findFirst({
+        where: {
+          id: updateTaskDto.taskInitiativeId,
+          boardId: existingTask.boardId,
+        },
+      });
+      if (!taskInitiative) {
+        throw new BadRequestException('Invalid task initiative for this board');
+      }
+    }
+
+    // Validate assignee, reviewer, and BA if provided
+    if (updateTaskDto.assigneeId) {
+      const assignee = await this.prisma.workspaceMember.findFirst({
+        where: {
+          workspaceId: existingTask.board.workspaceId,
+          userId: updateTaskDto.assigneeId,
+        },
+      });
+      if (!assignee) {
+        throw new BadRequestException(
+          'Assignee is not a member of the workspace',
+        );
+      }
+    }
+
+    if (updateTaskDto.reviewerId) {
+      const reviewer = await this.prisma.workspaceMember.findFirst({
+        where: {
+          workspaceId: existingTask.board.workspaceId,
+          userId: updateTaskDto.reviewerId,
+        },
+      });
+      if (!reviewer) {
+        throw new BadRequestException(
+          'Reviewer is not a member of the workspace',
+        );
+      }
+    }
+
+    if (updateTaskDto.baId) {
+      const baUser = await this.prisma.workspaceMember.findFirst({
+        where: {
+          workspaceId: existingTask.board.workspaceId,
+          userId: updateTaskDto.baId,
+        },
+      });
+      if (!baUser) {
+        throw new BadRequestException(
+          'BA user is not a member of the workspace',
+        );
+      }
+    }
+
+    // Get the latest version number
+    const latestHistory = await this.prisma.taskHistory.findFirst({
+      where: { taskId: id },
+      orderBy: { version: 'desc' },
+    });
+
+    const newVersion = latestHistory ? latestHistory.version + 1 : 1;
+
+    // Prepare update data
+    const updateData: any = { ...updateTaskDto };
+    if (updateTaskDto.dueDate) {
+      updateData.dueDate = new Date(updateTaskDto.dueDate);
+    }
+    if (updateTaskDto.goLive) {
+      updateData.goLive = new Date(updateTaskDto.goLive);
+    }
+
+    const task = await this.prisma.task.update({
+      where: { id },
+      data: updateData,
+      include: {
+        board: {
+          select: {
+            id: true,
+            title: true,
+            workspace: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        taskStatus: true,
+        taskPriority: true,
+        taskInitiative: true,
+        assignee: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        reviewer: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        baUser: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        taskMembers: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                fullname: true,
+                publicName: true,
+                avatarUrl: true,
+              },
+            },
+          },
+          orderBy: {
+            position: 'asc',
+          },
+        },
+        _count: {
+          select: {
+            taskMembers: true,
+            taskComments: true,
+            taskHistory: true,
+          },
+        },
+      },
+    });
+
+    // Create history record for the update
+    await this.prisma.taskHistory.create({
+      data: {
+        taskId: task.id,
+        version: newVersion,
+        changedById: userId,
+        changedAt: new Date(),
+        title: task.title,
+        dueDate: task.dueDate,
+        taskStatusId: task.taskStatusId,
+        taskInitiativeId: task.taskInitiativeId,
+        taskPriorityId: task.taskPriorityId,
+        okr: task.okr,
+        assigneeId: task.assigneeId,
+        reviewerId: task.reviewerId,
+        storyPoint: task.storyPoint,
+        sizeCard: task.sizeCard,
+        testCase: task.testCase,
+        goLive: task.goLive,
+        devMr: task.devMr,
+        baId: task.baId,
+        staging: task.staging,
+        note: task.note,
+        createdById: task.createdById,
+        createdTime: task.createdTime,
+        sprint: task.sprint,
+        featureCategories: task.featureCategories,
+        sprintGoal: task.sprintGoal,
+        descriptionJson: task.descriptionJson,
+        descriptionPlain: task.descriptionPlain,
+        noteJson: task.noteJson,
+        notePlain: task.notePlain,
+        attachments: task.attachments,
+      },
+    });
+
+    return task;
+  }
+
+  async remove(id: string, userId: string) {
+    // First get the task to check board access
+    const task = await this.prisma.task.findFirst({
+      where: {
+        id,
+        board: {
+          workspace: {
+            members: {
+              some: {
+                userId,
+              },
+            },
+          },
+        },
+      },
+      include: {
+        board: true,
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    // Check if user has permission to delete task
+    const member = await this.prisma.workspaceMember.findFirst({
+      where: {
+        workspaceId: task.board.workspaceId,
+        userId,
+        role: {
+          in: [WorkspaceMemberRole.owner, WorkspaceMemberRole.manager],
+        },
+      },
+    });
+
+    if (!member) {
+      throw new ForbiddenException('Insufficient permissions to delete task');
+    }
+
+    await this.prisma.task.delete({
+      where: { id },
+    });
+
+    return { message: 'Task deleted successfully' };
+  }
+
+  async getTaskStats(boardId: string, userId: string) {
+    // Check if user has access to the board
+    const board = await this.prisma.board.findFirst({
+      where: {
+        id: boardId,
+        workspace: {
+          members: {
+            some: {
+              userId,
+            },
+          },
+        },
+      },
+    });
+
+    if (!board) {
+      throw new ForbiddenException('Access denied to board');
+    }
+
+    const [
+      totalTasks,
+      completedTasks,
+      overdueTasks,
+      tasksByStatus,
+      tasksByPriority,
+      tasksByInitiative,
+    ] = await Promise.all([
+      this.prisma.task.count({
+        where: { boardId },
+      }),
+      this.prisma.task.count({
+        where: {
+          boardId,
+          taskStatus: {
+            title: {
+              contains: 'Done',
+            },
+          },
+        },
+      }),
+      this.prisma.task.count({
+        where: {
+          boardId,
+          dueDate: {
+            lt: new Date(),
+          },
+          taskStatus: {
+            title: {
+              not: {
+                contains: 'Done',
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.task.groupBy({
+        by: ['taskStatusId'],
+        where: { boardId },
+        _count: {
+          id: true,
+        },
+      }),
+      this.prisma.task.groupBy({
+        by: ['taskPriorityId'],
+        where: { boardId },
+        _count: {
+          id: true,
+        },
+      }),
+      this.prisma.task.groupBy({
+        by: ['taskInitiativeId'],
+        where: { boardId },
+        _count: {
+          id: true,
+        },
+      }),
+    ]);
+
+    return {
+      totalTasks,
+      completedTasks,
+      overdueTasks,
+      tasksByStatus,
+      tasksByPriority,
+      tasksByInitiative,
+    };
+  }
+}

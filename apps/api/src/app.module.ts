@@ -10,6 +10,11 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { WorkspaceMembersModule } from './modules/workspace-members/workspace-members.module';
 import { BoardsModule } from './modules/boards/boards.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { TasksModule } from './modules/tasks/tasks.module';
+import { TaskStatusModule } from './modules/task-status/task-status.module';
+import { TaskPriorityModule } from './modules/task-priority/task-priority.module';
+import { TaskInitiativeModule } from './modules/task-initiative/task-initiative.module';
+import { TaskMembersModule } from './modules/task-members/task-members.module';
 
 @Module({
   imports: [
@@ -22,6 +27,11 @@ import { UploadModule } from './modules/upload/upload.module';
     WorkspaceMembersModule,
     BoardsModule,
     UploadModule,
+    TasksModule,
+    TaskStatusModule,
+    TaskPriorityModule,
+    TaskInitiativeModule,
+    TaskMembersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
