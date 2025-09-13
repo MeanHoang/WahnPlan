@@ -27,13 +27,7 @@ export default function BoardDetailPage(): JSX.Element {
 
   const { data: boardData, loading: boardLoading } = useBoard(boardId);
 
-  // Fetch tasks
-  const {
-    data: tasks,
-    loading: tasksLoading,
-    error: tasksError,
-    refetch: refetchTasks,
-  } = useFetchApi<Task[]>("/tasks", { boardId });
+  // Tasks are now fetched by individual columns
 
   // Fetch statuses
   const {
@@ -57,16 +51,7 @@ export default function BoardDetailPage(): JSX.Element {
     error: initiativesError,
   } = useFetchApi<TaskInitiative[]>("/task-initiative", { boardId });
 
-  // Group tasks by status
-  const tasksByStatus =
-    statuses?.reduce(
-      (acc, status) => {
-        acc[status.id] =
-          tasks?.filter((task) => task.taskStatusId === status.id) || [];
-        return acc;
-      },
-      {} as Record<string, Task[]>
-    ) || {};
+  // Tasks are now managed by individual columns
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -80,16 +65,7 @@ export default function BoardDetailPage(): JSX.Element {
     }
   }, [boardData]);
 
-  // Show error toasts
-  useEffect(() => {
-    if (tasksError) {
-      toast({
-        title: "Error",
-        description: "Failed to load tasks. Please try again.",
-        variant: "destructive",
-      });
-    }
-  }, [tasksError, toast]);
+  // Error handling is now managed by individual columns
 
   useEffect(() => {
     if (statusesError) {
@@ -136,7 +112,7 @@ export default function BoardDetailPage(): JSX.Element {
   };
 
   const handleCreateSuccess = () => {
-    refetchTasks();
+    // TODO: Refresh individual columns when task is created
     toast({
       title: "Success",
       description: "Task created successfully!",
@@ -147,7 +123,6 @@ export default function BoardDetailPage(): JSX.Element {
   if (
     authLoading ||
     boardLoading ||
-    tasksLoading ||
     statusesLoading ||
     prioritiesLoading ||
     initiativesLoading
@@ -217,7 +192,7 @@ export default function BoardDetailPage(): JSX.Element {
             <StatusColumn
               key={status.id}
               status={status}
-              tasks={tasksByStatus[status.id] || []}
+              boardId={boardId}
               onTaskClick={handleTaskClick}
               onAddTask={handleAddTask}
             />

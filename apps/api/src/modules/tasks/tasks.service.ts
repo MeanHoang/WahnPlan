@@ -267,7 +267,13 @@ export class TasksService {
     return task;
   }
 
-  async findAll(boardId: string, userId: string, filters: TaskFiltersDto = {}) {
+  async findAll(
+    boardId: string,
+    userId: string,
+    filters: TaskFiltersDto = {},
+    page: number = 1,
+    limit: number = 10,
+  ) {
     // Check if user has access to the board
     const board = await this.prisma.board.findFirst({
       where: {
@@ -342,7 +348,16 @@ export class TasksService {
       };
     }
 
-    return this.prisma.task.findMany({
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const total = await this.prisma.task.count({
+      where: whereClause,
+    });
+
+    // Get paginated tasks
+    const tasks = await this.prisma.task.findMany({
       where: whereClause,
       include: {
         taskStatus: true,
@@ -411,7 +426,26 @@ export class TasksService {
       orderBy: {
         createdAt: 'desc',
       },
+      skip,
+      take: limit,
     });
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limit);
+    const hasNext = page < totalPages;
+    const hasPrev = page > 1;
+
+    return {
+      data: tasks,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext,
+        hasPrev,
+      },
+    };
   }
 
   async findOne(id: string, userId: string) {

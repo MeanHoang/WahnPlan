@@ -30,7 +30,7 @@ export class TasksController {
 
   @Get()
   findAll(@Query() query: FindTasksQueryDto, @Req() req: any) {
-    const { boardId, ...filters } = query;
+    const { boardId, page, limit, ...filters } = query;
 
     if (!boardId) {
       throw new BadRequestException('boardId query parameter is required');
@@ -40,6 +40,8 @@ export class TasksController {
       boardId,
       req.user.id,
       filters as TaskFiltersDto,
+      page || 1,
+      limit || 10,
     );
   }
 

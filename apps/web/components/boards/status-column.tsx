@@ -1,30 +1,63 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskCard } from "./task-card";
-import { Task, TaskStatus } from "@/types/task";
+import { Task, TaskStatus, PaginatedResponse } from "@/types/task";
+import { useFetchApi } from "@/hooks/use-fetch-api";
 
 interface StatusColumnProps {
   status: TaskStatus;
-  tasks: Task[];
+  boardId: string;
   onTaskClick?: (task: Task) => void;
   onAddTask?: (statusId: string) => void;
 }
 
 export function StatusColumn({
   status,
-  tasks,
+  boardId,
   onTaskClick,
   onAddTask,
 }: StatusColumnProps): JSX.Element {
-  const [showAll, setShowAll] = useState(false);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState<any>(null);
   const TASKS_PER_PAGE = 5;
 
-  const visibleTasks = showAll ? tasks : tasks.slice(0, TASKS_PER_PAGE);
-  const hasMoreTasks = tasks.length > TASKS_PER_PAGE;
-  const remainingTasks = tasks.length - TASKS_PER_PAGE;
+  const {
+    data: tasksResponse,
+    loading,
+    refetch,
+  } = useFetchApi<PaginatedResponse<Task>>("/tasks", {
+    boardId,
+    taskStatusId: status.id,
+    page: currentPage,
+    limit: TASKS_PER_PAGE,
+  });
+
+  // Update allTasks when new data comes in
+  useEffect(() => {
+    if (tasksResponse) {
+      if (currentPage === 1) {
+        // First page - replace all tasks
+        setAllTasks(tasksResponse.data);
+      } else {
+        // Subsequent pages - append to existing tasks, avoiding duplicates
+        setAllTasks((prev) => {
+          const existingIds = new Set(prev.map((task) => task.id));
+          const newTasks = tasksResponse.data.filter(
+            (task) => !existingIds.has(task.id)
+          );
+          return [...prev, ...newTasks];
+        });
+      }
+      setPagination(tasksResponse.pagination);
+    }
+  }, [tasksResponse, currentPage]);
+
+  const hasMoreTasks = pagination?.hasNext || false;
+  const remainingTasks = pagination ? pagination.total - allTasks.length : 0;
 
   return (
     <div
@@ -40,7 +73,7 @@ export function StatusColumn({
           />
           <h3 className="font-semibold text-gray-900">{status.title}</h3>
           <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-            {tasks.length}
+            {pagination?.total || 0}
           </span>
         </div>
       </div>
@@ -48,33 +81,27 @@ export function StatusColumn({
       {/* Tasks Container */}
       <div className="flex flex-col p-4 space-y-3 min-h-0 flex-1">
         {/* Visible Tasks */}
-        {visibleTasks.map((task) => (
-          <TaskCard key={task.id} task={task} onClick={onTaskClick} />
+        {allTasks.map((task, index) => (
+          <TaskCard
+            key={`${task.id}-${index}`}
+            task={task}
+            onClick={onTaskClick}
+          />
         ))}
 
         {/* Load More Button */}
-        {hasMoreTasks && !showAll && (
+        {hasMoreTasks && (
           <Button
             variant="ghost"
             size="sm"
             className="w-full text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-            onClick={() => setShowAll(true)}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+            disabled={loading}
           >
             <ChevronDown className="h-4 w-4 mr-2" />
-            Load {remainingTasks} more
-          </Button>
-        )}
-
-        {/* Show Less Button */}
-        {hasMoreTasks && showAll && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-            onClick={() => setShowAll(false)}
-          >
-            <ChevronDown className="h-4 w-4 mr-2 rotate-180" />
-            Show less
+            {loading
+              ? "Loading..."
+              : `Load ${Math.min(remainingTasks, TASKS_PER_PAGE)} more`}
           </Button>
         )}
 
