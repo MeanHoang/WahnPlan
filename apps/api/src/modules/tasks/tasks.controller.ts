@@ -9,11 +9,13 @@ import {
   UseGuards,
   Req,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskFiltersDto } from './dto/task-filters.dto';
+import { FindTasksQueryDto } from './dto/find-tasks-query.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('tasks')
@@ -27,16 +29,18 @@ export class TasksController {
   }
 
   @Get()
-  findAll(
-    @Query('boardId') boardId: string,
-    @Query() filters: TaskFiltersDto,
-    @Req() req: any,
-  ) {
+  findAll(@Query() query: FindTasksQueryDto, @Req() req: any) {
+    const { boardId, ...filters } = query;
+
     if (!boardId) {
-      throw new Error('boardId query parameter is required');
+      throw new BadRequestException('boardId query parameter is required');
     }
 
-    return this.tasksService.findAll(boardId, req.user.id, filters);
+    return this.tasksService.findAll(
+      boardId,
+      req.user.id,
+      filters as TaskFiltersDto,
+    );
   }
 
   @Get(':id')

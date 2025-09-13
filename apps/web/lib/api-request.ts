@@ -22,7 +22,9 @@ export async function apiRequest<T>(
         searchParams.append(key, String(value));
       }
     });
-    fullUrl += `?${searchParams.toString()}`;
+    // Only add query string if URL doesn't already have one
+    const separator = fullUrl.includes("?") ? "&" : "?";
+    fullUrl += `${separator}${searchParams.toString()}`;
   }
 
   // Get auth token
