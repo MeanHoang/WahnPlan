@@ -40,6 +40,24 @@ export class WorkspaceMembersController {
     );
   }
 
+  @Post('transfer-ownership')
+  transferOwnership(
+    @Param('id') id: string,
+    @Body() transferOwnershipDto: TransferOwnershipDto,
+    @Req() req: any,
+  ) {
+    return this.workspaceMembersService.transferOwnership(
+      id,
+      transferOwnershipDto.newOwnerId,
+      req.user.id,
+    );
+  }
+
+  @Post('leave')
+  leaveWorkspace(@Param('id') id: string, @Req() req: any) {
+    return this.workspaceMembersService.leaveWorkspace(id, req.user.id);
+  }
+
   @Patch(':memberId/role')
   updateMemberRole(
     @Param('id') id: string,
@@ -62,23 +80,5 @@ export class WorkspaceMembersController {
     @Req() req: any,
   ) {
     return this.workspaceMembersService.removeMember(id, memberId, req.user.id);
-  }
-
-  @Post('leave')
-  leaveWorkspace(@Param('id') id: string, @Req() req: any) {
-    return this.workspaceMembersService.leaveWorkspace(id, req.user.id);
-  }
-
-  @Post('transfer-ownership')
-  transferOwnership(
-    @Param('id') id: string,
-    @Body() transferOwnershipDto: TransferOwnershipDto,
-    @Req() req: any,
-  ) {
-    return this.workspaceMembersService.transferOwnership(
-      id,
-      transferOwnershipDto.newOwnerId,
-      req.user.id,
-    );
   }
 }
