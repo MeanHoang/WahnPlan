@@ -12,6 +12,7 @@ import {
 import { WorkspaceMembersService } from './workspace-members.service';
 import { InviteMemberDto } from './dto/invite-member.dto';
 import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
+import { TransferOwnershipDto } from './dto/transfer-ownership.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('workspaces/:id/members')
@@ -66,5 +67,18 @@ export class WorkspaceMembersController {
   @Post('leave')
   leaveWorkspace(@Param('id') id: string, @Req() req: any) {
     return this.workspaceMembersService.leaveWorkspace(id, req.user.id);
+  }
+
+  @Post('transfer-ownership')
+  transferOwnership(
+    @Param('id') id: string,
+    @Body() transferOwnershipDto: TransferOwnershipDto,
+    @Req() req: any,
+  ) {
+    return this.workspaceMembersService.transferOwnership(
+      id,
+      transferOwnershipDto.newOwnerId,
+      req.user.id,
+    );
   }
 }

@@ -11,14 +11,17 @@ import {
   Mail,
   User,
   Building,
+  Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useCreateApi } from "@/hooks/use-create-api";
+import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/api-request";
 import { Workspace } from "@/types/workspace-core";
 import { InviteMemberModal } from "./invite-member-modal";
+import { TransferOwnershipModal } from "./transfer-ownership-modal";
 
 interface WorkspaceMember {
   id: string;
@@ -50,6 +53,8 @@ export function MembersContent({
 }: MembersContentProps): JSX.Element {
   const [searchTerm, setSearchTerm] = useState("");
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const { toast } = useToast();
 
   const { data: workspace, loading: workspaceLoading } = useFetchApi<Workspace>(
     `/workspaces/${workspaceId}`
@@ -59,6 +64,7 @@ export function MembersContent({
     data: members,
     loading,
     error,
+    refetch: refetchMembers,
   } = useFetchApi<WorkspaceMember[]>(`/workspaces/${workspaceId}/members`);
 
   // Get current user info
@@ -94,6 +100,22 @@ export function MembersContent({
     } catch (error) {
       console.error("Error removing member:", error);
     }
+  };
+
+  const handleLeaveWorkspace = () => {
+    // If user is owner, show warning about transferring ownership
+    if (currentUserRole === "owner") {
+      toast({
+        title: "Transfer Ownership Required",
+        description:
+          "You must transfer ownership to another member before leaving the workspace.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // If not owner, proceed with leaving
+    leaveWorkspace({});
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -276,13 +298,21 @@ export function MembersContent({
                 {/* Action Buttons */}
                 <div className="flex items-center space-x-1">
                   <Button variant="outline" size="sm" className="text-xs">
-                    <Eye className="h-3 w-3 mr-1" />
-                    View boards (2)
-                  </Button>
-                  <Button variant="outline" size="sm" className="text-xs">
                     <Shield className="h-3 w-3 mr-1" />
                     {getRoleDisplayName(member.role)}
                   </Button>
+                  {/* Show Transfer Ownership button only for owner */}
+                  {currentUserRole === "owner" && member.role !== "owner" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs text-yellow-600 hover:text-yellow-700"
+                      onClick={() => setShowTransferModal(true)}
+                    >
+                      <Crown className="h-3 w-3 mr-1" />
+                      Transfer Ownership
+                    </Button>
+                  )}
                   {/* Show appropriate action based on user role and current user */}
                   {currentUser && (
                     <>
@@ -307,7 +337,7 @@ export function MembersContent({
                           variant="outline"
                           size="sm"
                           className="text-xs text-red-600 hover:text-red-700"
-                          onClick={() => leaveWorkspace({})}
+                          onClick={handleLeaveWorkspace}
                           disabled={isLeaving}
                         >
                           <X className="h-3 w-3 mr-1" />
@@ -328,6 +358,23 @@ export function MembersContent({
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
         workspaceId={workspaceId}
+        onSuccess={() => {
+          refetchMembers();
+        }}
+      />
+
+      {/* Transfer Ownership Modal */}
+      <TransferOwnershipModal
+        isOpen={showTransferModal}
+        onClose={() => setShowTransferModal(false)}
+        workspaceId={workspaceId}
+        currentOwnerName={
+          currentUser?.fullname || currentUser?.publicName || currentUser?.email
+        }
+        onSuccess={() => {
+          // Refresh the page to update user role
+          window.location.reload();
+        }}
       />
     </div>
   );

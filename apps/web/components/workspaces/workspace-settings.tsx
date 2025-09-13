@@ -14,6 +14,7 @@ import {
   Globe,
   Lock,
   Eye,
+  Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useUpdateApi } from "@/hooks/use-update-api";
 import { useToast } from "@/hooks/use-toast";
 import { Workspace } from "@/types/workspace-core";
+import { TransferOwnershipModal } from "./transfer-ownership-modal";
 
 interface WorkspaceSettingsProps {
   workspaceId: string;
@@ -46,11 +48,11 @@ export function WorkspaceSettings({
   workspaceId,
 }: WorkspaceSettingsProps): JSX.Element {
   const [isEditing, setIsEditing] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     visibility: "private",
-    allowInvites: true,
   });
   const { toast } = useToast();
 
@@ -99,7 +101,6 @@ export function WorkspaceSettings({
         name: workspace.name || "",
         description: workspace.description || "",
         visibility: workspace.visibility || "private",
-        allowInvites: workspace.allowInvites ?? true,
       });
     }
   }, [workspace]);
@@ -121,7 +122,6 @@ export function WorkspaceSettings({
         name: workspace.name || "",
         description: workspace.description || "",
         visibility: workspace.visibility || "private",
-        allowInvites: workspace.allowInvites ?? true,
       });
     }
     setIsEditing(false);
@@ -280,21 +280,6 @@ export function WorkspaceSettings({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="allowInvites"
-                  checked={formData.allowInvites}
-                  onChange={(e) =>
-                    handleInputChange("allowInvites", e.target.checked)
-                  }
-                  disabled={!isEditing || !isOwner}
-                  className="rounded border-gray-300"
-                />
-                <Label htmlFor="allowInvites">
-                  Allow members to invite others
-                </Label>
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -338,14 +323,26 @@ export function WorkspaceSettings({
               <CardTitle className="text-lg">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full justify-start">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() =>
+                  (window.location.href = `/workspace/${workspaceId}/members`)
+                }
+              >
                 <Users className="h-4 w-4 mr-2" />
                 Manage Members
               </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Eye className="h-4 w-4 mr-2" />
-                View Activity
-              </Button>
+              {isOwner && (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-yellow-600 hover:text-yellow-700"
+                  onClick={() => setShowTransferModal(true)}
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  Transfer Ownership
+                </Button>
+              )}
               <Button
                 variant="outline"
                 className="w-full justify-start text-red-600 hover:text-red-700"
@@ -357,6 +354,20 @@ export function WorkspaceSettings({
           </Card>
         </div>
       </div>
+
+      {/* Transfer Ownership Modal */}
+      <TransferOwnershipModal
+        isOpen={showTransferModal}
+        onClose={() => setShowTransferModal(false)}
+        workspaceId={workspaceId}
+        currentOwnerName={
+          currentUser?.fullname || currentUser?.publicName || currentUser?.email
+        }
+        onSuccess={() => {
+          // Refresh the page to update user role
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

@@ -310,4 +310,61 @@ export class WorkspaceMembersService {
 
     return { message: 'Left workspace successfully' };
   }
+
+  async transferOwnership(
+    workspaceId: string,
+    newOwnerId: string,
+    currentOwnerId: string,
+  ) {
+    // Check if current user is the owner
+    const currentOwner = await this.prisma.workspaceMember.findFirst({
+      where: {
+        workspaceId,
+        userId: currentOwnerId,
+        role: WorkspaceMemberRole.owner,
+      },
+    });
+
+    if (!currentOwner) {
+      throw new ForbiddenException(
+        'Only workspace owners can transfer ownership',
+      );
+    }
+
+    // Check if new owner exists in the workspace
+    const newOwner = await this.prisma.workspaceMember.findFirst({
+      where: {
+        workspaceId,
+        userId: newOwnerId,
+      },
+    });
+
+    if (!newOwner) {
+      throw new NotFoundException(
+        'New owner is not a member of this workspace',
+      );
+    }
+
+    // Prevent transferring to the same user
+    if (newOwnerId === currentOwnerId) {
+      throw new BadRequestException('Cannot transfer ownership to yourself');
+    }
+
+    // Use transaction to ensure both updates happen atomically
+    await this.prisma.$transaction(async (prisma) => {
+      // Update current owner to member
+      await prisma.workspaceMember.update({
+        where: { id: currentOwner.id },
+        data: { role: WorkspaceMemberRole.member },
+      });
+
+      // Update new owner to owner
+      await prisma.workspaceMember.update({
+        where: { id: newOwner.id },
+        data: { role: WorkspaceMemberRole.owner },
+      });
+    });
+
+    return { message: 'Ownership transferred successfully' };
+  }
 }

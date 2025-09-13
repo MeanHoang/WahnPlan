@@ -5,27 +5,43 @@ import { X, Link, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCreateApi } from "@/hooks/use-create-api";
+import { useToast } from "@/hooks/use-toast";
 
 interface InviteMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   workspaceId: string;
+  onSuccess?: () => void;
 }
 
 export function InviteMemberModal({
   isOpen,
   onClose,
   workspaceId,
+  onSuccess,
 }: InviteMemberModalProps): JSX.Element {
   const [email, setEmail] = useState("");
   const [isCreatingLink, setIsCreatingLink] = useState(false);
+  const { toast } = useToast();
 
   const { mutate: inviteMember, loading } = useCreateApi(
     `/workspaces/${workspaceId}/members/invite`,
     {
       onSuccess: () => {
+        toast({
+          title: "Success",
+          description: "Member invited successfully",
+        });
         setEmail("");
         onClose();
+        onSuccess?.();
+      },
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to invite member",
+          variant: "destructive",
+        });
       },
     }
   );
