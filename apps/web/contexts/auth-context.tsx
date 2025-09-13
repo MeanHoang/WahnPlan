@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { User, AuthResponse } from "@/types/auth";
 import { apiService } from "@/lib/api-service";
 
@@ -18,6 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   // Load user from localStorage on mount
   useEffect(() => {
@@ -70,6 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     setUser(null);
+    router.push("/login");
   };
 
   const refreshAuth = async () => {
