@@ -76,11 +76,6 @@ export function MembersContent({
   );
   const currentUserRole = currentUserMember?.role;
 
-  // Debug: Log current user role
-  console.log("Current user:", currentUser);
-  console.log("Current user role in workspace:", currentUserRole);
-  console.log("Members:", members);
-
   const { mutate: leaveWorkspace, loading: isLeaving } = useCreateApi(
     `/workspaces/${workspaceId}/members/leave`,
     {

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFetchApi } from "@/hooks/use-fetch-api";
+import { apiRequest } from "@/lib/api-request";
 import { Workspace } from "@/types/workspace-core";
 import { WorkspaceItems } from "@/components/workspaces/workspace-items";
 
@@ -48,16 +49,13 @@ export function Sidebar({
         const roles: Record<string, string> = {};
         for (const workspace of workspaces) {
           try {
-            const response = await fetch(
-              `/api/workspaces/${workspace.id}/members`
+            const members = await apiRequest<any[]>(
+              `/workspaces/${workspace.id}/members`
             );
-            if (response.ok) {
-              const members = await response.json();
-              const currentUserMember = members.find(
-                (member: any) => member.user.id === currentUser.id
-              );
-              roles[workspace.id] = currentUserMember?.role || "member";
-            }
+            const currentUserMember = members.find(
+              (member: any) => member.user.id === currentUser.id
+            );
+            roles[workspace.id] = currentUserMember?.role || "member";
           } catch (error) {
             console.error(
               `Error fetching role for workspace ${workspace.id}:`,
@@ -98,7 +96,7 @@ export function Sidebar({
         router.push(`/workspace/${workspaceId}/settings`);
         break;
       default:
-        console.log(`Unknown item: ${item}`);
+        break;
     }
   };
 

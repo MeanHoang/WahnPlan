@@ -29,7 +29,7 @@ export function useUserProfile(userId: string, enabled: boolean) {
 export function useCreateUser() {
   return useCreateApi<CreateUserData, User>("/users", {
     onSuccess: (user) => {
-      console.log("User created:", user);
+      // User created successfully
     },
     onError: (error) => {
       console.error("Failed to create user:", error);
@@ -41,7 +41,7 @@ export function useCreateUser() {
 export function useUpdateUser(userId: string) {
   return useUpdateApi<UpdateUserData, User>(`/users/${userId}`, {
     onSuccess: (user) => {
-      console.log("User updated:", user);
+      // User updated successfully
     },
   });
 }
@@ -50,7 +50,7 @@ export function useUpdateUser(userId: string) {
 export function useDeleteUser(userId: string) {
   return useDeleteApi(`/users/${userId}`, {
     onSuccess: () => {
-      console.log("User deleted");
+      // User deleted successfully
     },
   });
 }
@@ -59,7 +59,7 @@ export function useDeleteUser(userId: string) {
 export function useCreateProject() {
   return useCreateApi<CreateProjectData, Project>("/projects", {
     onSuccess: (project) => {
-      console.log("Project created:", project);
+      // Project created successfully
       // You can add navigation or other side effects here
     },
     onError: (error) => {
@@ -72,7 +72,7 @@ export function useCreateProject() {
 export function useUploadFile() {
   return useCreateApi<FormData, { url: string }>("/upload", {
     onSuccess: (data) => {
-      console.log("File uploaded:", data.url);
+      // File uploaded successfully
     },
   });
 }

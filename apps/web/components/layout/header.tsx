@@ -52,10 +52,8 @@ export function Header({
             <Menu className="h-5 w-5 text-gray-600" />
           </Button>
 
-          <Button variant="ghost" size="sm" className="p-2">
-            <Grid3X3 className="h-5 w-5 text-gray-600" />
-          </Button>
           <div className="flex items-center space-x-2">
+            {/* to do add logo here */}
             <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
               <div className="w-4 h-4 bg-white rounded-sm"></div>
             </div>

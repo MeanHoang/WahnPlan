@@ -44,10 +44,7 @@ export default function DashboardPage(): JSX.Element {
   }
 
   return (
-    <DashboardLayout
-      onSearch={(query: string) => console.log("Search:", query)}
-      onCreateClick={() => console.log("Create clicked")}
-    >
+    <DashboardLayout onSearch={(query: string) => {}} onCreateClick={() => {}}>
       <div className="px-12 py-8">
         {/* Welcome Section */}
         <div className="flex justify-between items-center mb-8">
