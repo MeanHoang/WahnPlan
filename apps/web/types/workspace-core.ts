@@ -36,11 +36,19 @@ export interface WorkspaceMember {
 
 export interface Board {
   id: string;
+  workspaceId: string;
   title: string;
   subtitle?: string;
   createdAt: string;
   updatedAt: string;
+  workspace: {
+    id: string;
+    name: string;
+  };
   _count: {
     tasks: number;
+    taskStatuses: number;
+    taskPriorities: number;
+    taskInitiatives: number;
   };
 }
