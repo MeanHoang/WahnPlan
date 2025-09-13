@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ChevronRight,
   ExternalLink,
@@ -27,6 +28,7 @@ export function UserDropdown({
   onClose,
 }: UserDropdownProps): JSX.Element | null {
   const { user, logout } = useAuth();
+  const router = useRouter();
 
   const getInitials = (name: string) => {
     return name
@@ -102,6 +104,10 @@ export function UserDropdown({
                 variant="ghost"
                 size="sm"
                 className="w-full justify-start text-sm"
+                onClick={() => {
+                  router.push("/profile");
+                  onClose();
+                }}
               >
                 <User className="mr-2 h-4 w-4" />
                 Profile and visibility

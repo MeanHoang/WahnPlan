@@ -47,6 +47,18 @@ class ApiService {
       body: { email },
     });
   }
+
+  // Profile APIs
+  async getProfile(): Promise<User> {
+    return apiRequest<User>("/users/profile");
+  }
+
+  async updateProfile(data: Partial<User>): Promise<User> {
+    return apiRequest<User>("/users/profile", {
+      method: "PUT",
+      body: data,
+    });
+  }
 }
 
 export const apiService = new ApiService();

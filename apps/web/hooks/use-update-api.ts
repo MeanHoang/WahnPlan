@@ -3,7 +3,12 @@ import { apiRequest } from "@/lib/api-request";
 
 // useUpdateApi Hook
 export function useUpdateApi<TData, TResponse>(
-  url: string,
+  config:
+    | string
+    | {
+        endpoint: string;
+        method?: "PUT" | "PATCH" | "POST";
+      },
   options?: {
     onSuccess?: (data: TResponse) => void;
     onError?: (error: Error) => void;
@@ -17,8 +22,13 @@ export function useUpdateApi<TData, TResponse>(
       try {
         setLoading(true);
         setError(null);
-        const result = await apiRequest<TResponse>(url, {
-          method: "PATCH",
+
+        const endpoint = typeof config === "string" ? config : config.endpoint;
+        const method =
+          typeof config === "string" ? "PATCH" : config.method || "PATCH";
+
+        const result = await apiRequest<TResponse>(endpoint, {
+          method,
           body: data,
         });
         options?.onSuccess?.(result);
@@ -32,7 +42,7 @@ export function useUpdateApi<TData, TResponse>(
         setLoading(false);
       }
     },
-    [url, options]
+    [config, options]
   );
 
   return { mutate, loading, error };
