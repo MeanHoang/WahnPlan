@@ -39,6 +39,7 @@ interface TaskTableViewProps {
     baIds: string[];
     memberIds: string[];
     dueDateRange?: DateRange;
+    createdAtRange?: DateRange;
   };
 }
 
@@ -99,6 +100,20 @@ export function TaskTableView({
       params.set(
         "dueDateTo",
         filters.dueDateRange.to.toISOString().split("T")[0] || ""
+      );
+    }
+
+    // Add created date range filters
+    if (filters?.createdAtRange?.from) {
+      params.set(
+        "createdAtFrom",
+        filters.createdAtRange.from.toISOString().split("T")[0] || ""
+      );
+    }
+    if (filters?.createdAtRange?.to) {
+      params.set(
+        "createdAtTo",
+        filters.createdAtRange.to.toISOString().split("T")[0] || ""
       );
     }
 

@@ -455,6 +455,19 @@ export class TasksService {
       }
     }
 
+    // Handle created date range filters
+    if (filters.createdAtFrom || filters.createdAtTo) {
+      whereClause.createdAt = {};
+
+      if (filters.createdAtFrom) {
+        whereClause.createdAt.gte = new Date(filters.createdAtFrom);
+      }
+
+      if (filters.createdAtTo) {
+        whereClause.createdAt.lte = new Date(filters.createdAtTo);
+      }
+    }
+
     // Handle overdue filter (this should not conflict with date range filters)
     if (filters.isOverdue && !filters.dueDateFrom && !filters.dueDateTo) {
       whereClause.dueDate = {

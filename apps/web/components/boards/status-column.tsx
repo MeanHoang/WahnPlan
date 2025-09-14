@@ -26,6 +26,7 @@ interface StatusColumnProps {
   selectedBaIds?: string[];
   selectedMemberIds?: string[];
   selectedDueDateRange?: DateRange;
+  selectedCreatedAtRange?: DateRange;
   refreshTrigger?: number; // Add refresh trigger prop
 }
 
@@ -42,6 +43,7 @@ export function StatusColumn({
   selectedBaIds = [],
   selectedMemberIds = [],
   selectedDueDateRange,
+  selectedCreatedAtRange,
   refreshTrigger,
 }: StatusColumnProps): JSX.Element {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
@@ -92,6 +94,16 @@ export function StatusColumn({
         selectedDueDateRange.to.toISOString().split("T")[0] || "";
     }
 
+    // Add created date range filters
+    if (selectedCreatedAtRange?.from) {
+      params.createdAtFrom =
+        selectedCreatedAtRange.from.toISOString().split("T")[0] || "";
+    }
+    if (selectedCreatedAtRange?.to) {
+      params.createdAtTo =
+        selectedCreatedAtRange.to.toISOString().split("T")[0] || "";
+    }
+
     return params;
   };
 
@@ -113,6 +125,7 @@ export function StatusColumn({
     selectedBaIds,
     selectedMemberIds,
     selectedDueDateRange,
+    selectedCreatedAtRange,
   ]);
 
   // Refetch data when refreshTrigger changes (e.g., after task move)

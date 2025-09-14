@@ -78,6 +78,8 @@ export function BoardViewRenderer({
   const [selectedBaIds, setSelectedBaIds] = useState<string[]>([]);
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const [selectedDueDateRange, setSelectedDueDateRange] = useState<DateRange>();
+  const [selectedCreatedAtRange, setSelectedCreatedAtRange] =
+    useState<DateRange>();
   const [showFilters, setShowFilters] = useState(false);
 
   // Refresh trigger for columns
@@ -136,6 +138,20 @@ export function BoardViewRenderer({
       );
     }
 
+    // Add created date range filters
+    if (selectedCreatedAtRange?.from) {
+      params.set(
+        "createdAtFrom",
+        selectedCreatedAtRange.from.toISOString().split("T")[0] || ""
+      );
+    }
+    if (selectedCreatedAtRange?.to) {
+      params.set(
+        "createdAtTo",
+        selectedCreatedAtRange.to.toISOString().split("T")[0] || ""
+      );
+    }
+
     Object.entries(additionalParams).forEach(([key, value]) => {
       if (value) params.set(key, value);
     });
@@ -157,6 +173,7 @@ export function BoardViewRenderer({
     baIds: string[];
     memberIds: string[];
     dueDateRange?: DateRange;
+    createdAtRange?: DateRange;
   }) => {
     setSelectedStatusIds(filters.statusIds);
     setSelectedPriorityIds(filters.priorityIds);
@@ -166,6 +183,7 @@ export function BoardViewRenderer({
     setSelectedBaIds(filters.baIds);
     setSelectedMemberIds(filters.memberIds);
     setSelectedDueDateRange(filters.dueDateRange);
+    setSelectedCreatedAtRange(filters.createdAtRange);
   };
   const renderView = () => {
     switch (view) {
@@ -187,6 +205,7 @@ export function BoardViewRenderer({
                 selectedBaIds={selectedBaIds}
                 selectedMemberIds={selectedMemberIds}
                 selectedDueDateRange={selectedDueDateRange}
+                selectedCreatedAtRange={selectedCreatedAtRange}
                 refreshTrigger={refreshTrigger}
               />
             ))}
@@ -239,6 +258,7 @@ export function BoardViewRenderer({
               baIds: selectedBaIds,
               memberIds: selectedMemberIds,
               dueDateRange: selectedDueDateRange,
+              createdAtRange: selectedCreatedAtRange,
             }}
           />
         );
@@ -275,6 +295,7 @@ export function BoardViewRenderer({
             selectedBaIds={selectedBaIds}
             selectedMemberIds={selectedMemberIds}
             selectedDueDateRange={selectedDueDateRange}
+            selectedCreatedAtRange={selectedCreatedAtRange}
             onFiltersChange={handleFiltersChange}
           />
         )}

@@ -108,4 +108,12 @@ export class FindTasksQueryDto {
   @IsOptional()
   @IsString()
   dueDateTo?: string;
+
+  @IsOptional()
+  @IsString()
+  createdAtFrom?: string;
+
+  @IsOptional()
+  @IsString()
+  createdAtTo?: string;
 }

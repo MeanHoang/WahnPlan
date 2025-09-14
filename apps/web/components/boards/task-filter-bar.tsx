@@ -31,6 +31,7 @@ interface TaskFilterBarProps {
   selectedBaIds: string[];
   selectedMemberIds: string[];
   selectedDueDateRange?: DateRange;
+  selectedCreatedAtRange?: DateRange;
   onFiltersChange: (filters: {
     statusIds: string[];
     priorityIds: string[];
@@ -40,6 +41,7 @@ interface TaskFilterBarProps {
     baIds: string[];
     memberIds: string[];
     dueDateRange?: DateRange;
+    createdAtRange?: DateRange;
   }) => void;
 }
 
@@ -56,6 +58,7 @@ export function TaskFilterBar({
   selectedBaIds,
   selectedMemberIds,
   selectedDueDateRange,
+  selectedCreatedAtRange,
   onFiltersChange,
 }: TaskFilterBarProps): JSX.Element {
   const handleClearAllFilters = () => {
@@ -68,6 +71,7 @@ export function TaskFilterBar({
       baIds: [],
       memberIds: [],
       dueDateRange: undefined,
+      createdAtRange: undefined,
     });
   };
 
@@ -80,7 +84,8 @@ export function TaskFilterBar({
       selectedReviewerIds.length +
       selectedBaIds.length +
       selectedMemberIds.length +
-      (selectedDueDateRange?.from || selectedDueDateRange?.to ? 1 : 0)
+      (selectedDueDateRange?.from || selectedDueDateRange?.to ? 1 : 0) +
+      (selectedCreatedAtRange?.from || selectedCreatedAtRange?.to ? 1 : 0)
     );
   };
 
@@ -108,6 +113,7 @@ export function TaskFilterBar({
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
                   dueDateRange: selectedDueDateRange,
+                  createdAtRange: selectedCreatedAtRange,
                 });
               }}
               placeholder="Priority"
@@ -133,6 +139,7 @@ export function TaskFilterBar({
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
                   dueDateRange: selectedDueDateRange,
+                  createdAtRange: selectedCreatedAtRange,
                 });
               }}
               placeholder="Status"
@@ -158,6 +165,7 @@ export function TaskFilterBar({
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
                   dueDateRange: selectedDueDateRange,
+                  createdAtRange: selectedCreatedAtRange,
                 });
               }}
               placeholder="Initiative"
@@ -185,6 +193,7 @@ export function TaskFilterBar({
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
                   dueDateRange: selectedDueDateRange,
+                  createdAtRange: selectedCreatedAtRange,
                 });
               }}
               placeholder="Assignee"
@@ -212,6 +221,7 @@ export function TaskFilterBar({
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
                   dueDateRange: selectedDueDateRange,
+                  createdAtRange: selectedCreatedAtRange,
                 });
               }}
               placeholder="Reviewer"
@@ -239,6 +249,7 @@ export function TaskFilterBar({
                   baIds: selected,
                   memberIds: selectedMemberIds,
                   dueDateRange: selectedDueDateRange,
+                  createdAtRange: selectedCreatedAtRange,
                 });
               }}
               placeholder="BA"
@@ -266,6 +277,7 @@ export function TaskFilterBar({
                   baIds: selectedBaIds,
                   memberIds: selected,
                   dueDateRange: selectedDueDateRange,
+                  createdAtRange: selectedCreatedAtRange,
                 });
               }}
               placeholder="Member"
@@ -286,9 +298,31 @@ export function TaskFilterBar({
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
                   dueDateRange: range,
+                  createdAtRange: selectedCreatedAtRange,
                 });
               }}
               placeholder="Due Date"
+            />
+          </div>
+
+          {/* Created At Filter */}
+          <div className="min-w-[200px]">
+            <DateRangePicker
+              value={selectedCreatedAtRange}
+              onChange={(range) => {
+                onFiltersChange({
+                  statusIds: selectedStatusIds,
+                  priorityIds: selectedPriorityIds,
+                  initiativeIds: selectedInitiativeIds,
+                  assigneeIds: selectedAssigneeIds,
+                  reviewerIds: selectedReviewerIds,
+                  baIds: selectedBaIds,
+                  memberIds: selectedMemberIds,
+                  dueDateRange: selectedDueDateRange,
+                  createdAtRange: range,
+                });
+              }}
+              placeholder="Created Date"
             />
           </div>
         </div>
@@ -327,6 +361,7 @@ export function TaskFilterBar({
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
                   dueDateRange: selectedDueDateRange,
+                  createdAtRange: selectedCreatedAtRange,
                 });
               }}
             />
@@ -349,6 +384,7 @@ export function TaskFilterBar({
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
                   dueDateRange: selectedDueDateRange,
+                  createdAtRange: selectedCreatedAtRange,
                 });
               }}
             />
@@ -371,6 +407,7 @@ export function TaskFilterBar({
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
                   dueDateRange: selectedDueDateRange,
+                  createdAtRange: selectedCreatedAtRange,
                 });
               }}
             />
@@ -394,6 +431,7 @@ export function TaskFilterBar({
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
                   dueDateRange: selectedDueDateRange,
+                  createdAtRange: selectedCreatedAtRange,
                 });
               }}
             />
@@ -417,6 +455,7 @@ export function TaskFilterBar({
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
                   dueDateRange: selectedDueDateRange,
+                  createdAtRange: selectedCreatedAtRange,
                 });
               }}
             />
@@ -438,6 +477,7 @@ export function TaskFilterBar({
                   baIds: selectedBaIds.filter((id) => id !== baId),
                   memberIds: selectedMemberIds,
                   dueDateRange: selectedDueDateRange,
+                  createdAtRange: selectedCreatedAtRange,
                 });
               }}
             />
@@ -459,6 +499,7 @@ export function TaskFilterBar({
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds.filter((id) => id !== memberId),
                   dueDateRange: selectedDueDateRange,
+                  createdAtRange: selectedCreatedAtRange,
                 });
               }}
             />
@@ -478,6 +519,7 @@ export function TaskFilterBar({
                     baIds: selectedBaIds,
                     memberIds: selectedMemberIds,
                     dueDateRange: undefined,
+                    createdAtRange: selectedCreatedAtRange,
                   });
                 }}
               >
@@ -487,6 +529,35 @@ export function TaskFilterBar({
                   : selectedDueDateRange.from
                     ? `From ${selectedDueDateRange.from.toLocaleDateString()}`
                     : `Until ${selectedDueDateRange.to?.toLocaleDateString()}`}
+                <X className="h-3 w-3 ml-1 cursor-pointer" />
+              </Badge>
+            ) : null}
+
+            {/* Created At Filter Display */}
+            {selectedCreatedAtRange?.from || selectedCreatedAtRange?.to ? (
+              <Badge
+                variant="secondary"
+                className="bg-green-100 text-green-800 hover:bg-green-200"
+                onClick={() => {
+                  onFiltersChange({
+                    statusIds: selectedStatusIds,
+                    priorityIds: selectedPriorityIds,
+                    initiativeIds: selectedInitiativeIds,
+                    assigneeIds: selectedAssigneeIds,
+                    reviewerIds: selectedReviewerIds,
+                    baIds: selectedBaIds,
+                    memberIds: selectedMemberIds,
+                    dueDateRange: selectedDueDateRange,
+                    createdAtRange: undefined,
+                  });
+                }}
+              >
+                Created Date:{" "}
+                {selectedCreatedAtRange.from && selectedCreatedAtRange.to
+                  ? `${selectedCreatedAtRange.from.toLocaleDateString()} - ${selectedCreatedAtRange.to.toLocaleDateString()}`
+                  : selectedCreatedAtRange.from
+                    ? `From ${selectedCreatedAtRange.from.toLocaleDateString()}`
+                    : `Until ${selectedCreatedAtRange.to?.toLocaleDateString()}`}
                 <X className="h-3 w-3 ml-1 cursor-pointer" />
               </Badge>
             ) : null}

@@ -135,4 +135,12 @@ export class TaskFiltersDto {
   @IsOptional()
   @IsString()
   dueDateTo?: string;
+
+  @IsOptional()
+  @IsString()
+  createdAtFrom?: string;
+
+  @IsOptional()
+  @IsString()
+  createdAtTo?: string;
 }
