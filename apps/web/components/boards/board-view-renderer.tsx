@@ -107,9 +107,9 @@ export function BoardViewRenderer({
   };
 
   return (
-    <div className="flex-1 p-6 bg-gray-50">
+    <div className="flex-1 p-6 bg-gray-50 flex flex-col">
       <div
-        className="flex gap-6 overflow-x-auto pb-4 h-full"
+        className="flex gap-6 overflow-x-auto flex-1"
         style={{ alignItems: "flex-start" }}
       >
         {renderView()}

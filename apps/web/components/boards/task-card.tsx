@@ -49,7 +49,7 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
 
   return (
     <div
-      className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-white rounded-2xl border-2 border-gray-200 p-5 shadow-sm hover:shadow-lg hover:border-gray-300 transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5"
       onClick={() => onClick?.(task)}
     >
       {/* Title */}
@@ -58,17 +58,17 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
       </h3>
 
       {/* Tags */}
-      <div className="flex flex-wrap gap-1 mb-3">
+      <div className="flex flex-wrap gap-2 mb-4">
         {task.taskPriority && (
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.taskPriority)}`}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium ${getPriorityColor(task.taskPriority)}`}
           >
             {task.taskPriority.name}
           </span>
         )}
         {task.taskInitiative && (
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${getInitiativeColor(task.taskInitiative)}`}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium ${getInitiativeColor(task.taskInitiative)}`}
           >
             {task.taskInitiative.name}
           </span>
@@ -77,8 +77,8 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
 
       {/* Date */}
       {task.dueDate && (
-        <div className="flex items-center gap-2 mb-3 text-xs text-gray-500">
-          <Calendar className="h-3 w-3" />
+        <div className="flex items-center gap-2 mb-4 text-xs text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
+          <Calendar className="h-3 w-3 text-gray-500" />
           <span>{formatDate(task.dueDate)}</span>
         </div>
       )}
@@ -86,11 +86,11 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
       {/* Footer */}
       <div className="flex items-center justify-between">
         {/* Assignees */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {task.taskMembers.slice(0, 3).map((member) => (
             <div
               key={member.id}
-              className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs font-medium text-gray-700"
+              className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-xs font-semibold text-blue-700 border border-blue-200 shadow-sm"
               title={
                 member.user.publicName ||
                 member.user.fullname ||
@@ -105,7 +105,7 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
                     member.user.fullname ||
                     member.user.email
                   }
-                  className="w-6 h-6 rounded-full"
+                  className="w-7 h-7 rounded-full border border-blue-200"
                 />
               ) : (
                 (
@@ -119,7 +119,7 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
             </div>
           ))}
           {task.taskMembers.length > 3 && (
-            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-xs font-semibold text-gray-600 border border-gray-200 shadow-sm">
               +{task.taskMembers.length - 3}
             </div>
           )}
@@ -127,9 +127,9 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
 
         {/* Comments */}
         {task._count.taskComments > 0 && (
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <MessageCircle className="h-3 w-3" />
-            <span>{task._count.taskComments}</span>
+          <div className="flex items-center gap-1.5 text-xs text-gray-600 bg-gray-50 rounded-lg px-2 py-1">
+            <MessageCircle className="h-3 w-3 text-gray-500" />
+            <span className="font-medium">{task._count.taskComments}</span>
           </div>
         )}
       </div>

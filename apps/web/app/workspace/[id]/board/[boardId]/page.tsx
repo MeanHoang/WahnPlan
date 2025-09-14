@@ -198,9 +198,9 @@ export default function BoardDetailPage(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
       {/* Header Section */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             <Button
@@ -239,7 +239,7 @@ export default function BoardDetailPage(): JSX.Element {
       </div>
 
       {/* View Filter Toolbar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3">
+      <div className="bg-white border-b border-gray-200 px-6 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           {/* View Options */}
           <div className="flex items-center gap-2">

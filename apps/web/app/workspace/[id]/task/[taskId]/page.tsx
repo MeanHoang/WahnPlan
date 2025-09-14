@@ -178,6 +178,7 @@ export default function TaskDetailPage(): JSX.Element {
           "noteJson",
           "notePlain",
           "attachments",
+          "dueDate",
         ];
 
         if (allowedFields.includes(field)) {
@@ -298,12 +299,13 @@ export default function TaskDetailPage(): JSX.Element {
                   type="date"
                   className="w-64 px-2 py-1 text-xs"
                   value={
-                    task.dueDate
+                    pendingUpdates.dueDate ||
+                    (task.dueDate
                       ? new Date(task.dueDate).toISOString().split("T")[0]
-                      : ""
+                      : "")
                   }
                   onChange={(e) => {
-                    // TODO: Handle date update
+                    handleFieldChange("dueDate", e.target.value);
                   }}
                 />
               </TaskAttributeRow>
@@ -353,9 +355,9 @@ export default function TaskDetailPage(): JSX.Element {
                   type="text"
                   className="w-64 px-2 py-1 text-xs"
                   placeholder="Empty"
-                  value={task.okr || ""}
+                  value={pendingUpdates.okr || task.okr || ""}
                   onChange={(e) => {
-                    // TODO: Handle OKR update
+                    handleFieldChange("okr", e.target.value);
                   }}
                 />
               </TaskAttributeRow>
@@ -392,8 +394,9 @@ export default function TaskDetailPage(): JSX.Element {
                   type="text"
                   className="w-64 px-2 py-1 text-xs"
                   placeholder="Empty"
+                  value={task.devMr || ""}
                   onChange={(e) => {
-                    // TODO: Handle developer update
+                    handleFieldChange("devMr", e.target.value);
                   }}
                 />
               </TaskAttributeRow>
@@ -446,8 +449,9 @@ export default function TaskDetailPage(): JSX.Element {
                   type="text"
                   className="w-64 px-2 py-1 text-xs"
                   placeholder="Empty"
+                  value={task.attachments || ""}
                   onChange={(e) => {
-                    // TODO: Handle figma update
+                    handleFieldChange("attachments", e.target.value);
                   }}
                 />
               </TaskAttributeRow>
@@ -477,9 +481,9 @@ export default function TaskDetailPage(): JSX.Element {
                   type="number"
                   className="w-64 px-2 py-1 text-xs"
                   placeholder="Empty"
-                  value={task.storyPoint || ""}
+                  value={pendingUpdates.storyPoint || task.storyPoint || ""}
                   onChange={(e) => {
-                    // TODO: Handle story points update
+                    handleFieldChange("storyPoint", e.target.value);
                   }}
                 />
               </TaskAttributeRow>
@@ -493,9 +497,9 @@ export default function TaskDetailPage(): JSX.Element {
                   type="text"
                   className="w-64 px-2 py-1 text-xs"
                   placeholder="Empty"
-                  value={task.devMr || ""}
+                  value={pendingUpdates.devMr || task.devMr || ""}
                   onChange={(e) => {
-                    // TODO: Handle dev MR update
+                    handleFieldChange("devMr", e.target.value);
                   }}
                 />
               </TaskAttributeRow>
@@ -509,9 +513,9 @@ export default function TaskDetailPage(): JSX.Element {
                   type="text"
                   className="w-64 px-2 py-1 text-xs"
                   placeholder="Empty"
-                  value={task.sizeCard || ""}
+                  value={pendingUpdates.sizeCard || task.sizeCard || ""}
                   onChange={(e) => {
-                    // TODO: Handle size card update
+                    handleFieldChange("sizeCard", e.target.value);
                   }}
                 />
               </TaskAttributeRow>
@@ -525,9 +529,9 @@ export default function TaskDetailPage(): JSX.Element {
                   type="text"
                   className="w-64 px-2 py-1 text-xs"
                   placeholder="Empty"
-                  value={task.testCase || ""}
+                  value={pendingUpdates.testCase || task.testCase || ""}
                   onChange={(e) => {
-                    // TODO: Handle test case update
+                    handleFieldChange("testCase", e.target.value);
                   }}
                 />
               </TaskAttributeRow>
@@ -541,12 +545,13 @@ export default function TaskDetailPage(): JSX.Element {
                   type="date"
                   className="w-64 px-2 py-1 text-xs"
                   value={
-                    task.goLive
+                    pendingUpdates.goLive ||
+                    (task.goLive
                       ? new Date(task.goLive).toISOString().split("T")[0]
-                      : ""
+                      : "")
                   }
                   onChange={(e) => {
-                    // TODO: Handle go-live date update
+                    handleFieldChange("goLive", e.target.value);
                   }}
                 />
               </TaskAttributeRow>
