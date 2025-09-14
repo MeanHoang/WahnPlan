@@ -1,5 +1,5 @@
-import { IsOptional, IsString, IsBoolean } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsOptional, IsString, IsBoolean, IsArray } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export class TaskFiltersDto {
   @IsOptional()
@@ -19,12 +19,45 @@ export class TaskFiltersDto {
   taskStatusId?: string;
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.split(',').filter(Boolean);
+    }
+    return value;
+  })
+  taskStatusIds?: string[];
+
+  @IsOptional()
   @IsString()
   taskPriorityId?: string;
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.split(',').filter(Boolean);
+    }
+    return value;
+  })
+  taskPriorityIds?: string[];
+
+  @IsOptional()
   @IsString()
   taskInitiativeId?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.split(',').filter(Boolean);
+    }
+    return value;
+  })
+  taskInitiativeIds?: string[];
 
   @IsOptional()
   @IsString()

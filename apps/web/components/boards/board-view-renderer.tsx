@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { StatusColumn } from "@/components/boards/status-column";
 import { AssigneeColumn } from "@/components/boards/assignee-column";
 import { TaskTableView } from "@/components/boards/task-table-view";
+import { TaskFilterBar } from "@/components/boards/task-filter-bar";
 import { Task, TaskStatus, TaskPriority, TaskInitiative } from "@/types/task";
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useAuth } from "@/contexts/auth-context";
@@ -22,6 +24,7 @@ interface BoardViewRendererProps {
   currentUserId?: string;
   onTaskClick: (task: Task) => void;
   onAddTask: (id: string) => void;
+  onToggleFilters?: (toggleFn: () => void) => void;
 }
 
 export function BoardViewRenderer({
@@ -34,15 +37,66 @@ export function BoardViewRenderer({
   currentUserId,
   onTaskClick,
   onAddTask,
+  onToggleFilters,
 }: BoardViewRendererProps): JSX.Element {
   const { user } = useAuth();
 
+  // Advanced filters state
+  const [selectedStatusIds, setSelectedStatusIds] = useState<string[]>([]);
+  const [selectedPriorityIds, setSelectedPriorityIds] = useState<string[]>([]);
+  const [selectedInitiativeIds, setSelectedInitiativeIds] = useState<string[]>(
+    []
+  );
+  const [showFilters, setShowFilters] = useState(false);
+
+  const toggleFilters = useCallback(() => {
+    setShowFilters((prev) => !prev);
+  }, []);
+
+  // Set the toggle function for parent component (only once)
+  useEffect(() => {
+    if (onToggleFilters) {
+      onToggleFilters(toggleFilters);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
+
+  // Build query parameters for filtered tasks
+  const buildTasksQuery = (additionalParams: Record<string, string> = {}) => {
+    const params = new URLSearchParams();
+    params.set("boardId", boardId);
+
+    if (selectedStatusIds.length > 0) {
+      params.set("taskStatusIds", selectedStatusIds.join(","));
+    }
+    if (selectedPriorityIds.length > 0) {
+      params.set("taskPriorityIds", selectedPriorityIds.join(","));
+    }
+    if (selectedInitiativeIds.length > 0) {
+      params.set("taskInitiativeIds", selectedInitiativeIds.join(","));
+    }
+
+    Object.entries(additionalParams).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+    });
+
+    return `/tasks?${params.toString()}`;
+  };
+
   // Fetch current user's tasks for Mine view using auth context
   const { data: userTasks, loading: userTasksLoading } = useFetchApi<Task[]>(
-    user?.id
-      ? `/tasks?boardId=${boardId}&assigneeId=${user.id}`
-      : "/tasks?boardId="
+    user?.id ? buildTasksQuery({ assigneeId: user.id }) : buildTasksQuery()
   );
+
+  const handleFiltersChange = (filters: {
+    statusIds: string[];
+    priorityIds: string[];
+    initiativeIds: string[];
+  }) => {
+    setSelectedStatusIds(filters.statusIds);
+    setSelectedPriorityIds(filters.priorityIds);
+    setSelectedInitiativeIds(filters.initiativeIds);
+  };
   const renderView = () => {
     switch (view) {
       case "by-status":
@@ -55,6 +109,9 @@ export function BoardViewRenderer({
                 boardId={boardId}
                 onTaskClick={onTaskClick}
                 onAddTask={onAddTask}
+                selectedStatusIds={selectedStatusIds}
+                selectedPriorityIds={selectedPriorityIds}
+                selectedInitiativeIds={selectedInitiativeIds}
               />
             ))}
           </>
@@ -116,19 +173,40 @@ export function BoardViewRenderer({
   };
 
   return (
-    <div className="flex-1 p-6 bg-gray-50 flex flex-col">
-      {view === "mine" ? (
-        // Full width for table view
-        <div className="flex-1">{renderView()}</div>
-      ) : (
-        // Horizontal scroll for column views
-        <div
-          className="flex gap-6 overflow-x-auto flex-1"
-          style={{ alignItems: "flex-start" }}
-        >
-          {renderView()}
-        </div>
+    <div className="flex-1 bg-gray-50 flex flex-col">
+      {/* Filter Bar */}
+      {showFilters && (
+        <TaskFilterBar
+          statuses={statuses}
+          priorities={priorities}
+          initiatives={initiatives}
+          selectedStatusIds={selectedStatusIds}
+          selectedPriorityIds={selectedPriorityIds}
+          selectedInitiativeIds={selectedInitiativeIds}
+          onFiltersChange={handleFiltersChange}
+        />
       )}
+
+      {/* Board Content */}
+      <div className="flex-1 flex flex-col">
+        {view === "mine" ? (
+          // Full width for table view
+          <div className="flex-1 p-6">{renderView()}</div>
+        ) : (
+          // Horizontal scroll for column views - scrollbar always visible at bottom
+          <div
+            className="flex-1 p-6 overflow-x-auto overflow-y-auto board-scroll-container"
+            style={{ scrollbarGutter: "stable" }}
+          >
+            <div
+              className="flex gap-6"
+              style={{ alignItems: "flex-start", minWidth: "max-content" }}
+            >
+              {renderView()}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

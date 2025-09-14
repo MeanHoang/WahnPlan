@@ -12,6 +12,9 @@ interface StatusColumnProps {
   boardId: string;
   onTaskClick?: (task: Task) => void;
   onAddTask?: (statusId: string) => void;
+  selectedStatusIds?: string[];
+  selectedPriorityIds?: string[];
+  selectedInitiativeIds?: string[];
 }
 
 export function StatusColumn({
@@ -19,22 +22,46 @@ export function StatusColumn({
   boardId,
   onTaskClick,
   onAddTask,
+  selectedStatusIds = [],
+  selectedPriorityIds = [],
+  selectedInitiativeIds = [],
 }: StatusColumnProps): JSX.Element {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<any>(null);
   const TASKS_PER_PAGE = 5;
 
+  // Build query parameters with advanced filters
+  const buildQueryParams = () => {
+    const params: any = {
+      boardId,
+      taskStatusId: status.id,
+      page: currentPage,
+      limit: TASKS_PER_PAGE,
+    };
+
+    // Add advanced filters if they don't conflict with status filter
+    if (selectedPriorityIds.length > 0) {
+      params.taskPriorityIds = selectedPriorityIds.join(",");
+    }
+    if (selectedInitiativeIds.length > 0) {
+      params.taskInitiativeIds = selectedInitiativeIds.join(",");
+    }
+
+    return params;
+  };
+
   const {
     data: tasksResponse,
     loading,
     refetch,
-  } = useFetchApi<PaginatedResponse<Task>>("/tasks", {
-    boardId,
-    taskStatusId: status.id,
-    page: currentPage,
-    limit: TASKS_PER_PAGE,
-  });
+  } = useFetchApi<PaginatedResponse<Task>>("/tasks", buildQueryParams());
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+    setAllTasks([]);
+  }, [selectedPriorityIds, selectedInitiativeIds]);
 
   // Update allTasks when new data comes in
   useEffect(() => {

@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsNumber, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  Min,
+  Max,
+  IsArray,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class FindTasksQueryDto {
@@ -23,11 +30,23 @@ export class FindTasksQueryDto {
 
   @IsOptional()
   @IsString()
+  taskStatusIds?: string;
+
+  @IsOptional()
+  @IsString()
   taskPriorityId?: string;
 
   @IsOptional()
   @IsString()
+  taskPriorityIds?: string;
+
+  @IsOptional()
+  @IsString()
   taskInitiativeId?: string;
+
+  @IsOptional()
+  @IsString()
+  taskInitiativeIds?: string;
 
   @IsOptional()
   @IsString()

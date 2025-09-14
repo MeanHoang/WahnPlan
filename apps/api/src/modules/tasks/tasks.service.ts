@@ -310,16 +310,40 @@ export class TasksService {
       whereClause.baId = filters.baId;
     }
 
+    // Handle single status filter (backward compatibility)
     if (filters.taskStatusId) {
       whereClause.taskStatusId = filters.taskStatusId;
     }
 
+    // Handle multiple status filters (new feature)
+    if (filters.taskStatusIds && filters.taskStatusIds.length > 0) {
+      whereClause.taskStatusId = {
+        in: filters.taskStatusIds,
+      };
+    }
+
+    // Handle single priority filter (backward compatibility)
     if (filters.taskPriorityId) {
       whereClause.taskPriorityId = filters.taskPriorityId;
     }
 
+    // Handle multiple priority filters (new feature)
+    if (filters.taskPriorityIds && filters.taskPriorityIds.length > 0) {
+      whereClause.taskPriorityId = {
+        in: filters.taskPriorityIds,
+      };
+    }
+
+    // Handle single initiative filter (backward compatibility)
     if (filters.taskInitiativeId) {
       whereClause.taskInitiativeId = filters.taskInitiativeId;
+    }
+
+    // Handle multiple initiative filters (new feature)
+    if (filters.taskInitiativeIds && filters.taskInitiativeIds.length > 0) {
+      whereClause.taskInitiativeId = {
+        in: filters.taskInitiativeIds,
+      };
     }
 
     if (filters.sprint) {

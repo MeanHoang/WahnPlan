@@ -30,7 +30,7 @@ export class TasksController {
 
   @Get()
   findAll(@Query() query: FindTasksQueryDto, @Req() req: any) {
-    const { boardId, page, limit, ...filters } = query;
+    const { boardId, page, limit, ...rawFilters } = query;
 
     if (!boardId) {
       console.error('TasksController.findAll - boardId is missing:', {
@@ -40,10 +40,52 @@ export class TasksController {
       throw new BadRequestException('boardId query parameter is required');
     }
 
+    // Process filters to handle multiple values
+    const filters: TaskFiltersDto = {
+      assigneeId: rawFilters.assigneeId,
+      reviewerId: rawFilters.reviewerId,
+      baId: rawFilters.baId,
+      taskStatusId: rawFilters.taskStatusId,
+      taskPriorityId: rawFilters.taskPriorityId,
+      taskInitiativeId: rawFilters.taskInitiativeId,
+      sprint: rawFilters.sprint,
+      featureCategories: rawFilters.featureCategories,
+      isOverdue: rawFilters.isOverdue === 'true',
+      createdById: rawFilters.createdById,
+    };
+
+    // Convert comma-separated strings to arrays for multiple value filters
+    if (
+      rawFilters.taskStatusIds &&
+      typeof rawFilters.taskStatusIds === 'string'
+    ) {
+      filters.taskStatusIds = rawFilters.taskStatusIds
+        .split(',')
+        .filter(Boolean);
+    }
+
+    if (
+      rawFilters.taskPriorityIds &&
+      typeof rawFilters.taskPriorityIds === 'string'
+    ) {
+      filters.taskPriorityIds = rawFilters.taskPriorityIds
+        .split(',')
+        .filter(Boolean);
+    }
+
+    if (
+      rawFilters.taskInitiativeIds &&
+      typeof rawFilters.taskInitiativeIds === 'string'
+    ) {
+      filters.taskInitiativeIds = rawFilters.taskInitiativeIds
+        .split(',')
+        .filter(Boolean);
+    }
+
     return this.tasksService.findAll(
       boardId,
       req.user.id,
-      filters as TaskFiltersDto,
+      filters,
       page || 1,
       limit || 10,
     );

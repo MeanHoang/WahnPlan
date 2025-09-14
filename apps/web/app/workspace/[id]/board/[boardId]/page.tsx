@@ -40,6 +40,7 @@ export default function BoardDetailPage(): JSX.Element {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedStatusId, setSelectedStatusId] = useState<string>("");
   const [selectedView, setSelectedView] = useState<string>("by-status");
+  const [toggleFilters, setToggleFilters] = useState<(() => void) | null>(null);
 
   const { data: boardData, loading: boardLoading } = useBoard(boardId);
 
@@ -158,6 +159,12 @@ export default function BoardDetailPage(): JSX.Element {
     setIsCreateModalOpen(true);
   };
 
+  const handleFilterClick = () => {
+    if (toggleFilters) {
+      toggleFilters();
+    }
+  };
+
   const handleCreateSuccess = () => {
     // TODO: Refresh individual columns when task is created
     toast({
@@ -253,7 +260,7 @@ export default function BoardDetailPage(): JSX.Element {
               onClick={() => setSelectedView("by-status")}
             >
               <Grid3X3 className="h-4 w-4" />
-              By Status
+              Master board
             </div>
             <div
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-colors ${
@@ -307,6 +314,7 @@ export default function BoardDetailPage(): JSX.Element {
               variant="ghost"
               size="sm"
               className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
+              onClick={handleFilterClick}
             >
               <Filter className="h-4 w-4" />
             </Button>
@@ -357,6 +365,7 @@ export default function BoardDetailPage(): JSX.Element {
         currentUserId={user?.id}
         onTaskClick={handleTaskClick}
         onAddTask={handleAddTask}
+        onToggleFilters={(fn) => setToggleFilters(() => fn)}
       />
 
       {/* Create Task Modal */}
