@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
 import { StatusColumn } from "@/components/boards/status-column";
 import { AssigneeColumn } from "@/components/boards/assignee-column";
 import { TaskTableView } from "@/components/boards/task-table-view";
 import { TaskFilterBar } from "@/components/boards/task-filter-bar";
+import { TaskCard } from "@/components/boards/task-card";
 import { Task, TaskStatus, TaskPriority, TaskInitiative } from "@/types/task";
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useAuth } from "@/contexts/auth-context";
+import { useTaskDragDrop } from "@/hooks/use-task-drag-drop";
 
 interface BoardViewRendererProps {
   view: string;
@@ -41,6 +44,24 @@ export function BoardViewRenderer({
 }: BoardViewRendererProps): JSX.Element {
   const { user } = useAuth();
 
+  // Drag and drop functionality
+  const {
+    activeTask,
+    isUpdating,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+  } = useTaskDragDrop({
+    onTaskMove: (taskId, newStatusId) => {
+      // This will be called for optimistic updates
+      console.log(`Task ${taskId} moved to status ${newStatusId}`);
+    },
+    onTaskMoveEnd: () => {
+      // Trigger refresh of all columns after task move
+      setRefreshTrigger((prev) => prev + 1);
+    },
+  });
+
   // Advanced filters state
   const [selectedStatusIds, setSelectedStatusIds] = useState<string[]>([]);
   const [selectedPriorityIds, setSelectedPriorityIds] = useState<string[]>([]);
@@ -52,6 +73,9 @@ export function BoardViewRenderer({
   const [selectedBaIds, setSelectedBaIds] = useState<string[]>([]);
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Refresh trigger for columns
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const toggleFilters = useCallback(() => {
     setShowFilters((prev) => !prev);
@@ -140,6 +164,7 @@ export function BoardViewRenderer({
                 selectedReviewerIds={selectedReviewerIds}
                 selectedBaIds={selectedBaIds}
                 selectedMemberIds={selectedMemberIds}
+                refreshTrigger={refreshTrigger}
               />
             ))}
           </>
@@ -204,45 +229,61 @@ export function BoardViewRenderer({
   };
 
   return (
-    <div className="flex-1 bg-gray-50 flex flex-col min-h-0">
-      {/* Filter Bar */}
-      {showFilters && (
-        <TaskFilterBar
-          statuses={statuses}
-          priorities={priorities}
-          initiatives={initiatives}
-          assignees={assignees}
-          selectedStatusIds={selectedStatusIds}
-          selectedPriorityIds={selectedPriorityIds}
-          selectedInitiativeIds={selectedInitiativeIds}
-          selectedAssigneeIds={selectedAssigneeIds}
-          selectedReviewerIds={selectedReviewerIds}
-          selectedBaIds={selectedBaIds}
-          selectedMemberIds={selectedMemberIds}
-          onFiltersChange={handleFiltersChange}
-        />
-      )}
-
-      {/* Board Content */}
-      <div className="flex-1 flex flex-col min-h-0">
-        {view === "mine" ? (
-          // Full width for table view
-          <div className="flex-1 p-6 overflow-auto">{renderView()}</div>
-        ) : (
-          // Horizontal scroll for column views - scrollbar always visible at bottom
-          <div
-            className="flex-1 p-6 overflow-x-auto overflow-y-auto board-scroll-container"
-            style={{ scrollbarGutter: "stable" }}
-          >
-            <div
-              className="flex gap-6"
-              style={{ alignItems: "flex-start", minWidth: "max-content" }}
-            >
-              {renderView()}
-            </div>
-          </div>
+    <DndContext
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="flex-1 bg-gray-50 flex flex-col min-h-0">
+        {/* Filter Bar */}
+        {showFilters && (
+          <TaskFilterBar
+            statuses={statuses}
+            priorities={priorities}
+            initiatives={initiatives}
+            assignees={assignees}
+            selectedStatusIds={selectedStatusIds}
+            selectedPriorityIds={selectedPriorityIds}
+            selectedInitiativeIds={selectedInitiativeIds}
+            selectedAssigneeIds={selectedAssigneeIds}
+            selectedReviewerIds={selectedReviewerIds}
+            selectedBaIds={selectedBaIds}
+            selectedMemberIds={selectedMemberIds}
+            onFiltersChange={handleFiltersChange}
+          />
         )}
+
+        {/* Board Content */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {view === "mine" ? (
+            // Full width for table view
+            <div className="flex-1 p-6 overflow-auto">{renderView()}</div>
+          ) : (
+            // Horizontal scroll for column views - scrollbar always visible at bottom
+            <div
+              className="flex-1 p-6 overflow-x-auto overflow-y-auto board-scroll-container"
+              style={{ scrollbarGutter: "stable" }}
+            >
+              <div
+                className="flex gap-6"
+                style={{ alignItems: "flex-start", minWidth: "max-content" }}
+              >
+                {renderView()}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Drag Overlay */}
+      <DragOverlay>
+        {activeTask ? (
+          <div className="rotate-3 opacity-90">
+            <TaskCard task={activeTask} />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }

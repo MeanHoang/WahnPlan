@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, ChevronDown } from "lucide-react";
+import { useDroppable } from "@dnd-kit/core";
 import { Button } from "@/components/ui/button";
 import { TaskCard } from "./task-card";
 import { Task, TaskStatus, PaginatedResponse } from "@/types/task";
@@ -19,6 +20,7 @@ interface StatusColumnProps {
   selectedReviewerIds?: string[];
   selectedBaIds?: string[];
   selectedMemberIds?: string[];
+  refreshTrigger?: number; // Add refresh trigger prop
 }
 
 export function StatusColumn({
@@ -33,11 +35,16 @@ export function StatusColumn({
   selectedReviewerIds = [],
   selectedBaIds = [],
   selectedMemberIds = [],
+  refreshTrigger,
 }: StatusColumnProps): JSX.Element {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<any>(null);
   const TASKS_PER_PAGE = 5;
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: status.id,
+  });
 
   // Build query parameters with advanced filters
   const buildQueryParams = () => {
@@ -90,6 +97,15 @@ export function StatusColumn({
     selectedMemberIds,
   ]);
 
+  // Refetch data when refreshTrigger changes (e.g., after task move)
+  useEffect(() => {
+    if (refreshTrigger && refreshTrigger > 0) {
+      refetch();
+      setCurrentPage(1);
+      setAllTasks([]);
+    }
+  }, [refreshTrigger, refetch]);
+
   // Update allTasks when new data comes in
   useEffect(() => {
     if (tasksResponse) {
@@ -115,7 +131,10 @@ export function StatusColumn({
 
   return (
     <div
-      className="flex flex-col bg-white rounded-lg border border-gray-200 flex-none basis-[300px]"
+      ref={setNodeRef}
+      className={`flex flex-col bg-white rounded-lg border flex-none basis-[300px] transition-all duration-200 ${
+        isOver ? "border-blue-400 bg-blue-50" : "border-gray-200"
+      }`}
       style={{ width: 300, minWidth: 300 }}
     >
       {/* Header */}

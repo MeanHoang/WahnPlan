@@ -18,14 +18,24 @@ export function useUpdateApi<TData, TResponse>(
   const [error, setError] = useState<Error | null>(null);
 
   const mutate = useCallback(
-    async (data: TData) => {
+    async (
+      data: TData,
+      overrideConfig?: {
+        endpoint: string;
+        method?: "PUT" | "PATCH" | "POST";
+      }
+    ) => {
       try {
         setLoading(true);
         setError(null);
 
-        const endpoint = typeof config === "string" ? config : config.endpoint;
+        const finalConfig = overrideConfig || config;
+        const endpoint =
+          typeof finalConfig === "string" ? finalConfig : finalConfig.endpoint;
         const method =
-          typeof config === "string" ? "PATCH" : config.method || "PATCH";
+          typeof finalConfig === "string"
+            ? "PATCH"
+            : finalConfig.method || "PATCH";
 
         const result = await apiRequest<TResponse>(endpoint, {
           method,
