@@ -10,6 +10,14 @@ import {
   FileText,
 } from "lucide-react";
 import { Task, TaskPriority, TaskInitiative, TaskStatus } from "@/types/task";
+import {
+  getPriorityStyle,
+  getStatusStyle,
+  getInitiativeStyle,
+  getStatusDotStyle,
+  getTaskAttributeClasses,
+  getStatusDotClasses,
+} from "@/lib/task-attribute-helpers";
 
 interface TaskTableViewProps {
   tasks: Task[] | { data: Task[]; pagination: any };
@@ -44,71 +52,6 @@ export function TaskTableView({
       day: "numeric",
       year: "numeric",
     }).format(new Date(date));
-  };
-
-  const getPriorityStyle = (priority?: TaskPriority) => {
-    if (!priority) return { backgroundColor: "#f3f4f6", color: "#1f2937" };
-
-    // Use hex color directly from API response
-    const hexColor = priority.color;
-
-    // Ensure hex color is valid
-    if (!hexColor || !hexColor.startsWith("#")) {
-      return { backgroundColor: "#f3f4f6", color: "#1f2937" };
-    }
-
-    const backgroundColor = hexColor + "20"; // Add 20% opacity
-    const textColor = hexColor;
-
-    return { backgroundColor, color: textColor };
-  };
-
-  const getStatusStyle = (status?: TaskStatus) => {
-    if (!status) return { backgroundColor: "#f3f4f6", color: "#1f2937" };
-
-    // Use hex color directly from API response
-    const hexColor = status.color;
-
-    // Ensure hex color is valid
-    if (!hexColor || !hexColor.startsWith("#")) {
-      return { backgroundColor: "#f3f4f6", color: "#1f2937" };
-    }
-
-    const backgroundColor = hexColor + "20"; // Add 20% opacity
-    const textColor = hexColor;
-
-    return { backgroundColor, color: textColor };
-  };
-
-  const getInitiativeStyle = (initiative?: TaskInitiative) => {
-    if (!initiative) return { backgroundColor: "#f3f4f6", color: "#1f2937" };
-
-    // Use hex color directly from API response
-    const hexColor = initiative.color;
-
-    // Ensure hex color is valid
-    if (!hexColor || !hexColor.startsWith("#")) {
-      return { backgroundColor: "#f3f4f6", color: "#1f2937" };
-    }
-
-    const backgroundColor = hexColor + "20"; // Add 20% opacity
-    const textColor = hexColor;
-
-    return { backgroundColor, color: textColor };
-  };
-
-  const getStatusDotStyle = (status?: TaskStatus) => {
-    if (!status) return { backgroundColor: "#6b7280" };
-
-    // Use hex color directly from API response for status dot
-    const hexColor = status.color;
-
-    // Ensure hex color is valid
-    if (!hexColor || !hexColor.startsWith("#")) {
-      return { backgroundColor: "#6b7280" };
-    }
-
-    return { backgroundColor: hexColor };
   };
 
   const handleSort = (field: string) => {
@@ -166,7 +109,7 @@ export function TaskTableView({
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       {/* Table Header */}
       <div className="bg-gray-50 border-b border-gray-200">
-        <div className="grid grid-cols-12 gap-4 px-6 py-4 text-sm font-semibold text-gray-700">
+        <div className="grid grid-cols-12 gap-2 px-6 py-4 text-sm font-semibold text-gray-700">
           <div
             className="col-span-3 flex items-center gap-2 cursor-pointer hover:text-gray-900"
             onClick={() => handleSort("title")}
@@ -208,7 +151,7 @@ export function TaskTableView({
             )}
           </div>
           <div
-            className="col-span-1 flex items-center gap-2 cursor-pointer hover:text-gray-900"
+            className="col-span-1 flex items-center justify-center gap-2 cursor-pointer hover:text-gray-900"
             onClick={() => handleSort("priority")}
           >
             <Flag className="h-4 w-4" />
@@ -220,7 +163,7 @@ export function TaskTableView({
             )}
           </div>
           <div
-            className="col-span-1 flex items-center gap-2 cursor-pointer hover:text-gray-900"
+            className="col-span-1 flex items-center justify-center gap-2 cursor-pointer hover:text-gray-900"
             onClick={() => handleSort("initiative")}
           >
             <Target className="h-4 w-4" />
@@ -232,7 +175,7 @@ export function TaskTableView({
             )}
           </div>
           <div
-            className="col-span-1 flex items-center gap-2 cursor-pointer hover:text-gray-900"
+            className="col-span-1 flex items-center justify-center gap-2 cursor-pointer hover:text-gray-900"
             onClick={() => handleSort("status")}
           >
             <Target className="h-4 w-4" />
@@ -270,7 +213,7 @@ export function TaskTableView({
           sortedTasks.map((task) => (
             <div
               key={task.id}
-              className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
+              className="grid grid-cols-12 gap-2 px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
               onClick={() => onTaskClick(task)}
             >
               {/* Task Name */}
@@ -344,10 +287,10 @@ export function TaskTableView({
               </div>
 
               {/* Priority */}
-              <div className="col-span-1 flex items-center">
+              <div className="col-span-1 flex items-center justify-center">
                 {task.taskPriority ? (
                   <span
-                    className="px-2 py-1 rounded-full text-xs font-medium"
+                    className={getTaskAttributeClasses()}
                     style={getPriorityStyle(task.taskPriority)}
                   >
                     {task.taskPriority.name}
@@ -358,10 +301,10 @@ export function TaskTableView({
               </div>
 
               {/* Initiative */}
-              <div className="col-span-1 flex items-center">
+              <div className="col-span-1 flex items-center justify-center">
                 {task.taskInitiative ? (
                   <span
-                    className="px-2 py-1 rounded-full text-xs font-medium"
+                    className={getTaskAttributeClasses()}
                     style={getInitiativeStyle(task.taskInitiative)}
                   >
                     {task.taskInitiative.name}
@@ -372,14 +315,14 @@ export function TaskTableView({
               </div>
 
               {/* Status */}
-              <div className="col-span-1 flex items-center">
+              <div className="col-span-1 flex items-center justify-center">
                 {task.taskStatus ? (
                   <span
-                    className="px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+                    className={`${getTaskAttributeClasses()} flex items-center gap-1`}
                     style={getStatusStyle(task.taskStatus)}
                   >
                     <div
-                      className="w-2 h-2 rounded-full"
+                      className={getStatusDotClasses()}
                       style={getStatusDotStyle(task.taskStatus)}
                     ></div>
                     {task.taskStatus.title}

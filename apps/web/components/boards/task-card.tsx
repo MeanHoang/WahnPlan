@@ -2,6 +2,11 @@
 
 import { MessageCircle, Calendar, User } from "lucide-react";
 import { Task, TaskPriority, TaskInitiative } from "@/types/task";
+import {
+  getPriorityStyle,
+  getInitiativeStyle,
+  getTaskAttributeClasses,
+} from "@/lib/task-attribute-helpers";
 
 interface TaskCardProps {
   task: Task;
@@ -19,34 +24,6 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
     }).format(new Date(date));
   };
 
-  const getPriorityColor = (priority?: TaskPriority) => {
-    if (!priority) return "bg-gray-100 text-gray-800";
-
-    switch (priority.name.toLowerCase()) {
-      case "high":
-        return "bg-pink-100 text-pink-800";
-      case "medium":
-        return "bg-yellow-100 text-yellow-800";
-      case "low":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getInitiativeColor = (initiative?: TaskInitiative) => {
-    if (!initiative) return "bg-gray-100 text-gray-800";
-
-    switch (initiative.name.toLowerCase()) {
-      case "improvement":
-        return "bg-yellow-100 text-yellow-800";
-      case "tech debt":
-        return "bg-pink-100 text-pink-800";
-      default:
-        return "bg-blue-100 text-blue-800";
-    }
-  };
-
   return (
     <div
       className="bg-white rounded-2xl border-2 border-gray-200 p-5 shadow-sm hover:shadow-lg hover:border-gray-300 transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5"
@@ -61,14 +38,16 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
       <div className="flex flex-wrap gap-2 mb-4">
         {task.taskPriority && (
           <span
-            className={`px-3 py-1.5 rounded-full text-xs font-medium ${getPriorityColor(task.taskPriority)}`}
+            className={getTaskAttributeClasses()}
+            style={getPriorityStyle(task.taskPriority)}
           >
             {task.taskPriority.name}
           </span>
         )}
         {task.taskInitiative && (
           <span
-            className={`px-3 py-1.5 rounded-full text-xs font-medium ${getInitiativeColor(task.taskInitiative)}`}
+            className={getTaskAttributeClasses()}
+            style={getInitiativeStyle(task.taskInitiative)}
           >
             {task.taskInitiative.name}
           </span>
