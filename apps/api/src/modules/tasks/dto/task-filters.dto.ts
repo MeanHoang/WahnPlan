@@ -119,4 +119,12 @@ export class TaskFiltersDto {
   @IsOptional()
   @IsString()
   createdById?: string;
+
+  @IsOptional()
+  @IsString()
+  sortBy?: string;
+
+  @IsOptional()
+  @IsString()
+  sortOrder?: 'asc' | 'desc';
 }

@@ -99,6 +99,14 @@ export class TasksController {
       filters.memberIds = rawFilters.memberIds.split(',').filter(Boolean);
     }
 
+    // Add sorting parameters
+    if (rawFilters.sortBy) {
+      filters.sortBy = rawFilters.sortBy;
+    }
+    if (rawFilters.sortOrder) {
+      filters.sortOrder = rawFilters.sortOrder;
+    }
+
     return this.tasksService.findAll(
       boardId,
       req.user.id,

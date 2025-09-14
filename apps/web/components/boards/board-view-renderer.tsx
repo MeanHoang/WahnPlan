@@ -175,20 +175,22 @@ export function BoardViewRenderer({
           <TaskTableView tasks={userTasks || []} onTaskClick={onTaskClick} />
         );
 
-      case "by-priority":
-        // TODO: Implement priority-based view
+      case "table":
         return (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-gray-500">Priority view coming soon</p>
-          </div>
-        );
-
-      case "by-initiative":
-        // TODO: Implement initiative-based view
-        return (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-gray-500">Initiative view coming soon</p>
-          </div>
+          <TaskTableView
+            tasks={[]}
+            onTaskClick={onTaskClick}
+            boardId={boardId}
+            filters={{
+              statusIds: selectedStatusIds,
+              priorityIds: selectedPriorityIds,
+              initiativeIds: selectedInitiativeIds,
+              assigneeIds: selectedAssigneeIds,
+              reviewerIds: selectedReviewerIds,
+              baIds: selectedBaIds,
+              memberIds: selectedMemberIds,
+            }}
+          />
         );
 
       default:

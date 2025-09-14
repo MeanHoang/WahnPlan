@@ -267,6 +267,58 @@ export class TasksService {
     return task;
   }
 
+  private buildOrderBy(sortBy?: string, sortOrder?: 'asc' | 'desc') {
+    const order = sortOrder || 'desc';
+
+    switch (sortBy) {
+      case 'title':
+        return { title: order };
+      case 'createdAt':
+        return { createdTime: order };
+      case 'dueDate':
+        // Sort by due date, with null values last
+        return [
+          { dueDate: order },
+          { dueDate: order === 'asc' ? 'desc' : 'asc' }, // null values last
+        ];
+      case 'priority':
+        // Sort by priority position (lower position = higher priority)
+        // Null values (no priority) should be treated as position 99 (always last)
+        // Use taskPriorityId to ensure nulls are handled correctly
+        if (order === 'asc') {
+          return [
+            { taskPriorityId: 'asc' }, // nulls first for asc
+            { taskPriority: { position: 'asc' } },
+          ];
+        } else {
+          return [
+            { taskPriority: { position: 'desc' } },
+            { taskPriorityId: 'desc' }, // nulls last for desc
+          ];
+        }
+      case 'status':
+        // Sort by status title, with null values last
+        return [
+          { taskStatus: { title: order } },
+          { taskStatusId: order === 'asc' ? 'desc' : 'asc' }, // null values last
+        ];
+      case 'initiative':
+        // Sort by initiative name, with null values last
+        return [
+          { taskInitiative: { name: order } },
+          { taskInitiativeId: order === 'asc' ? 'desc' : 'asc' }, // null values last
+        ];
+      case 'sizeCard':
+        // Sort by size card, with null values last
+        return [
+          { sizeCard: order },
+          { sizeCard: order === 'asc' ? 'desc' : 'asc' }, // null values last
+        ];
+      default:
+        return { createdTime: 'desc' };
+    }
+  }
+
   async findAll(
     boardId: string,
     userId: string,
@@ -479,9 +531,7 @@ export class TasksService {
           },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: this.buildOrderBy(filters.sortBy, filters.sortOrder) as any,
       skip,
       take: limit,
     });

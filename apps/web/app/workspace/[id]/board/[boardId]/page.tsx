@@ -286,25 +286,14 @@ export default function BoardDetailPage(): JSX.Element {
             </div>
             <div
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-colors ${
-                selectedView === "by-priority"
+                selectedView === "table"
                   ? "bg-gray-200 text-gray-700"
                   : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
               }`}
-              onClick={() => setSelectedView("by-priority")}
+              onClick={() => setSelectedView("table")}
             >
               <BarChart className="h-4 w-4" />
-              By Priority
-            </div>
-            <div
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-colors ${
-                selectedView === "by-initiative"
-                  ? "bg-gray-200 text-gray-700"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-              }`}
-              onClick={() => setSelectedView("by-initiative")}
-            >
-              <FileText className="h-4 w-4" />
-              By Initiative
+              Table Board
             </div>
           </div>
 

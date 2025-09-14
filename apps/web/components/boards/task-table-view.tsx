@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useFetchApi } from "@/hooks/use-fetch-api";
 import {
   MessageCircle,
   Calendar,
@@ -23,18 +24,133 @@ interface TaskTableViewProps {
   tasks: Task[] | { data: Task[]; pagination: any };
   onTaskClick: (task: Task) => void;
   onAddTask?: () => void;
+  boardId?: string;
+  filters?: {
+    statusIds: string[];
+    priorityIds: string[];
+    initiativeIds: string[];
+    assigneeIds: string[];
+    reviewerIds: string[];
+    baIds: string[];
+    memberIds: string[];
+  };
 }
 
 export function TaskTableView({
   tasks,
   onTaskClick,
   onAddTask,
+  boardId,
+  filters,
 }: TaskTableViewProps): JSX.Element {
   const [sortField, setSortField] = useState<string>("createdAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  // Extract tasks array from response
-  const tasksArray = Array.isArray(tasks) ? tasks : tasks?.data || [];
+  const TASKS_PER_PAGE = 5;
+
+  // Build query parameters for paginated tasks
+  const buildTasksQuery = (page: number) => {
+    const params = new URLSearchParams();
+
+    if (boardId) {
+      params.set("boardId", boardId);
+    }
+
+    if (filters?.statusIds && filters.statusIds.length > 0) {
+      params.set("taskStatusIds", filters.statusIds.join(","));
+    }
+    if (filters?.priorityIds && filters.priorityIds.length > 0) {
+      params.set("taskPriorityIds", filters.priorityIds.join(","));
+    }
+    if (filters?.initiativeIds && filters.initiativeIds.length > 0) {
+      params.set("taskInitiativeIds", filters.initiativeIds.join(","));
+    }
+    if (filters?.assigneeIds && filters.assigneeIds.length > 0) {
+      params.set("assigneeIds", filters.assigneeIds.join(","));
+    }
+    if (filters?.reviewerIds && filters.reviewerIds.length > 0) {
+      params.set("reviewerIds", filters.reviewerIds.join(","));
+    }
+    if (filters?.baIds && filters.baIds.length > 0) {
+      params.set("baIds", filters.baIds.join(","));
+    }
+    if (filters?.memberIds && filters.memberIds.length > 0) {
+      params.set("memberIds", filters.memberIds.join(","));
+    }
+
+    params.set("page", page.toString());
+    params.set("limit", TASKS_PER_PAGE.toString());
+
+    // Add sorting parameters
+    if (sortField && sortDirection) {
+      params.set("sortBy", sortField);
+      params.set("sortOrder", sortDirection);
+    }
+
+    return `/tasks?${params.toString()}`;
+  };
+
+  // Fetch tasks with pagination
+  const { data: paginatedTasks, loading: fetchLoading } = useFetchApi<{
+    data: Task[];
+    pagination: any;
+  }>(filters && boardId ? buildTasksQuery(currentPage) : "");
+
+  // Reset tasks when filters, boardId, or sorting change
+  useEffect(() => {
+    setAllTasks([]);
+    setCurrentPage(1);
+    setHasMore(true);
+  }, [filters, boardId, sortField, sortDirection]);
+
+  // Update tasks when new data comes in
+  useEffect(() => {
+    if (paginatedTasks) {
+      if (currentPage === 1) {
+        setAllTasks(paginatedTasks.data);
+      } else {
+        // Avoid duplicates by filtering out existing task IDs
+        setAllTasks((prev) => {
+          const existingIds = new Set(prev.map((task) => task.id));
+          const newTasks = paginatedTasks.data.filter(
+            (task) => !existingIds.has(task.id)
+          );
+          return [...prev, ...newTasks];
+        });
+      }
+
+      // Check if there are more pages
+      const totalPages = Math.ceil(
+        paginatedTasks.pagination.total / TASKS_PER_PAGE
+      );
+
+      // Also check if we received fewer tasks than expected (end of data)
+      const receivedTasksCount = paginatedTasks.data.length;
+      setHasMore(
+        currentPage < totalPages && receivedTasksCount === TASKS_PER_PAGE
+      );
+      setLoading(false);
+    }
+  }, [paginatedTasks, currentPage]);
+
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      setLoading(true);
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  // Use allTasks for display, fallback to props tasks
+  const tasksArray =
+    allTasks.length > 0
+      ? allTasks
+      : Array.isArray(tasks)
+        ? tasks
+        : tasks?.data || [];
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat("en-US", {
@@ -55,63 +171,37 @@ export function TaskTableView({
   };
 
   const handleSort = (field: string) => {
-    if (sortField === field) {
+    // Map frontend field names to backend field names
+    const backendFieldMap: { [key: string]: string } = {
+      createdAt: "createdAt", // Frontend uses createdAt, backend expects createdAt (mapped in buildOrderBy)
+      title: "title",
+      dueDate: "dueDate",
+      priority: "priority",
+      status: "status",
+      initiative: "initiative",
+      sizeCard: "sizeCard",
+    };
+
+    const backendField = backendFieldMap[field] || field;
+
+    if (sortField === backendField) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
-      setSortField(field);
+      setSortField(backendField);
       setSortDirection("asc");
     }
   };
 
-  const sortedTasks = [...tasksArray].sort((a, b) => {
-    let aValue: any;
-    let bValue: any;
-
-    switch (sortField) {
-      case "title":
-        aValue = a.title.toLowerCase();
-        bValue = b.title.toLowerCase();
-        break;
-      case "createdAt":
-        aValue = new Date(a.createdAt).getTime();
-        bValue = new Date(b.createdAt).getTime();
-        break;
-      case "dueDate":
-        aValue = a.dueDate ? new Date(a.dueDate).getTime() : 0;
-        bValue = b.dueDate ? new Date(b.dueDate).getTime() : 0;
-        break;
-      case "priority":
-        aValue = a.taskPriority?.name || "";
-        bValue = b.taskPriority?.name || "";
-        break;
-      case "status":
-        aValue = a.taskStatus?.title || "";
-        bValue = b.taskStatus?.title || "";
-        break;
-      case "initiative":
-        aValue = a.taskInitiative?.name || "";
-        bValue = b.taskInitiative?.name || "";
-        break;
-      case "sizeCard":
-        aValue = a.sizeCard || "";
-        bValue = b.sizeCard || "";
-        break;
-      default:
-        return 0;
-    }
-
-    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-    return 0;
-  });
+  // No client-side sorting needed - server handles sorting
+  const sortedTasks = tasksArray;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-auto w-full max-h-[calc(100vh-200px)]">
       {/* Table Header */}
-      <div className="bg-gray-50 border-b border-gray-200">
-        <div className="grid grid-cols-12 gap-2 px-6 py-4 text-sm font-semibold text-gray-700">
+      <div className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+        <div className="flex items-center gap-4 px-6 py-4 text-sm font-semibold text-gray-700 w-full">
           <div
-            className="col-span-3 flex items-center gap-2 cursor-pointer hover:text-gray-900"
+            className="flex-1 min-w-[300px] flex items-center gap-2 cursor-pointer hover:text-gray-900"
             onClick={() => handleSort("title")}
           >
             <FileText className="h-4 w-4" />
@@ -123,7 +213,7 @@ export function TaskTableView({
             )}
           </div>
           <div
-            className="col-span-2 flex items-center gap-2 cursor-pointer hover:text-gray-900"
+            className="w-[220px] flex items-center gap-2 cursor-pointer hover:text-gray-900"
             onClick={() => handleSort("createdAt")}
           >
             <Calendar className="h-4 w-4" />
@@ -134,12 +224,12 @@ export function TaskTableView({
               </span>
             )}
           </div>
-          <div className="col-span-2 flex items-center gap-2">
+          <div className="w-[180px] flex items-center gap-2">
             <User className="h-4 w-4" />
             Members
           </div>
           <div
-            className="col-span-1 flex items-center gap-2 cursor-pointer hover:text-gray-900"
+            className="w-[100px] flex items-center gap-2 cursor-pointer hover:text-gray-900"
             onClick={() => handleSort("sizeCard")}
           >
             <FileText className="h-4 w-4" />
@@ -151,7 +241,7 @@ export function TaskTableView({
             )}
           </div>
           <div
-            className="col-span-1 flex items-center justify-center gap-2 cursor-pointer hover:text-gray-900"
+            className="w-[100px] flex items-center justify-center gap-2 cursor-pointer hover:text-gray-900"
             onClick={() => handleSort("priority")}
           >
             <Flag className="h-4 w-4" />
@@ -163,7 +253,7 @@ export function TaskTableView({
             )}
           </div>
           <div
-            className="col-span-1 flex items-center justify-center gap-2 cursor-pointer hover:text-gray-900"
+            className="w-[120px] flex items-center justify-center gap-2 cursor-pointer hover:text-gray-900"
             onClick={() => handleSort("initiative")}
           >
             <Target className="h-4 w-4" />
@@ -175,7 +265,7 @@ export function TaskTableView({
             )}
           </div>
           <div
-            className="col-span-1 flex items-center justify-center gap-2 cursor-pointer hover:text-gray-900"
+            className="w-[100px] flex items-center justify-center gap-2 cursor-pointer hover:text-gray-900"
             onClick={() => handleSort("status")}
           >
             <Target className="h-4 w-4" />
@@ -187,7 +277,7 @@ export function TaskTableView({
             )}
           </div>
           <div
-            className="col-span-1 flex items-center gap-2 cursor-pointer hover:text-gray-900"
+            className="w-[120px] flex items-center gap-2 cursor-pointer hover:text-gray-900"
             onClick={() => handleSort("dueDate")}
           >
             <Calendar className="h-4 w-4" />
@@ -213,11 +303,11 @@ export function TaskTableView({
           sortedTasks.map((task) => (
             <div
               key={task.id}
-              className="grid grid-cols-12 gap-2 px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
+              className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors w-full"
               onClick={() => onTaskClick(task)}
             >
               {/* Task Name */}
-              <div className="col-span-3 flex items-center gap-3">
+              <div className="flex-1 min-w-[300px] flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
                   <FileText className="h-4 w-4 text-blue-600" />
                 </div>
@@ -237,12 +327,12 @@ export function TaskTableView({
               </div>
 
               {/* Created Time */}
-              <div className="col-span-2 flex items-center text-sm text-gray-600">
+              <div className="w-[220px] flex items-center text-sm text-gray-600">
                 {formatDate(task.createdAt)}
               </div>
 
               {/* Members */}
-              <div className="col-span-2 flex items-center gap-1">
+              <div className="w-[180px] flex items-center gap-1">
                 {task.taskMembers.slice(0, 3).map((member) => (
                   <div
                     key={member.id}
@@ -282,12 +372,12 @@ export function TaskTableView({
               </div>
 
               {/* Size Card */}
-              <div className="col-span-1 flex items-center text-sm text-gray-600">
+              <div className="w-[100px] flex items-center text-sm text-gray-600">
                 {task.sizeCard || "-"}
               </div>
 
               {/* Priority */}
-              <div className="col-span-1 flex items-center justify-center">
+              <div className="w-[100px] flex items-center justify-center">
                 {task.taskPriority ? (
                   <span
                     className={getTaskAttributeClasses()}
@@ -301,7 +391,7 @@ export function TaskTableView({
               </div>
 
               {/* Initiative */}
-              <div className="col-span-1 flex items-center justify-center">
+              <div className="w-[120px] flex items-center justify-center">
                 {task.taskInitiative ? (
                   <span
                     className={getTaskAttributeClasses()}
@@ -315,7 +405,7 @@ export function TaskTableView({
               </div>
 
               {/* Status */}
-              <div className="col-span-1 flex items-center justify-center">
+              <div className="w-[100px] flex items-center justify-center">
                 {task.taskStatus ? (
                   <span
                     className={`${getTaskAttributeClasses()} flex items-center gap-1`}
@@ -333,13 +423,26 @@ export function TaskTableView({
               </div>
 
               {/* Due Date */}
-              <div className="col-span-1 flex items-center text-sm text-gray-600">
+              <div className="w-[120px] flex items-center text-sm text-gray-600">
                 {task.dueDate ? formatDueDate(task.dueDate) : "-"}
               </div>
             </div>
           ))
         )}
       </div>
+
+      {/* Load More Button */}
+      {hasMore && tasksArray.length > 0 && (
+        <div className="px-6 py-4 border-t border-gray-200">
+          <button
+            onClick={handleLoadMore}
+            disabled={loading || fetchLoading}
+            className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading || fetchLoading ? "Loading..." : "Load More"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
