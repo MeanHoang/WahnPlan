@@ -8,6 +8,11 @@ import { TaskTableView } from "@/components/boards/task-table-view";
 import { TaskFilterBar } from "@/components/boards/task-filter-bar";
 import { TaskCard } from "@/components/boards/task-card";
 import { Task, TaskStatus, TaskPriority, TaskInitiative } from "@/types/task";
+
+interface DateRange {
+  from?: Date;
+  to?: Date;
+}
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useAuth } from "@/contexts/auth-context";
 import { useTaskDragDrop } from "@/hooks/use-task-drag-drop";
@@ -72,6 +77,7 @@ export function BoardViewRenderer({
   const [selectedReviewerIds, setSelectedReviewerIds] = useState<string[]>([]);
   const [selectedBaIds, setSelectedBaIds] = useState<string[]>([]);
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+  const [selectedDueDateRange, setSelectedDueDateRange] = useState<DateRange>();
   const [showFilters, setShowFilters] = useState(false);
 
   // Refresh trigger for columns
@@ -116,6 +122,20 @@ export function BoardViewRenderer({
       params.set("memberIds", selectedMemberIds.join(","));
     }
 
+    // Add due date range filters
+    if (selectedDueDateRange?.from) {
+      params.set(
+        "dueDateFrom",
+        selectedDueDateRange.from.toISOString().split("T")[0] || ""
+      );
+    }
+    if (selectedDueDateRange?.to) {
+      params.set(
+        "dueDateTo",
+        selectedDueDateRange.to.toISOString().split("T")[0] || ""
+      );
+    }
+
     Object.entries(additionalParams).forEach(([key, value]) => {
       if (value) params.set(key, value);
     });
@@ -136,6 +156,7 @@ export function BoardViewRenderer({
     reviewerIds: string[];
     baIds: string[];
     memberIds: string[];
+    dueDateRange?: DateRange;
   }) => {
     setSelectedStatusIds(filters.statusIds);
     setSelectedPriorityIds(filters.priorityIds);
@@ -144,6 +165,7 @@ export function BoardViewRenderer({
     setSelectedReviewerIds(filters.reviewerIds);
     setSelectedBaIds(filters.baIds);
     setSelectedMemberIds(filters.memberIds);
+    setSelectedDueDateRange(filters.dueDateRange);
   };
   const renderView = () => {
     switch (view) {
@@ -164,6 +186,7 @@ export function BoardViewRenderer({
                 selectedReviewerIds={selectedReviewerIds}
                 selectedBaIds={selectedBaIds}
                 selectedMemberIds={selectedMemberIds}
+                selectedDueDateRange={selectedDueDateRange}
                 refreshTrigger={refreshTrigger}
               />
             ))}
@@ -215,6 +238,7 @@ export function BoardViewRenderer({
               reviewerIds: selectedReviewerIds,
               baIds: selectedBaIds,
               memberIds: selectedMemberIds,
+              dueDateRange: selectedDueDateRange,
             }}
           />
         );
@@ -250,6 +274,7 @@ export function BoardViewRenderer({
             selectedReviewerIds={selectedReviewerIds}
             selectedBaIds={selectedBaIds}
             selectedMemberIds={selectedMemberIds}
+            selectedDueDateRange={selectedDueDateRange}
             onFiltersChange={handleFiltersChange}
           />
         )}

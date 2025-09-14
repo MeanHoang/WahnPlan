@@ -442,8 +442,21 @@ export class TasksService {
       whereClause.createdById = filters.createdById;
     }
 
-    // Handle overdue filter
-    if (filters.isOverdue) {
+    // Handle due date range filters
+    if (filters.dueDateFrom || filters.dueDateTo) {
+      whereClause.dueDate = {};
+
+      if (filters.dueDateFrom) {
+        whereClause.dueDate.gte = new Date(filters.dueDateFrom);
+      }
+
+      if (filters.dueDateTo) {
+        whereClause.dueDate.lte = new Date(filters.dueDateTo);
+      }
+    }
+
+    // Handle overdue filter (this should not conflict with date range filters)
+    if (filters.isOverdue && !filters.dueDateFrom && !filters.dueDateTo) {
       whereClause.dueDate = {
         lt: new Date(),
       };

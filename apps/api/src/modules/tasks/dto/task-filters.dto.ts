@@ -127,4 +127,12 @@ export class TaskFiltersDto {
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc';
+
+  @IsOptional()
+  @IsString()
+  dueDateFrom?: string;
+
+  @IsOptional()
+  @IsString()
+  dueDateTo?: string;
 }

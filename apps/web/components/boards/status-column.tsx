@@ -6,6 +6,11 @@ import { useDroppable } from "@dnd-kit/core";
 import { Button } from "@/components/ui/button";
 import { TaskCard } from "./task-card";
 import { Task, TaskStatus, PaginatedResponse } from "@/types/task";
+
+interface DateRange {
+  from?: Date;
+  to?: Date;
+}
 import { useFetchApi } from "@/hooks/use-fetch-api";
 
 interface StatusColumnProps {
@@ -20,6 +25,7 @@ interface StatusColumnProps {
   selectedReviewerIds?: string[];
   selectedBaIds?: string[];
   selectedMemberIds?: string[];
+  selectedDueDateRange?: DateRange;
   refreshTrigger?: number; // Add refresh trigger prop
 }
 
@@ -35,6 +41,7 @@ export function StatusColumn({
   selectedReviewerIds = [],
   selectedBaIds = [],
   selectedMemberIds = [],
+  selectedDueDateRange,
   refreshTrigger,
 }: StatusColumnProps): JSX.Element {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
@@ -75,6 +82,16 @@ export function StatusColumn({
       params.memberIds = selectedMemberIds.join(",");
     }
 
+    // Add due date range filters
+    if (selectedDueDateRange?.from) {
+      params.dueDateFrom =
+        selectedDueDateRange.from.toISOString().split("T")[0] || "";
+    }
+    if (selectedDueDateRange?.to) {
+      params.dueDateTo =
+        selectedDueDateRange.to.toISOString().split("T")[0] || "";
+    }
+
     return params;
   };
 
@@ -95,6 +112,7 @@ export function StatusColumn({
     selectedReviewerIds,
     selectedBaIds,
     selectedMemberIds,
+    selectedDueDateRange,
   ]);
 
   // Refetch data when refreshTrigger changes (e.g., after task move)

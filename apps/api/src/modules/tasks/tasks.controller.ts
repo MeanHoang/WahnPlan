@@ -52,6 +52,8 @@ export class TasksController {
       featureCategories: rawFilters.featureCategories,
       isOverdue: rawFilters.isOverdue === 'true',
       createdById: rawFilters.createdById,
+      dueDateFrom: rawFilters.dueDateFrom,
+      dueDateTo: rawFilters.dueDateTo,
     };
 
     // Convert comma-separated strings to arrays for multiple value filters

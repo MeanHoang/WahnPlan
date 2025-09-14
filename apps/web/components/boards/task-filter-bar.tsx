@@ -1,10 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MultiSelect, MultiSelectDisplay } from "@/components/ui/multi-select";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { TaskStatus, TaskPriority, TaskInitiative } from "@/types/task";
+
+interface DateRange {
+  from?: Date;
+  to?: Date;
+}
 
 interface TaskFilterBarProps {
   statuses: TaskStatus[];
@@ -23,6 +30,7 @@ interface TaskFilterBarProps {
   selectedReviewerIds: string[];
   selectedBaIds: string[];
   selectedMemberIds: string[];
+  selectedDueDateRange?: DateRange;
   onFiltersChange: (filters: {
     statusIds: string[];
     priorityIds: string[];
@@ -31,6 +39,7 @@ interface TaskFilterBarProps {
     reviewerIds: string[];
     baIds: string[];
     memberIds: string[];
+    dueDateRange?: DateRange;
   }) => void;
 }
 
@@ -46,6 +55,7 @@ export function TaskFilterBar({
   selectedReviewerIds,
   selectedBaIds,
   selectedMemberIds,
+  selectedDueDateRange,
   onFiltersChange,
 }: TaskFilterBarProps): JSX.Element {
   const handleClearAllFilters = () => {
@@ -57,6 +67,7 @@ export function TaskFilterBar({
       reviewerIds: [],
       baIds: [],
       memberIds: [],
+      dueDateRange: undefined,
     });
   };
 
@@ -68,7 +79,8 @@ export function TaskFilterBar({
       selectedAssigneeIds.length +
       selectedReviewerIds.length +
       selectedBaIds.length +
-      selectedMemberIds.length
+      selectedMemberIds.length +
+      (selectedDueDateRange?.from || selectedDueDateRange?.to ? 1 : 0)
     );
   };
 
@@ -95,6 +107,7 @@ export function TaskFilterBar({
                   reviewerIds: selectedReviewerIds,
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
+                  dueDateRange: selectedDueDateRange,
                 });
               }}
               placeholder="Priority"
@@ -119,6 +132,7 @@ export function TaskFilterBar({
                   reviewerIds: selectedReviewerIds,
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
+                  dueDateRange: selectedDueDateRange,
                 });
               }}
               placeholder="Status"
@@ -143,6 +157,7 @@ export function TaskFilterBar({
                   reviewerIds: selectedReviewerIds,
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
+                  dueDateRange: selectedDueDateRange,
                 });
               }}
               placeholder="Initiative"
@@ -169,6 +184,7 @@ export function TaskFilterBar({
                   reviewerIds: selectedReviewerIds,
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
+                  dueDateRange: selectedDueDateRange,
                 });
               }}
               placeholder="Assignee"
@@ -195,6 +211,7 @@ export function TaskFilterBar({
                   reviewerIds: selected,
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
+                  dueDateRange: selectedDueDateRange,
                 });
               }}
               placeholder="Reviewer"
@@ -221,6 +238,7 @@ export function TaskFilterBar({
                   reviewerIds: selectedReviewerIds,
                   baIds: selected,
                   memberIds: selectedMemberIds,
+                  dueDateRange: selectedDueDateRange,
                 });
               }}
               placeholder="BA"
@@ -247,9 +265,30 @@ export function TaskFilterBar({
                   reviewerIds: selectedReviewerIds,
                   baIds: selectedBaIds,
                   memberIds: selected,
+                  dueDateRange: selectedDueDateRange,
                 });
               }}
               placeholder="Member"
+            />
+          </div>
+
+          {/* Due Date Filter */}
+          <div className="min-w-[200px]">
+            <DateRangePicker
+              value={selectedDueDateRange}
+              onChange={(range) => {
+                onFiltersChange({
+                  statusIds: selectedStatusIds,
+                  priorityIds: selectedPriorityIds,
+                  initiativeIds: selectedInitiativeIds,
+                  assigneeIds: selectedAssigneeIds,
+                  reviewerIds: selectedReviewerIds,
+                  baIds: selectedBaIds,
+                  memberIds: selectedMemberIds,
+                  dueDateRange: range,
+                });
+              }}
+              placeholder="Due Date"
             />
           </div>
         </div>
@@ -287,6 +326,7 @@ export function TaskFilterBar({
                   reviewerIds: selectedReviewerIds,
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
+                  dueDateRange: selectedDueDateRange,
                 });
               }}
             />
@@ -308,6 +348,7 @@ export function TaskFilterBar({
                   reviewerIds: selectedReviewerIds,
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
+                  dueDateRange: selectedDueDateRange,
                 });
               }}
             />
@@ -329,6 +370,7 @@ export function TaskFilterBar({
                   reviewerIds: selectedReviewerIds,
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
+                  dueDateRange: selectedDueDateRange,
                 });
               }}
             />
@@ -351,6 +393,7 @@ export function TaskFilterBar({
                   reviewerIds: selectedReviewerIds,
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
+                  dueDateRange: selectedDueDateRange,
                 });
               }}
             />
@@ -373,6 +416,7 @@ export function TaskFilterBar({
                   ),
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds,
+                  dueDateRange: selectedDueDateRange,
                 });
               }}
             />
@@ -393,6 +437,7 @@ export function TaskFilterBar({
                   reviewerIds: selectedReviewerIds,
                   baIds: selectedBaIds.filter((id) => id !== baId),
                   memberIds: selectedMemberIds,
+                  dueDateRange: selectedDueDateRange,
                 });
               }}
             />
@@ -413,9 +458,38 @@ export function TaskFilterBar({
                   reviewerIds: selectedReviewerIds,
                   baIds: selectedBaIds,
                   memberIds: selectedMemberIds.filter((id) => id !== memberId),
+                  dueDateRange: selectedDueDateRange,
                 });
               }}
             />
+
+            {/* Due Date Filter Display */}
+            {selectedDueDateRange?.from || selectedDueDateRange?.to ? (
+              <Badge
+                variant="secondary"
+                className="bg-orange-100 text-orange-800 hover:bg-orange-200"
+                onClick={() => {
+                  onFiltersChange({
+                    statusIds: selectedStatusIds,
+                    priorityIds: selectedPriorityIds,
+                    initiativeIds: selectedInitiativeIds,
+                    assigneeIds: selectedAssigneeIds,
+                    reviewerIds: selectedReviewerIds,
+                    baIds: selectedBaIds,
+                    memberIds: selectedMemberIds,
+                    dueDateRange: undefined,
+                  });
+                }}
+              >
+                Due Date:{" "}
+                {selectedDueDateRange.from && selectedDueDateRange.to
+                  ? `${selectedDueDateRange.from.toLocaleDateString()} - ${selectedDueDateRange.to.toLocaleDateString()}`
+                  : selectedDueDateRange.from
+                    ? `From ${selectedDueDateRange.from.toLocaleDateString()}`
+                    : `Until ${selectedDueDateRange.to?.toLocaleDateString()}`}
+                <X className="h-3 w-3 ml-1 cursor-pointer" />
+              </Badge>
+            ) : null}
           </div>
         </div>
       )}

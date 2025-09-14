@@ -11,6 +11,11 @@ import {
   FileText,
 } from "lucide-react";
 import { Task, TaskPriority, TaskInitiative, TaskStatus } from "@/types/task";
+
+interface DateRange {
+  from?: Date;
+  to?: Date;
+}
 import {
   getPriorityStyle,
   getStatusStyle,
@@ -33,6 +38,7 @@ interface TaskTableViewProps {
     reviewerIds: string[];
     baIds: string[];
     memberIds: string[];
+    dueDateRange?: DateRange;
   };
 }
 
@@ -80,6 +86,20 @@ export function TaskTableView({
     }
     if (filters?.memberIds && filters.memberIds.length > 0) {
       params.set("memberIds", filters.memberIds.join(","));
+    }
+
+    // Add due date range filters
+    if (filters?.dueDateRange?.from) {
+      params.set(
+        "dueDateFrom",
+        filters.dueDateRange.from.toISOString().split("T")[0] || ""
+      );
+    }
+    if (filters?.dueDateRange?.to) {
+      params.set(
+        "dueDateTo",
+        filters.dueDateRange.to.toISOString().split("T")[0] || ""
+      );
     }
 
     params.set("page", page.toString());
