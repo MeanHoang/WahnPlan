@@ -45,16 +45,6 @@ export function AssigneeColumn({
     }
   );
 
-  // Debug logging
-  useEffect(() => {
-    console.log("AssigneeColumn Debug:", {
-      boardId,
-      assigneeId: assignee.id,
-      assigneeName: assignee.name,
-      hasValidParams: !!(boardId && assignee.id),
-    });
-  }, [boardId, assignee.id, assignee.name]);
-
   // Debug error logging
   useEffect(() => {
     if (tasksError) {
@@ -64,7 +54,6 @@ export function AssigneeColumn({
 
   useEffect(() => {
     if (tasksData) {
-      console.log("AssigneeColumn - tasksData received:", tasksData);
       // Handle API response format: { data: [...], pagination: {...} }
       const tasks = Array.isArray(tasksData) ? tasksData : tasksData.data || [];
       setTasks(tasks);

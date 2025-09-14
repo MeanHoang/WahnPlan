@@ -9,6 +9,7 @@ import {
   Grid3X3,
   BarChart,
   Users,
+  User,
   FileText,
   Plus,
   Filter,
@@ -273,7 +274,7 @@ export default function BoardDetailPage(): JSX.Element {
               }`}
               onClick={() => setSelectedView("mine")}
             >
-              <Users className="h-4 w-4" />
+              <User className="h-4 w-4" />
               Mine
             </div>
             <div

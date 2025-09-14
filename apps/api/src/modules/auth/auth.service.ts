@@ -24,8 +24,6 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
-    console.log('Starting registration for email:', registerDto.email);
-
     const {
       email,
       password,

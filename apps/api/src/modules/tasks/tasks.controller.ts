@@ -30,7 +30,6 @@ export class TasksController {
 
   @Get()
   findAll(@Query() query: FindTasksQueryDto, @Req() req: any) {
-    console.log('TasksController.findAll - Received query:', query);
     const { boardId, page, limit, ...filters } = query;
 
     if (!boardId) {
