@@ -20,6 +20,8 @@ export interface Option {
   label: string;
   value: string;
   color?: string;
+  avatar?: string;
+  subtitle?: string;
 }
 
 interface MultiSelectProps {
@@ -38,6 +40,7 @@ export function MultiSelect({
   className,
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
+  const [searchTerm, setSearchTerm] = React.useState("");
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   const handleSelect = (item: string) => {
@@ -48,6 +51,11 @@ export function MultiSelect({
     }
   };
 
+  // Filter options based on search term
+  const filteredOptions = options.filter((option) =>
+    option.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   // Close dropdown when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -56,12 +64,14 @@ export function MultiSelect({
         !dropdownRef.current.contains(event.target as Node)
       ) {
         setOpen(false);
+        setSearchTerm(""); // Clear search when closing
       }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setOpen(false);
+        setSearchTerm("");
       }
     };
 
@@ -96,20 +106,32 @@ export function MultiSelect({
       </Button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 w-full min-w-[200px]">
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 w-full min-w-[250px]">
           <div className="p-2">
+            {/* Search Input */}
+            <div className="mb-2">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autoFocus
+              />
+            </div>
+
             <div className="space-y-1 max-h-60 overflow-y-auto">
-              {options.length === 0 ? (
+              {filteredOptions.length === 0 ? (
                 <div className="text-sm text-gray-500 p-2">
-                  No items available
+                  {searchTerm ? "No items found" : "No items available"}
                 </div>
               ) : (
-                options.map((option) => {
+                filteredOptions.map((option) => {
                   const isSelected = selected.includes(option.value);
                   return (
                     <div
                       key={option.value}
-                      className={`flex items-center space-x-2 p-1.5 rounded-md cursor-pointer transition-colors ${
+                      className={`flex items-center space-x-3 p-2 rounded-md cursor-pointer transition-colors ${
                         isSelected
                           ? "bg-blue-50 border border-blue-200"
                           : "hover:bg-gray-50"
@@ -120,16 +142,38 @@ export function MultiSelect({
                         handleSelect(option.value);
                       }}
                     >
-                      <div
-                        className="w-3 h-3 rounded-full flex-shrink-0 border border-white shadow-sm"
-                        style={{ backgroundColor: option.color || "#6B7280" }}
-                      />
-                      <span className="text-xs font-medium text-gray-900 flex-1 truncate">
-                        {option.label}
-                      </span>
+                      {/* Avatar or Color Dot */}
+                      {option.avatar ? (
+                        <img
+                          src={option.avatar}
+                          alt={option.label}
+                          className="w-6 h-6 rounded-full flex-shrink-0 border border-gray-200"
+                        />
+                      ) : (
+                        <div
+                          className="w-6 h-6 rounded-full flex-shrink-0 border-2 border-white shadow-sm flex items-center justify-center text-xs font-medium text-white"
+                          style={{ backgroundColor: option.color || "#6B7280" }}
+                        >
+                          {option.label.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+
+                      {/* Name and Subtitle */}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate">
+                          {option.label}
+                        </div>
+                        {option.subtitle && (
+                          <div className="text-xs text-gray-500 truncate">
+                            {option.subtitle}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Check Icon */}
                       {isSelected && (
-                        <div className="flex items-center justify-center w-4 h-4 bg-blue-600 rounded-full flex-shrink-0">
-                          <CheckIcon className="w-2.5 h-2.5 text-white" />
+                        <div className="flex items-center justify-center w-5 h-5 bg-blue-600 rounded-full flex-shrink-0">
+                          <CheckIcon className="w-3 h-3 text-white" />
                         </div>
                       )}
                     </div>
@@ -181,15 +225,25 @@ export function MultiSelectDisplay({
           <Badge
             key={value}
             variant="secondary"
-            className="flex items-center gap-1"
+            className="flex items-center gap-2 px-2 py-1"
           >
-            <div
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: option.color || "#6B7280" }}
-            />
-            {option.label}
+            {option.avatar ? (
+              <img
+                src={option.avatar}
+                alt={option.label}
+                className="w-4 h-4 rounded-full border border-gray-200"
+              />
+            ) : (
+              <div
+                className="w-4 h-4 rounded-full flex items-center justify-center text-xs font-medium text-white"
+                style={{ backgroundColor: option.color || "#6B7280" }}
+              >
+                {option.label.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <span className="text-xs">{option.label}</span>
             <XIcon
-              className="w-3 h-3 cursor-pointer"
+              className="w-3 h-3 cursor-pointer hover:text-red-500"
               onClick={() => onRemove(value)}
             />
           </Badge>

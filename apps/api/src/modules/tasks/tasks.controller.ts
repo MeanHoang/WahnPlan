@@ -82,6 +82,23 @@ export class TasksController {
         .filter(Boolean);
     }
 
+    // Convert comma-separated strings to arrays for multiple assignee/reviewer/BA filters
+    if (rawFilters.assigneeIds && typeof rawFilters.assigneeIds === 'string') {
+      filters.assigneeIds = rawFilters.assigneeIds.split(',').filter(Boolean);
+    }
+
+    if (rawFilters.reviewerIds && typeof rawFilters.reviewerIds === 'string') {
+      filters.reviewerIds = rawFilters.reviewerIds.split(',').filter(Boolean);
+    }
+
+    if (rawFilters.baIds && typeof rawFilters.baIds === 'string') {
+      filters.baIds = rawFilters.baIds.split(',').filter(Boolean);
+    }
+
+    if (rawFilters.memberIds && typeof rawFilters.memberIds === 'string') {
+      filters.memberIds = rawFilters.memberIds.split(',').filter(Boolean);
+    }
+
     return this.tasksService.findAll(
       boardId,
       req.user.id,

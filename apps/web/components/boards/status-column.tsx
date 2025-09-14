@@ -15,6 +15,10 @@ interface StatusColumnProps {
   selectedStatusIds?: string[];
   selectedPriorityIds?: string[];
   selectedInitiativeIds?: string[];
+  selectedAssigneeIds?: string[];
+  selectedReviewerIds?: string[];
+  selectedBaIds?: string[];
+  selectedMemberIds?: string[];
 }
 
 export function StatusColumn({
@@ -25,6 +29,10 @@ export function StatusColumn({
   selectedStatusIds = [],
   selectedPriorityIds = [],
   selectedInitiativeIds = [],
+  selectedAssigneeIds = [],
+  selectedReviewerIds = [],
+  selectedBaIds = [],
+  selectedMemberIds = [],
 }: StatusColumnProps): JSX.Element {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -47,6 +55,18 @@ export function StatusColumn({
     if (selectedInitiativeIds.length > 0) {
       params.taskInitiativeIds = selectedInitiativeIds.join(",");
     }
+    if (selectedAssigneeIds.length > 0) {
+      params.assigneeIds = selectedAssigneeIds.join(",");
+    }
+    if (selectedReviewerIds.length > 0) {
+      params.reviewerIds = selectedReviewerIds.join(",");
+    }
+    if (selectedBaIds.length > 0) {
+      params.baIds = selectedBaIds.join(",");
+    }
+    if (selectedMemberIds.length > 0) {
+      params.memberIds = selectedMemberIds.join(",");
+    }
 
     return params;
   };
@@ -61,7 +81,14 @@ export function StatusColumn({
   useEffect(() => {
     setCurrentPage(1);
     setAllTasks([]);
-  }, [selectedPriorityIds, selectedInitiativeIds]);
+  }, [
+    selectedPriorityIds,
+    selectedInitiativeIds,
+    selectedAssigneeIds,
+    selectedReviewerIds,
+    selectedBaIds,
+    selectedMemberIds,
+  ]);
 
   // Update allTasks when new data comes in
   useEffect(() => {

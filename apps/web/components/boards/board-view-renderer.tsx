@@ -47,6 +47,10 @@ export function BoardViewRenderer({
   const [selectedInitiativeIds, setSelectedInitiativeIds] = useState<string[]>(
     []
   );
+  const [selectedAssigneeIds, setSelectedAssigneeIds] = useState<string[]>([]);
+  const [selectedReviewerIds, setSelectedReviewerIds] = useState<string[]>([]);
+  const [selectedBaIds, setSelectedBaIds] = useState<string[]>([]);
+  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
   const toggleFilters = useCallback(() => {
@@ -75,6 +79,18 @@ export function BoardViewRenderer({
     if (selectedInitiativeIds.length > 0) {
       params.set("taskInitiativeIds", selectedInitiativeIds.join(","));
     }
+    if (selectedAssigneeIds.length > 0) {
+      params.set("assigneeIds", selectedAssigneeIds.join(","));
+    }
+    if (selectedReviewerIds.length > 0) {
+      params.set("reviewerIds", selectedReviewerIds.join(","));
+    }
+    if (selectedBaIds.length > 0) {
+      params.set("baIds", selectedBaIds.join(","));
+    }
+    if (selectedMemberIds.length > 0) {
+      params.set("memberIds", selectedMemberIds.join(","));
+    }
 
     Object.entries(additionalParams).forEach(([key, value]) => {
       if (value) params.set(key, value);
@@ -92,10 +108,18 @@ export function BoardViewRenderer({
     statusIds: string[];
     priorityIds: string[];
     initiativeIds: string[];
+    assigneeIds: string[];
+    reviewerIds: string[];
+    baIds: string[];
+    memberIds: string[];
   }) => {
     setSelectedStatusIds(filters.statusIds);
     setSelectedPriorityIds(filters.priorityIds);
     setSelectedInitiativeIds(filters.initiativeIds);
+    setSelectedAssigneeIds(filters.assigneeIds);
+    setSelectedReviewerIds(filters.reviewerIds);
+    setSelectedBaIds(filters.baIds);
+    setSelectedMemberIds(filters.memberIds);
   };
   const renderView = () => {
     switch (view) {
@@ -112,6 +136,10 @@ export function BoardViewRenderer({
                 selectedStatusIds={selectedStatusIds}
                 selectedPriorityIds={selectedPriorityIds}
                 selectedInitiativeIds={selectedInitiativeIds}
+                selectedAssigneeIds={selectedAssigneeIds}
+                selectedReviewerIds={selectedReviewerIds}
+                selectedBaIds={selectedBaIds}
+                selectedMemberIds={selectedMemberIds}
               />
             ))}
           </>
@@ -180,9 +208,14 @@ export function BoardViewRenderer({
           statuses={statuses}
           priorities={priorities}
           initiatives={initiatives}
+          assignees={assignees}
           selectedStatusIds={selectedStatusIds}
           selectedPriorityIds={selectedPriorityIds}
           selectedInitiativeIds={selectedInitiativeIds}
+          selectedAssigneeIds={selectedAssigneeIds}
+          selectedReviewerIds={selectedReviewerIds}
+          selectedBaIds={selectedBaIds}
+          selectedMemberIds={selectedMemberIds}
           onFiltersChange={handleFiltersChange}
         />
       )}

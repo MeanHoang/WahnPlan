@@ -15,6 +15,50 @@ export class TaskFiltersDto {
   baId?: string;
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.split(',').filter(Boolean);
+    }
+    return value;
+  })
+  assigneeIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.split(',').filter(Boolean);
+    }
+    return value;
+  })
+  reviewerIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.split(',').filter(Boolean);
+    }
+    return value;
+  })
+  baIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.split(',').filter(Boolean);
+    }
+    return value;
+  })
+  memberIds?: string[];
+
+  @IsOptional()
   @IsString()
   taskStatusId?: string;
 

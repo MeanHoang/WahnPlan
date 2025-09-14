@@ -10,13 +10,27 @@ interface TaskFilterBarProps {
   statuses: TaskStatus[];
   priorities: TaskPriority[];
   initiatives: TaskInitiative[];
+  assignees: Array<{
+    id: string;
+    name: string;
+    email?: string;
+    avatar?: string;
+  }>;
   selectedStatusIds: string[];
   selectedPriorityIds: string[];
   selectedInitiativeIds: string[];
+  selectedAssigneeIds: string[];
+  selectedReviewerIds: string[];
+  selectedBaIds: string[];
+  selectedMemberIds: string[];
   onFiltersChange: (filters: {
     statusIds: string[];
     priorityIds: string[];
     initiativeIds: string[];
+    assigneeIds: string[];
+    reviewerIds: string[];
+    baIds: string[];
+    memberIds: string[];
   }) => void;
 }
 
@@ -24,9 +38,14 @@ export function TaskFilterBar({
   statuses,
   priorities,
   initiatives,
+  assignees,
   selectedStatusIds,
   selectedPriorityIds,
   selectedInitiativeIds,
+  selectedAssigneeIds,
+  selectedReviewerIds,
+  selectedBaIds,
+  selectedMemberIds,
   onFiltersChange,
 }: TaskFilterBarProps): JSX.Element {
   const handleClearAllFilters = () => {
@@ -34,6 +53,10 @@ export function TaskFilterBar({
       statusIds: [],
       priorityIds: [],
       initiativeIds: [],
+      assigneeIds: [],
+      reviewerIds: [],
+      baIds: [],
+      memberIds: [],
     });
   };
 
@@ -41,7 +64,11 @@ export function TaskFilterBar({
     return (
       selectedStatusIds.length +
       selectedPriorityIds.length +
-      selectedInitiativeIds.length
+      selectedInitiativeIds.length +
+      selectedAssigneeIds.length +
+      selectedReviewerIds.length +
+      selectedBaIds.length +
+      selectedMemberIds.length
     );
   };
 
@@ -64,6 +91,10 @@ export function TaskFilterBar({
                   statusIds: selectedStatusIds,
                   priorityIds: selected,
                   initiativeIds: selectedInitiativeIds,
+                  assigneeIds: selectedAssigneeIds,
+                  reviewerIds: selectedReviewerIds,
+                  baIds: selectedBaIds,
+                  memberIds: selectedMemberIds,
                 });
               }}
               placeholder="Priority"
@@ -84,6 +115,10 @@ export function TaskFilterBar({
                   statusIds: selected,
                   priorityIds: selectedPriorityIds,
                   initiativeIds: selectedInitiativeIds,
+                  assigneeIds: selectedAssigneeIds,
+                  reviewerIds: selectedReviewerIds,
+                  baIds: selectedBaIds,
+                  memberIds: selectedMemberIds,
                 });
               }}
               placeholder="Status"
@@ -104,9 +139,117 @@ export function TaskFilterBar({
                   statusIds: selectedStatusIds,
                   priorityIds: selectedPriorityIds,
                   initiativeIds: selected,
+                  assigneeIds: selectedAssigneeIds,
+                  reviewerIds: selectedReviewerIds,
+                  baIds: selectedBaIds,
+                  memberIds: selectedMemberIds,
                 });
               }}
               placeholder="Initiative"
+            />
+          </div>
+
+          {/* Assignee Filter */}
+          <div className="min-w-[150px]">
+            <MultiSelect
+              options={assignees.map((a) => ({
+                label: a.name,
+                value: a.id,
+                color: "#3B82F6", // Default blue color for users
+                avatar: a.avatar,
+                subtitle: a.email,
+              }))}
+              selected={selectedAssigneeIds}
+              onChange={(selected) => {
+                onFiltersChange({
+                  statusIds: selectedStatusIds,
+                  priorityIds: selectedPriorityIds,
+                  initiativeIds: selectedInitiativeIds,
+                  assigneeIds: selected,
+                  reviewerIds: selectedReviewerIds,
+                  baIds: selectedBaIds,
+                  memberIds: selectedMemberIds,
+                });
+              }}
+              placeholder="Assignee"
+            />
+          </div>
+
+          {/* Reviewer Filter */}
+          <div className="min-w-[150px]">
+            <MultiSelect
+              options={assignees.map((a) => ({
+                label: a.name,
+                value: a.id,
+                color: "#10B981", // Default green color for reviewers
+                avatar: a.avatar,
+                subtitle: a.email,
+              }))}
+              selected={selectedReviewerIds}
+              onChange={(selected) => {
+                onFiltersChange({
+                  statusIds: selectedStatusIds,
+                  priorityIds: selectedPriorityIds,
+                  initiativeIds: selectedInitiativeIds,
+                  assigneeIds: selectedAssigneeIds,
+                  reviewerIds: selected,
+                  baIds: selectedBaIds,
+                  memberIds: selectedMemberIds,
+                });
+              }}
+              placeholder="Reviewer"
+            />
+          </div>
+
+          {/* BA Filter */}
+          <div className="min-w-[150px]">
+            <MultiSelect
+              options={assignees.map((a) => ({
+                label: a.name,
+                value: a.id,
+                color: "#F59E0B", // Default orange color for BA
+                avatar: a.avatar,
+                subtitle: a.email,
+              }))}
+              selected={selectedBaIds}
+              onChange={(selected) => {
+                onFiltersChange({
+                  statusIds: selectedStatusIds,
+                  priorityIds: selectedPriorityIds,
+                  initiativeIds: selectedInitiativeIds,
+                  assigneeIds: selectedAssigneeIds,
+                  reviewerIds: selectedReviewerIds,
+                  baIds: selected,
+                  memberIds: selectedMemberIds,
+                });
+              }}
+              placeholder="BA"
+            />
+          </div>
+
+          {/* Member Filter */}
+          <div className="min-w-[150px]">
+            <MultiSelect
+              options={assignees.map((a) => ({
+                label: a.name,
+                value: a.id,
+                color: "#8B5CF6", // Default purple color for members
+                avatar: a.avatar,
+                subtitle: a.email,
+              }))}
+              selected={selectedMemberIds}
+              onChange={(selected) => {
+                onFiltersChange({
+                  statusIds: selectedStatusIds,
+                  priorityIds: selectedPriorityIds,
+                  initiativeIds: selectedInitiativeIds,
+                  assigneeIds: selectedAssigneeIds,
+                  reviewerIds: selectedReviewerIds,
+                  baIds: selectedBaIds,
+                  memberIds: selected,
+                });
+              }}
+              placeholder="Member"
             />
           </div>
         </div>
@@ -140,6 +283,10 @@ export function TaskFilterBar({
                   statusIds: selectedStatusIds.filter((id) => id !== statusId),
                   priorityIds: selectedPriorityIds,
                   initiativeIds: selectedInitiativeIds,
+                  assigneeIds: selectedAssigneeIds,
+                  reviewerIds: selectedReviewerIds,
+                  baIds: selectedBaIds,
+                  memberIds: selectedMemberIds,
                 });
               }}
             />
@@ -157,6 +304,10 @@ export function TaskFilterBar({
                     (id) => id !== priorityId
                   ),
                   initiativeIds: selectedInitiativeIds,
+                  assigneeIds: selectedAssigneeIds,
+                  reviewerIds: selectedReviewerIds,
+                  baIds: selectedBaIds,
+                  memberIds: selectedMemberIds,
                 });
               }}
             />
@@ -174,6 +325,94 @@ export function TaskFilterBar({
                   initiativeIds: selectedInitiativeIds.filter(
                     (id) => id !== initiativeId
                   ),
+                  assigneeIds: selectedAssigneeIds,
+                  reviewerIds: selectedReviewerIds,
+                  baIds: selectedBaIds,
+                  memberIds: selectedMemberIds,
+                });
+              }}
+            />
+            <MultiSelectDisplay
+              options={assignees.map((a) => ({
+                label: `Assignee: ${a.name}`,
+                value: a.id,
+                color: "#3B82F6",
+                avatar: a.avatar,
+              }))}
+              selected={selectedAssigneeIds}
+              onRemove={(assigneeId) => {
+                onFiltersChange({
+                  statusIds: selectedStatusIds,
+                  priorityIds: selectedPriorityIds,
+                  initiativeIds: selectedInitiativeIds,
+                  assigneeIds: selectedAssigneeIds.filter(
+                    (id) => id !== assigneeId
+                  ),
+                  reviewerIds: selectedReviewerIds,
+                  baIds: selectedBaIds,
+                  memberIds: selectedMemberIds,
+                });
+              }}
+            />
+            <MultiSelectDisplay
+              options={assignees.map((a) => ({
+                label: `Reviewer: ${a.name}`,
+                value: a.id,
+                color: "#10B981",
+                avatar: a.avatar,
+              }))}
+              selected={selectedReviewerIds}
+              onRemove={(reviewerId) => {
+                onFiltersChange({
+                  statusIds: selectedStatusIds,
+                  priorityIds: selectedPriorityIds,
+                  initiativeIds: selectedInitiativeIds,
+                  assigneeIds: selectedAssigneeIds,
+                  reviewerIds: selectedReviewerIds.filter(
+                    (id) => id !== reviewerId
+                  ),
+                  baIds: selectedBaIds,
+                  memberIds: selectedMemberIds,
+                });
+              }}
+            />
+            <MultiSelectDisplay
+              options={assignees.map((a) => ({
+                label: `BA: ${a.name}`,
+                value: a.id,
+                color: "#F59E0B",
+                avatar: a.avatar,
+              }))}
+              selected={selectedBaIds}
+              onRemove={(baId) => {
+                onFiltersChange({
+                  statusIds: selectedStatusIds,
+                  priorityIds: selectedPriorityIds,
+                  initiativeIds: selectedInitiativeIds,
+                  assigneeIds: selectedAssigneeIds,
+                  reviewerIds: selectedReviewerIds,
+                  baIds: selectedBaIds.filter((id) => id !== baId),
+                  memberIds: selectedMemberIds,
+                });
+              }}
+            />
+            <MultiSelectDisplay
+              options={assignees.map((a) => ({
+                label: `Member: ${a.name}`,
+                value: a.id,
+                color: "#8B5CF6",
+                avatar: a.avatar,
+              }))}
+              selected={selectedMemberIds}
+              onRemove={(memberId) => {
+                onFiltersChange({
+                  statusIds: selectedStatusIds,
+                  priorityIds: selectedPriorityIds,
+                  initiativeIds: selectedInitiativeIds,
+                  assigneeIds: selectedAssigneeIds,
+                  reviewerIds: selectedReviewerIds,
+                  baIds: selectedBaIds,
+                  memberIds: selectedMemberIds.filter((id) => id !== memberId),
                 });
               }}
             />

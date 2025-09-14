@@ -310,6 +310,38 @@ export class TasksService {
       whereClause.baId = filters.baId;
     }
 
+    // Handle multiple assignee filters (new feature)
+    if (filters.assigneeIds && filters.assigneeIds.length > 0) {
+      whereClause.assigneeId = {
+        in: filters.assigneeIds,
+      };
+    }
+
+    // Handle multiple reviewer filters (new feature)
+    if (filters.reviewerIds && filters.reviewerIds.length > 0) {
+      whereClause.reviewerId = {
+        in: filters.reviewerIds,
+      };
+    }
+
+    // Handle multiple BA filters (new feature)
+    if (filters.baIds && filters.baIds.length > 0) {
+      whereClause.baId = {
+        in: filters.baIds,
+      };
+    }
+
+    // Handle multiple member filters (new feature) - special case using taskMembers relation
+    if (filters.memberIds && filters.memberIds.length > 0) {
+      whereClause.taskMembers = {
+        some: {
+          userId: {
+            in: filters.memberIds,
+          },
+        },
+      };
+    }
+
     // Handle single status filter (backward compatibility)
     if (filters.taskStatusId) {
       whereClause.taskStatusId = filters.taskStatusId;

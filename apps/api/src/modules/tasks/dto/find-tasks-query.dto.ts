@@ -26,6 +26,22 @@ export class FindTasksQueryDto {
 
   @IsOptional()
   @IsString()
+  assigneeIds?: string;
+
+  @IsOptional()
+  @IsString()
+  reviewerIds?: string;
+
+  @IsOptional()
+  @IsString()
+  baIds?: string;
+
+  @IsOptional()
+  @IsString()
+  memberIds?: string;
+
+  @IsOptional()
+  @IsString()
   taskStatusId?: string;
 
   @IsOptional()
