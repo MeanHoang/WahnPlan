@@ -32,15 +32,42 @@ export function AssigneeColumn({
     loading: tasksLoading,
     error: tasksError,
     refetch: refetchTasks,
-  } = useFetchApi<Task[]>("/tasks", {
-    boardId,
-    assigneeId: assignee.id,
-  });
+  } = useFetchApi<any>(
+    "/tasks",
+    boardId && assignee.id
+      ? {
+          boardId,
+          assigneeId: assignee.id,
+        }
+      : undefined,
+    {
+      enabled: !!(boardId && assignee.id),
+    }
+  );
+
+  // Debug logging
+  useEffect(() => {
+    console.log("AssigneeColumn Debug:", {
+      boardId,
+      assigneeId: assignee.id,
+      assigneeName: assignee.name,
+      hasValidParams: !!(boardId && assignee.id),
+    });
+  }, [boardId, assignee.id, assignee.name]);
+
+  // Debug error logging
+  useEffect(() => {
+    if (tasksError) {
+      console.error("AssigneeColumn Error:", tasksError);
+    }
+  }, [tasksError]);
 
   useEffect(() => {
     if (tasksData) {
-      setTasks(Array.isArray(tasksData) ? tasksData : []);
-      setLoading(false);
+      console.log("AssigneeColumn - tasksData received:", tasksData);
+      // Handle API response format: { data: [...], pagination: {...} }
+      const tasks = Array.isArray(tasksData) ? tasksData : tasksData.data || [];
+      setTasks(tasks);
     }
   }, [tasksData]);
 

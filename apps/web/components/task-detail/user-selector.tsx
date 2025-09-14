@@ -88,7 +88,7 @@ export function UserSelector({
     <div className={`relative ${className}`} ref={selectRef}>
       <button
         type="button"
-        className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm text-left flex items-center justify-between bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="w-64 px-2 py-1 text-xs text-left flex items-center justify-between bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-center gap-2 flex-1">
@@ -140,7 +140,7 @@ export function UserSelector({
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-hidden">
+        <div className="absolute z-10 w-full mt-1 bg-white shadow-lg max-h-60 overflow-hidden">
           {/* Search Input */}
           <div className="p-2 border-b border-gray-200">
             <div className="relative">
@@ -150,7 +150,7 @@ export function UserSelector({
                 placeholder="Search users..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-64 pl-8 pr-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -162,7 +162,7 @@ export function UserSelector({
                 <button
                   key={user.id}
                   type="button"
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                  className="w-64 px-2 py-1 text-left text-xs hover:bg-gray-50 flex items-center gap-2"
                   onClick={() => handleUserSelect(user.id)}
                 >
                   <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center">

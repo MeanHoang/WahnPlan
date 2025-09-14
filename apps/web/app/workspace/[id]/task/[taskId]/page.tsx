@@ -251,329 +251,336 @@ export default function TaskDetailPage(): JSX.Element {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBackToBoard}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
-          </div>
-          {hasChanges && (
+      {/* Outer Wrapper */}
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="px-6 py-6 flex justify-center">
+          <div className="flex items-center justify-between max-w-4xl w-full">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBackToBoard}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <h1 className="text-3xl font-bold text-gray-900">{task.title}</h1>
+            </div>
             <Button
               onClick={handleSaveChanges}
-              disabled={isUpdating}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={isUpdating || !hasChanges}
+              className={`${
+                hasChanges
+                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
-              {isUpdating ? "Saving..." : "Save Changes"}
+              {isUpdating
+                ? "Saving..."
+                : hasChanges
+                  ? "Save Changes"
+                  : "No Changes"}
             </Button>
-          )}
-        </div>
-        {/* Large Title */}
-        <div className="mt-4">
-          <h1 className="text-3xl font-bold text-gray-900">{task.title}</h1>
-        </div>
-      </div>
-
-      {/* Task Details */}
-      <div className="max-w-5xl mx-auto p-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="space-y-1">
-            {/* Due Date */}
-            <TaskAttributeRow
-              icon={<Calendar className="h-5 w-5 text-gray-400" />}
-              label="Due date"
-            >
-              <input
-                type="date"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm"
-                value={
-                  task.dueDate
-                    ? new Date(task.dueDate).toISOString().split("T")[0]
-                    : ""
-                }
-                onChange={(e) => {
-                  // TODO: Handle date update
-                }}
-              />
-            </TaskAttributeRow>
-
-            {/* Priority */}
-            <TaskAttributeRow
-              icon={<Flag className="h-5 w-5 text-gray-400" />}
-              label="Priority"
-            >
-              <ColoredSelect
-                value={
-                  pendingUpdates.taskPriorityId || task.taskPriority?.id || ""
-                }
-                onChange={(value) => {
-                  handleFieldChange("taskPriorityId", value);
-                }}
-                options={priorities || []}
-                placeholder="Empty"
-              />
-            </TaskAttributeRow>
-
-            {/* Initiative */}
-            <TaskAttributeRow
-              icon={<Target className="h-5 w-5 text-gray-400" />}
-              label="Initiative"
-            >
-              <ColoredSelect
-                value={
-                  pendingUpdates.taskInitiativeId ||
-                  task.taskInitiative?.id ||
-                  ""
-                }
-                onChange={(value) => {
-                  handleFieldChange("taskInitiativeId", value);
-                }}
-                options={initiatives || []}
-                placeholder="Empty"
-              />
-            </TaskAttributeRow>
-
-            {/* OKR */}
-            <TaskAttributeRow
-              icon={<FileText className="h-5 w-5 text-gray-400" />}
-              label="OKR"
-            >
-              <input
-                type="text"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm"
-                placeholder="Empty"
-                value={task.okr || ""}
-                onChange={(e) => {
-                  // TODO: Handle OKR update
-                }}
-              />
-            </TaskAttributeRow>
-
-            {/* Status */}
-            <TaskAttributeRow
-              icon={<Flag className="h-5 w-5 text-gray-400" />}
-              label="Status"
-            >
-              <ColoredSelect
-                value={pendingUpdates.taskStatusId || task.taskStatus?.id || ""}
-                onChange={(value) => {
-                  handleFieldChange("taskStatusId", value);
-                }}
-                options={
-                  statuses?.map((status) => ({
-                    id: status.id,
-                    name: status.title,
-                    color: status.color,
-                  })) || []
-                }
-                placeholder="Empty"
-              />
-            </TaskAttributeRow>
-
-            {/* Developer */}
-            <TaskAttributeRow
-              icon={<Code className="h-5 w-5 text-gray-400" />}
-              label="Developer"
-            >
-              <input
-                type="text"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm"
-                placeholder="Empty"
-                onChange={(e) => {
-                  // TODO: Handle developer update
-                }}
-              />
-            </TaskAttributeRow>
-
-            {/* Assignee */}
-            <TaskAttributeRow
-              icon={<User className="h-5 w-5 text-gray-400" />}
-              label="Assignee"
-            >
-              <UserSelector
-                value={pendingUpdates.assigneeId || task.assignee?.id || ""}
-                onChange={(value) => {
-                  handleFieldChange("assigneeId", value as string);
-                }}
-                users={availableUsers}
-                placeholder="Select assignee"
-                multiple={false}
-              />
-            </TaskAttributeRow>
-
-            {/* Members */}
-            <TaskAttributeRow
-              icon={<Users className="h-5 w-5 text-gray-400" />}
-              label="Members"
-            >
-              <UserSelector
-                value={
-                  pendingUpdates.memberIds?.split(",") ||
-                  task.taskMembers?.map((member) => member.user.id) ||
-                  []
-                }
-                onChange={(value) => {
-                  handleFieldChange(
-                    "memberIds",
-                    Array.isArray(value) ? value.join(",") : (value as string)
-                  );
-                }}
-                users={availableUsers}
-                placeholder="Select members"
-                multiple={true}
-              />
-            </TaskAttributeRow>
-
-            {/* Figma */}
-            <TaskAttributeRow
-              icon={<FileText className="h-5 w-5 text-gray-400" />}
-              label="Figma"
-            >
-              <input
-                type="text"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm"
-                placeholder="Empty"
-                onChange={(e) => {
-                  // TODO: Handle figma update
-                }}
-              />
-            </TaskAttributeRow>
-
-            {/* Reviewer */}
-            <TaskAttributeRow
-              icon={<User className="h-5 w-5 text-gray-400" />}
-              label="Reviewer"
-            >
-              <UserSelector
-                value={pendingUpdates.reviewerId || task.reviewer?.id || ""}
-                onChange={(value) => {
-                  handleFieldChange("reviewerId", value as string);
-                }}
-                users={availableUsers}
-                placeholder="Select reviewer"
-                multiple={false}
-              />
-            </TaskAttributeRow>
-
-            {/* Story Points */}
-            <TaskAttributeRow
-              icon={<CheckSquare className="h-5 w-5 text-gray-400" />}
-              label="Story points"
-            >
-              <input
-                type="number"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm"
-                placeholder="Empty"
-                value={task.storyPoint || ""}
-                onChange={(e) => {
-                  // TODO: Handle story points update
-                }}
-              />
-            </TaskAttributeRow>
-
-            {/* DEV | Development */}
-            <TaskAttributeRow
-              icon={<Code className="h-5 w-5 text-gray-400" />}
-              label="DEV|Development"
-            >
-              <input
-                type="text"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm"
-                placeholder="Empty"
-                value={task.devMr || ""}
-                onChange={(e) => {
-                  // TODO: Handle dev MR update
-                }}
-              />
-            </TaskAttributeRow>
-
-            {/* Size Card */}
-            <TaskAttributeRow
-              icon={<FileText className="h-5 w-5 text-gray-400" />}
-              label="Size card"
-            >
-              <input
-                type="text"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm"
-                placeholder="Empty"
-                value={task.sizeCard || ""}
-                onChange={(e) => {
-                  // TODO: Handle size card update
-                }}
-              />
-            </TaskAttributeRow>
-
-            {/* Test Case */}
-            <TaskAttributeRow
-              icon={<CheckSquare className="h-5 w-5 text-gray-400" />}
-              label="Test case"
-            >
-              <input
-                type="text"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm"
-                placeholder="Empty"
-                value={task.testCase || ""}
-                onChange={(e) => {
-                  // TODO: Handle test case update
-                }}
-              />
-            </TaskAttributeRow>
-
-            {/* Go-live */}
-            <TaskAttributeRow
-              icon={<Play className="h-5 w-5 text-gray-400" />}
-              label="Go-live"
-            >
-              <input
-                type="date"
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm"
-                value={
-                  task.goLive
-                    ? new Date(task.goLive).toISOString().split("T")[0]
-                    : ""
-                }
-                onChange={(e) => {
-                  // TODO: Handle go-live date update
-                }}
-              />
-            </TaskAttributeRow>
           </div>
+        </div>
 
-          {/* Description Section */}
-          {(task.descriptionPlain || task.notePlain) && (
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Description
-              </h3>
-              {task.descriptionPlain && (
-                <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </h4>
-                  <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                    {task.descriptionPlain}
-                  </p>
-                </div>
-              )}
-              {task.notePlain && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">
-                    Notes
-                  </h4>
-                  <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                    {task.notePlain}
-                  </p>
-                </div>
-              )}
+        {/* Task Details */}
+        <div className="p-6 flex justify-center items-center">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-4xl w-full flex flex-col items-center">
+            <div className="space-y-1 w-full max-w-2xl">
+              {/* Due Date */}
+              <TaskAttributeRow
+                icon={<Calendar className="h-5 w-5 text-gray-400" />}
+                label="Due date"
+              >
+                <input
+                  type="date"
+                  className="w-64 px-2 py-1 text-xs"
+                  value={
+                    task.dueDate
+                      ? new Date(task.dueDate).toISOString().split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) => {
+                    // TODO: Handle date update
+                  }}
+                />
+              </TaskAttributeRow>
+
+              {/* Priority */}
+              <TaskAttributeRow
+                icon={<Flag className="h-5 w-5 text-gray-400" />}
+                label="Priority"
+              >
+                <ColoredSelect
+                  value={
+                    pendingUpdates.taskPriorityId || task.taskPriority?.id || ""
+                  }
+                  onChange={(value) => {
+                    handleFieldChange("taskPriorityId", value);
+                  }}
+                  options={priorities || []}
+                  placeholder="Empty"
+                />
+              </TaskAttributeRow>
+
+              {/* Initiative */}
+              <TaskAttributeRow
+                icon={<Target className="h-5 w-5 text-gray-400" />}
+                label="Initiative"
+              >
+                <ColoredSelect
+                  value={
+                    pendingUpdates.taskInitiativeId ||
+                    task.taskInitiative?.id ||
+                    ""
+                  }
+                  onChange={(value) => {
+                    handleFieldChange("taskInitiativeId", value);
+                  }}
+                  options={initiatives || []}
+                  placeholder="Empty"
+                />
+              </TaskAttributeRow>
+
+              {/* OKR */}
+              <TaskAttributeRow
+                icon={<FileText className="h-5 w-5 text-gray-400" />}
+                label="OKR"
+              >
+                <input
+                  type="text"
+                  className="w-64 px-2 py-1 text-xs"
+                  placeholder="Empty"
+                  value={task.okr || ""}
+                  onChange={(e) => {
+                    // TODO: Handle OKR update
+                  }}
+                />
+              </TaskAttributeRow>
+
+              {/* Status */}
+              <TaskAttributeRow
+                icon={<Flag className="h-5 w-5 text-gray-400" />}
+                label="Status"
+              >
+                <ColoredSelect
+                  value={
+                    pendingUpdates.taskStatusId || task.taskStatus?.id || ""
+                  }
+                  onChange={(value) => {
+                    handleFieldChange("taskStatusId", value);
+                  }}
+                  options={
+                    statuses?.map((status) => ({
+                      id: status.id,
+                      name: status.title,
+                      color: status.color,
+                    })) || []
+                  }
+                  placeholder="Empty"
+                />
+              </TaskAttributeRow>
+
+              {/* Developer */}
+              <TaskAttributeRow
+                icon={<Code className="h-5 w-5 text-gray-400" />}
+                label="Developer"
+              >
+                <input
+                  type="text"
+                  className="w-64 px-2 py-1 text-xs"
+                  placeholder="Empty"
+                  onChange={(e) => {
+                    // TODO: Handle developer update
+                  }}
+                />
+              </TaskAttributeRow>
+
+              {/* Assignee */}
+              <TaskAttributeRow
+                icon={<User className="h-5 w-5 text-gray-400" />}
+                label="Assignee"
+              >
+                <UserSelector
+                  value={pendingUpdates.assigneeId || task.assignee?.id || ""}
+                  onChange={(value) => {
+                    handleFieldChange("assigneeId", value as string);
+                  }}
+                  users={availableUsers}
+                  placeholder="Select assignee"
+                  multiple={false}
+                />
+              </TaskAttributeRow>
+
+              {/* Members */}
+              <TaskAttributeRow
+                icon={<Users className="h-5 w-5 text-gray-400" />}
+                label="Members"
+              >
+                <UserSelector
+                  value={
+                    pendingUpdates.memberIds?.split(",") ||
+                    task.taskMembers?.map((member) => member.user.id) ||
+                    []
+                  }
+                  onChange={(value) => {
+                    handleFieldChange(
+                      "memberIds",
+                      Array.isArray(value) ? value.join(",") : (value as string)
+                    );
+                  }}
+                  users={availableUsers}
+                  placeholder="Select members"
+                  multiple={true}
+                />
+              </TaskAttributeRow>
+
+              {/* Figma */}
+              <TaskAttributeRow
+                icon={<FileText className="h-5 w-5 text-gray-400" />}
+                label="Figma"
+              >
+                <input
+                  type="text"
+                  className="w-64 px-2 py-1 text-xs"
+                  placeholder="Empty"
+                  onChange={(e) => {
+                    // TODO: Handle figma update
+                  }}
+                />
+              </TaskAttributeRow>
+
+              {/* Reviewer */}
+              <TaskAttributeRow
+                icon={<User className="h-5 w-5 text-gray-400" />}
+                label="Reviewer"
+              >
+                <UserSelector
+                  value={pendingUpdates.reviewerId || task.reviewer?.id || ""}
+                  onChange={(value) => {
+                    handleFieldChange("reviewerId", value as string);
+                  }}
+                  users={availableUsers}
+                  placeholder="Select reviewer"
+                  multiple={false}
+                />
+              </TaskAttributeRow>
+
+              {/* Story Points */}
+              <TaskAttributeRow
+                icon={<CheckSquare className="h-5 w-5 text-gray-400" />}
+                label="Story points"
+              >
+                <input
+                  type="number"
+                  className="w-64 px-2 py-1 text-xs"
+                  placeholder="Empty"
+                  value={task.storyPoint || ""}
+                  onChange={(e) => {
+                    // TODO: Handle story points update
+                  }}
+                />
+              </TaskAttributeRow>
+
+              {/* DEV | Development */}
+              <TaskAttributeRow
+                icon={<Code className="h-5 w-5 text-gray-400" />}
+                label="DEV|Development"
+              >
+                <input
+                  type="text"
+                  className="w-64 px-2 py-1 text-xs"
+                  placeholder="Empty"
+                  value={task.devMr || ""}
+                  onChange={(e) => {
+                    // TODO: Handle dev MR update
+                  }}
+                />
+              </TaskAttributeRow>
+
+              {/* Size Card */}
+              <TaskAttributeRow
+                icon={<FileText className="h-5 w-5 text-gray-400" />}
+                label="Size card"
+              >
+                <input
+                  type="text"
+                  className="w-64 px-2 py-1 text-xs"
+                  placeholder="Empty"
+                  value={task.sizeCard || ""}
+                  onChange={(e) => {
+                    // TODO: Handle size card update
+                  }}
+                />
+              </TaskAttributeRow>
+
+              {/* Test Case */}
+              <TaskAttributeRow
+                icon={<CheckSquare className="h-5 w-5 text-gray-400" />}
+                label="Test case"
+              >
+                <input
+                  type="text"
+                  className="w-64 px-2 py-1 text-xs"
+                  placeholder="Empty"
+                  value={task.testCase || ""}
+                  onChange={(e) => {
+                    // TODO: Handle test case update
+                  }}
+                />
+              </TaskAttributeRow>
+
+              {/* Go-live */}
+              <TaskAttributeRow
+                icon={<Play className="h-5 w-5 text-gray-400" />}
+                label="Go-live"
+              >
+                <input
+                  type="date"
+                  className="w-64 px-2 py-1 text-xs"
+                  value={
+                    task.goLive
+                      ? new Date(task.goLive).toISOString().split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) => {
+                    // TODO: Handle go-live date update
+                  }}
+                />
+              </TaskAttributeRow>
             </div>
-          )}
+
+            {/* Description Section */}
+            {(task.descriptionPlain || task.notePlain) && (
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Description
+                </h3>
+                {task.descriptionPlain && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      Description
+                    </h4>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                      {task.descriptionPlain}
+                    </p>
+                  </div>
+                )}
+                {task.notePlain && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      Notes
+                    </h4>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                      {task.notePlain}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -15,7 +15,7 @@ export function useFetchApi<T>(
   const [error, setError] = useState<Error | null>(null);
 
   // Memoize query to prevent infinite loops
-  const memoizedQuery = useMemo(() => query, [JSON.stringify(query)]);
+  const memoizedQuery = useMemo(() => query || {}, [JSON.stringify(query)]);
 
   const fetchData = useCallback(async () => {
     if (options?.enabled === false) return;

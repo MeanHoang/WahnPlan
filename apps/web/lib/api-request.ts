@@ -27,6 +27,17 @@ export async function apiRequest<T>(
     fullUrl += `${separator}${searchParams.toString()}`;
   }
 
+  // Debug logging for tasks endpoint
+  if (url.includes("/tasks")) {
+    console.log("API Request Debug:", {
+      method,
+      url: fullUrl,
+      query,
+      originalUrl: url,
+      hasQuery: !!(query && Object.keys(query).length > 0),
+    });
+  }
+
   // Get auth token
   const token = localStorage.getItem("accessToken");
 
