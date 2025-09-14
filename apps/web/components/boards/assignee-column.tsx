@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User } from "lucide-react";
+import { User, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskCard } from "@/components/boards/task-card";
 import { useFetchApi } from "@/hooks/use-fetch-api";
@@ -16,12 +16,14 @@ interface AssigneeColumnProps {
   };
   boardId: string;
   onTaskClick: (task: Task) => void;
+  onAddTask?: (assigneeId: string) => void;
 }
 
 export function AssigneeColumn({
   assignee,
   boardId,
   onTaskClick,
+  onAddTask,
 }: AssigneeColumnProps): JSX.Element {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -153,6 +155,16 @@ export function AssigneeColumn({
             <p className="text-sm text-red-500">Error loading tasks</p>
           </div>
         )}
+
+        {/* Add Task Button */}
+        <Button
+          variant="outline"
+          className="w-full h-12 border-dashed border-2 border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-600 hover:bg-gray-50"
+          onClick={() => onAddTask?.(assignee.id)}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          New task
+        </Button>
       </div>
     </div>
   );

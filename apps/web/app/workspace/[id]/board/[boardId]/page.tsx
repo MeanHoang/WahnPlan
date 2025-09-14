@@ -39,8 +39,10 @@ export default function BoardDetailPage(): JSX.Element {
   const [board, setBoard] = useState<Board | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedStatusId, setSelectedStatusId] = useState<string>("");
+  const [selectedAssigneeId, setSelectedAssigneeId] = useState<string>("");
   const [selectedView, setSelectedView] = useState<string>("by-status");
   const [toggleFilters, setToggleFilters] = useState<(() => void) | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const { data: boardData, loading: boardLoading } = useBoard(boardId);
 
@@ -154,8 +156,18 @@ export default function BoardDetailPage(): JSX.Element {
     router.push(`/workspace/${workspaceId}/task/${task.id}`);
   };
 
-  const handleAddTask = (statusId: string) => {
-    setSelectedStatusId(statusId);
+  const handleAddTask = (id: string) => {
+    // If it's a status ID (from status column), use it directly
+    // If it's an assignee ID (from assignee column), use the first available status
+    const isStatusId = statuses?.some((status) => status.id === id);
+    if (isStatusId) {
+      setSelectedStatusId(id);
+      setSelectedAssigneeId(""); // Clear assignee when creating from status column
+    } else {
+      // For assignee ID, use the first status as default and set the assignee
+      setSelectedStatusId(statuses?.[0]?.id || "");
+      setSelectedAssigneeId(id); // Set the assignee when creating from assignee column
+    }
     setIsCreateModalOpen(true);
   };
 
@@ -166,7 +178,8 @@ export default function BoardDetailPage(): JSX.Element {
   };
 
   const handleCreateSuccess = () => {
-    // TODO: Refresh individual columns when task is created
+    // Trigger refresh of all columns by updating refreshKey
+    setRefreshKey((prev) => prev + 1);
     toast({
       title: "Success",
       description: "Task created successfully!",
@@ -206,7 +219,7 @@ export default function BoardDetailPage(): JSX.Element {
   }
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header Section */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
         <div className="flex justify-between items-center">
@@ -345,6 +358,7 @@ export default function BoardDetailPage(): JSX.Element {
 
       {/* Board Content */}
       <BoardViewRenderer
+        key={refreshKey}
         view={selectedView}
         boardId={boardId}
         statuses={statuses || []}
@@ -366,6 +380,8 @@ export default function BoardDetailPage(): JSX.Element {
         statuses={statuses || []}
         priorities={priorities || []}
         initiatives={initiatives || []}
+        assignees={assignees}
+        presetAssigneeId={selectedAssigneeId}
         onSuccess={handleCreateSuccess}
       />
     </div>

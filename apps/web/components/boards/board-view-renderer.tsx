@@ -154,6 +154,7 @@ export function BoardViewRenderer({
                 assignee={assignee}
                 boardId={boardId}
                 onTaskClick={onTaskClick}
+                onAddTask={onAddTask}
               />
             ))}
           </>
@@ -203,7 +204,7 @@ export function BoardViewRenderer({
   };
 
   return (
-    <div className="flex-1 bg-gray-50 flex flex-col">
+    <div className="flex-1 bg-gray-50 flex flex-col min-h-0">
       {/* Filter Bar */}
       {showFilters && (
         <TaskFilterBar
@@ -223,10 +224,10 @@ export function BoardViewRenderer({
       )}
 
       {/* Board Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {view === "mine" ? (
           // Full width for table view
-          <div className="flex-1 p-6">{renderView()}</div>
+          <div className="flex-1 p-6 overflow-auto">{renderView()}</div>
         ) : (
           // Horizontal scroll for column views - scrollbar always visible at bottom
           <div

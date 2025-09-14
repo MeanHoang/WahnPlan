@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,6 +32,13 @@ interface CreateTaskModalProps {
   statuses: TaskStatus[];
   priorities: TaskPriority[];
   initiatives: TaskInitiative[];
+  assignees: Array<{
+    id: string;
+    name: string;
+    email?: string;
+    avatar?: string;
+  }>;
+  presetAssigneeId?: string;
   onSuccess?: () => void;
 }
 
@@ -42,6 +50,8 @@ export function CreateTaskModal({
   statuses,
   priorities,
   initiatives,
+  assignees,
+  presetAssigneeId,
   onSuccess,
 }: CreateTaskModalProps): JSX.Element {
   const { toast } = useToast();
@@ -50,6 +60,7 @@ export function CreateTaskModal({
     statusId: statusId,
     priorityId: "",
     initiativeId: "",
+    assigneeId: presetAssigneeId || "",
   });
 
   const { mutate: createTask, loading } = useCreateApi<any, any>("/tasks", {
@@ -61,6 +72,7 @@ export function CreateTaskModal({
         statusId: statusId,
         priorityId: "",
         initiativeId: "",
+        assigneeId: presetAssigneeId || "",
       });
     },
     onError: (error) => {
@@ -75,9 +87,13 @@ export function CreateTaskModal({
 
   useEffect(() => {
     if (isOpen) {
-      setFormData((prev) => ({ ...prev, statusId }));
+      setFormData((prev) => ({
+        ...prev,
+        statusId,
+        assigneeId: presetAssigneeId || "",
+      }));
     }
-  }, [isOpen, statusId]);
+  }, [isOpen, statusId, presetAssigneeId]);
 
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
@@ -104,6 +120,7 @@ export function CreateTaskModal({
       taskStatusId: formData.statusId,
       taskPriorityId: formData.priorityId || null,
       taskInitiativeId: formData.initiativeId || null,
+      assigneeId: formData.assigneeId || null,
     };
 
     await createTask(payload);
@@ -111,10 +128,14 @@ export function CreateTaskModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Create New Task</DialogTitle>
-          <DialogDescription>Add a new task to this board.</DialogDescription>
+          <DialogDescription>
+            {presetAssigneeId
+              ? `Add a new task for ${assignees.find((a) => a.id === presetAssigneeId)?.name || "selected assignee"}.`
+              : "Add a new task to this board."}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -208,6 +229,58 @@ export function CreateTaskModal({
                         style={{ backgroundColor: initiative.color }}
                       />
                       {initiative.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Assignee */}
+          <div>
+            <Label htmlFor="assignee">Assignee</Label>
+            <Select
+              value={formData.assigneeId}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, assigneeId: value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select assignee" />
+              </SelectTrigger>
+              <SelectContent>
+                {assignees.map((assignee) => (
+                  <SelectItem key={assignee.id} value={assignee.id}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+                        {assignee.avatar && assignee.avatar.trim() !== "" ? (
+                          <img
+                            src={assignee.avatar}
+                            alt={assignee.name}
+                            className="w-full h-full object-cover rounded-full"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                              const nextElement = e.currentTarget
+                                .nextElementSibling as HTMLElement;
+                              if (nextElement) {
+                                nextElement.style.display = "flex";
+                              }
+                            }}
+                          />
+                        ) : null}
+                        <User
+                          className="h-3 w-3 text-blue-600"
+                          style={{
+                            display:
+                              assignee.avatar && assignee.avatar.trim() !== ""
+                                ? "none"
+                                : "flex",
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <div className="font-medium">{assignee.name}</div>
+                      </div>
                     </div>
                   </SelectItem>
                 ))}
