@@ -442,6 +442,14 @@ export class TasksService {
       whereClause.createdById = filters.createdById;
     }
 
+    // Handle search by task title
+    if (filters.search) {
+      whereClause.title = {
+        contains: filters.search,
+        mode: 'insensitive',
+      };
+    }
+
     // Handle due date range filters
     if (filters.dueDateFrom || filters.dueDateTo) {
       whereClause.dueDate = {};

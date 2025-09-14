@@ -143,4 +143,8 @@ export class TaskFiltersDto {
   @IsOptional()
   @IsString()
   createdAtTo?: string;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
 }

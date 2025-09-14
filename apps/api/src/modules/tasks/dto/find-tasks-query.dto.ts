@@ -116,4 +116,8 @@ export class FindTasksQueryDto {
   @IsOptional()
   @IsString()
   createdAtTo?: string;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
 }

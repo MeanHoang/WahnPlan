@@ -56,6 +56,7 @@ export class TasksController {
       dueDateTo: rawFilters.dueDateTo,
       createdAtFrom: rawFilters.createdAtFrom,
       createdAtTo: rawFilters.createdAtTo,
+      search: rawFilters.search,
     };
 
     // Convert comma-separated strings to arrays for multiple value filters

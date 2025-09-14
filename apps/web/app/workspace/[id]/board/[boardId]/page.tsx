@@ -10,13 +10,9 @@ import {
   BarChart,
   Users,
   User,
-  FileText,
-  Plus,
   Filter,
-  ArrowUpDown,
-  Zap,
   Search,
-  SlidersHorizontal,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
@@ -25,6 +21,7 @@ import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useToast } from "@/hooks/use-toast";
 import { BoardViewRenderer } from "@/components/boards/board-view-renderer";
 import { CreateTaskModal } from "@/components/boards/create-task-modal";
+import { TaskSearchModal } from "@/components/boards/task-search-modal";
 import { Board } from "@/types/board-core";
 import { Task, TaskStatus, TaskPriority, TaskInitiative } from "@/types/task";
 
@@ -38,6 +35,7 @@ export default function BoardDetailPage(): JSX.Element {
 
   const [board, setBoard] = useState<Board | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [selectedStatusId, setSelectedStatusId] = useState<string>("");
   const [selectedAssigneeId, setSelectedAssigneeId] = useState<string>("");
   const [selectedView, setSelectedView] = useState<string>("by-status");
@@ -324,33 +322,20 @@ export default function BoardDetailPage(): JSX.Element {
               variant="ghost"
               size="sm"
               className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
-            >
-              <ArrowUpDown className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
-            >
-              <Zap className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
+              onClick={() => setIsSearchModalOpen(true)}
             >
               <Search className="h-4 w-4" />
             </Button>
             <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+              onClick={() => {
+                setSelectedStatusId(statuses?.[0]?.id || "");
+                setSelectedAssigneeId("");
+                setIsCreateModalOpen(true);
+              }}
             >
-              <SlidersHorizontal className="h-4 w-4" />
-            </Button>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
+              <Plus className="h-4 w-4" />
               New
-              <ArrowUpDown className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -383,6 +368,14 @@ export default function BoardDetailPage(): JSX.Element {
         assignees={assignees}
         presetAssigneeId={selectedAssigneeId}
         onSuccess={handleCreateSuccess}
+      />
+
+      {/* Search Task Modal */}
+      <TaskSearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        boardId={boardId}
+        onTaskClick={handleTaskClick}
       />
     </div>
   );
