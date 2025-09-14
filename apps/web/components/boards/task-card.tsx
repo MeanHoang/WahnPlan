@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageCircle, Calendar, User } from "lucide-react";
+import { MessageCircle, Calendar, User, GripVertical } from "lucide-react";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { Task, TaskPriority, TaskInitiative } from "@/types/task";
@@ -42,15 +42,22 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white rounded-2xl border-2 p-5 shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 ${
+      className={`group bg-white rounded-2xl border-2 p-5 shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 ${
         isDragging
           ? "border-blue-400 shadow-xl opacity-50"
           : "border-gray-200 hover:shadow-lg hover:border-gray-300"
       }`}
       onClick={() => onClick?.(task)}
-      {...listeners}
-      {...attributes}
     >
+      {/* Drag handle - small area in top right */}
+      <div
+        className="absolute top-2 right-2 w-6 h-6 cursor-grab active:cursor-grabbing z-10 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity group-hover:opacity-100"
+        {...listeners}
+        {...attributes}
+        onClick={(e) => e.stopPropagation()} // Prevent click event from bubbling
+      >
+        <GripVertical className="w-4 h-4 text-gray-400" />
+      </div>
       {/* Title */}
       <h3 className="font-medium text-gray-900 mb-3 line-clamp-2 text-sm leading-5">
         {task.title}
