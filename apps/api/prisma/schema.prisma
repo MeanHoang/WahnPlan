@@ -20,6 +20,29 @@ enum WorkspaceMemberRole {
   guest
 }
 
+enum NotificationType {
+  task_assigned
+  task_updated
+  task_completed
+  task_due_soon
+  task_overdue
+  comment_added
+  mention
+  workspace_invite
+  workspace_role_changed
+  board_created
+  task_status_changed
+  task_priority_changed
+  task_tester_assigned
+  task_reviewer_assigned
+}
+
+enum NotificationStatus {
+  unread
+  read
+  archived
+}
+
 // Models
 model User {
   id           String  @id @default(cuid())
@@ -51,6 +74,7 @@ model User {
   taskComments        TaskComment[]
   commentReactions    CommentReaction[]
   commentMentions     CommentMention[]
+  notifications       Notification[]
 
   @@map("users")
 }
@@ -334,4 +358,23 @@ model CommentMention {
 
   @@unique([commentId, mentionedUserId])
   @@map("comment_mentions")
+}
+
+model Notification {
+  id          String             @id @default(cuid())
+  userId      String             @map("user_id")
+  type        NotificationType
+  status      NotificationStatus @default(unread)
+  title       String
+  message     String
+  data        Json?              // Additional data for the notification (e.g., task ID, workspace ID)
+  isRead      Boolean            @default(false) @map("is_read")
+  readAt      DateTime?          @map("read_at")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
 }
