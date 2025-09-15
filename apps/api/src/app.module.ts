@@ -15,6 +15,7 @@ import { TaskStatusModule } from './modules/task-status/task-status.module';
 import { TaskPriorityModule } from './modules/task-priority/task-priority.module';
 import { TaskInitiativeModule } from './modules/task-initiative/task-initiative.module';
 import { TaskMembersModule } from './modules/task-members/task-members.module';
+import { TaskCommentsModule } from './modules/task-comments/task-comments.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { TaskMembersModule } from './modules/task-members/task-members.module';
     TaskPriorityModule,
     TaskInitiativeModule,
     TaskMembersModule,
+    TaskCommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
