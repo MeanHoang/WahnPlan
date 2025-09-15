@@ -2,37 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import {
-  ArrowLeft,
-  Calendar,
-  User,
-  Users,
-  Flag,
-  Target,
-  FileText,
-  Code,
-  CheckSquare,
-  Play,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useUpdateApi } from "@/hooks/use-update-api";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/api-request";
-import { Task } from "@/types/task";
-import { TaskAttributeRow } from "@/components/task-detail/task-attribute-row";
-import { TaskPriority, TaskInitiative, TaskStatus } from "@/types/task";
-import { ColoredSelect } from "@/components/task-detail/colored-select";
-import { UserSelector } from "@/components/task-detail/user-selector";
-import {
-  getPriorityStyle,
-  getStatusStyle,
-  getInitiativeStyle,
-  getStatusDotStyle,
-  getTaskAttributeClasses,
-  getStatusDotClasses,
-} from "@/lib/task-attribute-helpers";
+import { Task, TaskPriority, TaskInitiative, TaskStatus } from "@/types/task";
+import { TaskHeader } from "@/components/task-detail/task-header";
+import { TaskTitle } from "@/components/task-detail/task-title";
+import { TaskAttributes } from "@/components/task-detail/task-attributes";
+import { TaskDescription } from "@/components/task-detail/task-description";
+import { TaskComments } from "@/components/task-detail/task-comments";
 
 export default function TaskDetailPage(): JSX.Element {
   const { user, isLoading: authLoading } = useAuth();
@@ -47,17 +27,6 @@ export default function TaskDetailPage(): JSX.Element {
   const [pendingUpdates, setPendingUpdates] = useState<Record<string, string>>(
     {}
   );
-  const [titleRows, setTitleRows] = useState(1);
-
-  // Update title rows when title changes
-  useEffect(() => {
-    const currentTitle = pendingUpdates.title || task?.title || "";
-    const calculatedRows = Math.min(
-      3,
-      Math.max(1, Math.ceil(currentTitle.length / 15))
-    );
-    setTitleRows(calculatedRows);
-  }, [pendingUpdates.title, task?.title]);
 
   // Update API hook
   const { mutate: updateTask, loading: isUpdating } = useUpdateApi<
@@ -282,454 +251,39 @@ export default function TaskDetailPage(): JSX.Element {
       {/* Outer Wrapper */}
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="px-6 py-6 flex justify-center">
-          <div className="flex items-center justify-between max-w-4xl w-full">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleBackToBoard}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </div>
-            <Button
-              onClick={handleSaveChanges}
-              disabled={isUpdating || !hasChanges}
-              className={`${
-                hasChanges
-                  ? "bg-blue-600 hover:bg-blue-700 text-white"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
-            >
-              {isUpdating
-                ? "Saving..."
-                : hasChanges
-                  ? "Save Changes"
-                  : "No Changes"}
-            </Button>
-          </div>
-        </div>
+        <TaskHeader
+          hasChanges={hasChanges}
+          isUpdating={isUpdating}
+          onBack={handleBackToBoard}
+          onSave={handleSaveChanges}
+        />
 
         {/* Task Details */}
         <div className="p-6 flex justify-center items-center">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-4xl w-full flex flex-col items-center">
-            <div className="space-y-1 w-full max-w-2xl">
               {/* Title */}
-              <div className="mb-6 ml-32">
-                <textarea
-                  className="w-full text-5xl font-bold text-gray-900 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded resize-none px-4 py-2"
-                  placeholder="Task title"
-                  value={pendingUpdates.title || task.title}
-                  onChange={(e) => {
-                    handleFieldChange("title", e.target.value);
-                  }}
-                  rows={titleRows}
-                  style={{
-                    height: "auto",
-                    overflow: "hidden",
-                    resize: "none",
-                  }}
-                />
-              </div>
+            <TaskTitle
+              task={task}
+              pendingUpdates={pendingUpdates}
+              onFieldChange={handleFieldChange}
+            />
 
-              {/* Due Date */}
-              <TaskAttributeRow
-                icon={<Calendar className="h-5 w-5 text-gray-400" />}
-                label="Due date"
-              >
-                <input
-                  type="date"
-                  className="w-64 px-2 py-1 text-xs"
-                  value={
-                    pendingUpdates.dueDate ||
-                    (task.dueDate
-                      ? new Date(task.dueDate).toISOString().split("T")[0]
-                      : "")
-                  }
-                  onChange={(e) => {
-                    handleFieldChange("dueDate", e.target.value);
-                  }}
-                />
-              </TaskAttributeRow>
-
-              {/* Priority */}
-              <TaskAttributeRow
-                icon={<Flag className="h-5 w-5 text-gray-400" />}
-                label="Priority"
-              >
-                <ColoredSelect
-                  value={
-                    pendingUpdates.taskPriorityId || task.taskPriority?.id || ""
-                  }
-                  onChange={(value) => {
-                    handleFieldChange("taskPriorityId", value);
-                  }}
-                  options={priorities || []}
-                  placeholder="Empty"
-                />
-              </TaskAttributeRow>
-
-              {/* Initiative */}
-              <TaskAttributeRow
-                icon={<Target className="h-5 w-5 text-gray-400" />}
-                label="Initiative"
-              >
-                <ColoredSelect
-                  value={
-                    pendingUpdates.taskInitiativeId ||
-                    task.taskInitiative?.id ||
-                    ""
-                  }
-                  onChange={(value) => {
-                    handleFieldChange("taskInitiativeId", value);
-                  }}
-                  options={initiatives || []}
-                  placeholder="Empty"
-                />
-              </TaskAttributeRow>
-
-              {/* OKR */}
-              <TaskAttributeRow
-                icon={<FileText className="h-5 w-5 text-gray-400" />}
-                label="OKR"
-              >
-                <input
-                  type="text"
-                  className="w-64 px-2 py-1 text-xs"
-                  placeholder="Empty"
-                  value={pendingUpdates.okr || task.okr || ""}
-                  onChange={(e) => {
-                    handleFieldChange("okr", e.target.value);
-                  }}
-                />
-              </TaskAttributeRow>
-
-              {/* Status */}
-              <TaskAttributeRow
-                icon={<Flag className="h-5 w-5 text-gray-400" />}
-                label="Status"
-              >
-                <ColoredSelect
-                  value={
-                    pendingUpdates.taskStatusId || task.taskStatus?.id || ""
-                  }
-                  onChange={(value) => {
-                    handleFieldChange("taskStatusId", value);
-                  }}
-                  options={
-                    statuses?.map((status) => ({
-                      id: status.id,
-                      name: status.title,
-                      color: status.color,
-                    })) || []
-                  }
-                  placeholder="Empty"
-                />
-              </TaskAttributeRow>
-
-              {/* Assignee */}
-              <TaskAttributeRow
-                icon={<User className="h-5 w-5 text-gray-400" />}
-                label="Assignee"
-              >
-                <UserSelector
-                  value={pendingUpdates.assigneeId || task.assignee?.id || ""}
-                  onChange={(value) => {
-                    handleFieldChange("assigneeId", value as string);
-                  }}
-                  users={availableUsers}
-                  placeholder="Select assignee"
-                  multiple={false}
-                />
-              </TaskAttributeRow>
-
-              {/* Members */}
-              <TaskAttributeRow
-                icon={<Users className="h-5 w-5 text-gray-400" />}
-                label="Members"
-              >
-                <UserSelector
-                  value={
-                    pendingUpdates.memberIds?.split(",") ||
-                    task.taskMembers?.map((member) => member.user.id) ||
-                    []
-                  }
-                  onChange={(value) => {
-                    handleFieldChange(
-                      "memberIds",
-                      Array.isArray(value) ? value.join(",") : (value as string)
-                    );
-                  }}
-                  users={availableUsers}
-                  placeholder="Select members"
-                  multiple={true}
-                />
-              </TaskAttributeRow>
-
-              {/* Figma */}
-              <TaskAttributeRow
-                icon={<FileText className="h-5 w-5 text-gray-400" />}
-                label="Figma"
-              >
-                <input
-                  type="text"
-                  className="w-64 px-2 py-1 text-xs"
-                  placeholder="Empty"
-                  value={task.attachments || ""}
-                  onChange={(e) => {
-                    handleFieldChange("attachments", e.target.value);
-                  }}
-                />
-              </TaskAttributeRow>
-
-              {/* Reviewer */}
-              <TaskAttributeRow
-                icon={<User className="h-5 w-5 text-gray-400" />}
-                label="Reviewer"
-              >
-                <UserSelector
-                  value={pendingUpdates.reviewerId || task.reviewer?.id || ""}
-                  onChange={(value) => {
-                    handleFieldChange("reviewerId", value as string);
-                  }}
-                  users={availableUsers}
-                  placeholder="Select reviewer"
-                  multiple={false}
-                />
-              </TaskAttributeRow>
-
-              {/* Tester */}
-              <TaskAttributeRow
-                icon={<User className="h-5 w-5 text-gray-400" />}
-                label="Tester"
-              >
-                <UserSelector
-                  value={pendingUpdates.testerId || task.tester?.id || ""}
-                  onChange={(value) => {
-                    handleFieldChange("testerId", value as string);
-                  }}
-                  users={availableUsers}
-                  placeholder="Select tester"
-                  multiple={false}
-                />
-              </TaskAttributeRow>
-
-              {/* BA User */}
-              <TaskAttributeRow
-                icon={<User className="h-5 w-5 text-gray-400" />}
-                label="BA User"
-              >
-                <UserSelector
-                  value={pendingUpdates.baId || task.baUser?.id || ""}
-                  onChange={(value) => {
-                    handleFieldChange("baId", value as string);
-                  }}
-                  users={availableUsers}
-                  placeholder="Select BA user"
-                  multiple={false}
-                />
-              </TaskAttributeRow>
-
-              {/* Is Done */}
-              <TaskAttributeRow
-                icon={<CheckSquare className="h-5 w-5 text-gray-400" />}
-                label="Is Done"
-              >
-                <input
-                  type="checkbox"
-                  className="w-4 h-4"
-                  checked={
-                    pendingUpdates.isDone === "true" || task.isDone || false
-                  }
-                  onChange={(e) => {
-                    handleFieldChange("isDone", e.target.checked.toString());
-                  }}
-                />
-              </TaskAttributeRow>
-
-              {/* Story Points */}
-              <TaskAttributeRow
-                icon={<CheckSquare className="h-5 w-5 text-gray-400" />}
-                label="Story points"
-              >
-                <input
-                  type="number"
-                  className="w-64 px-2 py-1 text-xs"
-                  placeholder="Empty"
-                  value={pendingUpdates.storyPoint || task.storyPoint || ""}
-                  onChange={(e) => {
-                    handleFieldChange("storyPoint", e.target.value);
-                  }}
-                />
-              </TaskAttributeRow>
-
-              {/* Merge Request */}
-              <TaskAttributeRow
-                icon={<Code className="h-5 w-5 text-gray-400" />}
-                label="Merge Request"
-              >
-                <input
-                  type="text"
-                  className="w-64 px-2 py-1 text-xs"
-                  placeholder="Empty"
-                  value={pendingUpdates.devMr || task.devMr || ""}
-                  onChange={(e) => {
-                    handleFieldChange("devMr", e.target.value);
-                  }}
-                />
-              </TaskAttributeRow>
-
-              {/* Size Card */}
-              <TaskAttributeRow
-                icon={<FileText className="h-5 w-5 text-gray-400" />}
-                label="Size card"
-              >
-                <input
-                  type="text"
-                  className="w-64 px-2 py-1 text-xs"
-                  placeholder="Empty"
-                  value={pendingUpdates.sizeCard || task.sizeCard || ""}
-                  onChange={(e) => {
-                    handleFieldChange("sizeCard", e.target.value);
-                  }}
-                />
-              </TaskAttributeRow>
-
-              {/* Test Case */}
-              <TaskAttributeRow
-                icon={<CheckSquare className="h-5 w-5 text-gray-400" />}
-                label="Test case"
-              >
-                <input
-                  type="text"
-                  className="w-64 px-2 py-1 text-xs"
-                  placeholder="Empty"
-                  value={pendingUpdates.testCase || task.testCase || ""}
-                  onChange={(e) => {
-                    handleFieldChange("testCase", e.target.value);
-                  }}
-                />
-              </TaskAttributeRow>
-
-              {/* Go-live */}
-              <TaskAttributeRow
-                icon={<Play className="h-5 w-5 text-gray-400" />}
-                label="Go-live"
-              >
-                <input
-                  type="date"
-                  className="w-64 px-2 py-1 text-xs"
-                  value={
-                    pendingUpdates.goLive ||
-                    (task.goLive
-                      ? new Date(task.goLive).toISOString().split("T")[0]
-                      : "")
-                  }
-                  onChange={(e) => {
-                    handleFieldChange("goLive", e.target.value);
-                  }}
-                />
-              </TaskAttributeRow>
-
-              {/* Staging */}
-              <TaskAttributeRow
-                icon={<FileText className="h-5 w-5 text-gray-400" />}
-                label="Staging"
-              >
-                <input
-                  type="text"
-                  className="w-64 px-2 py-1 text-xs"
-                  placeholder="Empty"
-                  value={pendingUpdates.staging || task.staging || ""}
-                  onChange={(e) => {
-                    handleFieldChange("staging", e.target.value);
-                  }}
-                />
-              </TaskAttributeRow>
-
-              {/* Sprint */}
-              <TaskAttributeRow
-                icon={<FileText className="h-5 w-5 text-gray-400" />}
-                label="Sprint"
-              >
-                <input
-                  type="text"
-                  className="w-64 px-2 py-1 text-xs"
-                  placeholder="Empty"
-                  value={pendingUpdates.sprint || task.sprint || ""}
-                  onChange={(e) => {
-                    handleFieldChange("sprint", e.target.value);
-                  }}
-                />
-              </TaskAttributeRow>
-
-              {/* Feature Categories */}
-              <TaskAttributeRow
-                icon={<FileText className="h-5 w-5 text-gray-400" />}
-                label="Feature Categories"
-              >
-                <input
-                  type="text"
-                  className="w-64 px-2 py-1 text-xs"
-                  placeholder="Empty"
-                  value={
-                    pendingUpdates.featureCategories ||
-                    task.featureCategories ||
-                    ""
-                  }
-                  onChange={(e) => {
-                    handleFieldChange("featureCategories", e.target.value);
-                  }}
-                />
-              </TaskAttributeRow>
-
-              {/* Sprint Goal */}
-              <TaskAttributeRow
-                icon={<FileText className="h-5 w-5 text-gray-400" />}
-                label="Sprint Goal"
-              >
-                <input
-                  type="text"
-                  className="w-64 px-2 py-1 text-xs"
-                  placeholder="Empty"
-                  value={pendingUpdates.sprintGoal || task.sprintGoal || ""}
-                  onChange={(e) => {
-                    handleFieldChange("sprintGoal", e.target.value);
-                  }}
-                />
-              </TaskAttributeRow>
-            </div>
+            {/* Task Attributes */}
+            <TaskAttributes
+              task={task}
+              pendingUpdates={pendingUpdates}
+              priorities={priorities || []}
+              initiatives={initiatives || []}
+              statuses={statuses || []}
+              availableUsers={availableUsers}
+              onFieldChange={handleFieldChange}
+            />
 
             {/* Description Section */}
-            {(task.descriptionPlain || task.notePlain) && (
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Description
-                </h3>
-                {task.descriptionPlain && (
-                  <div className="mb-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">
-                      Description
-                    </h4>
-                    <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                      {task.descriptionPlain}
-                    </p>
-                  </div>
-                )}
-                {task.notePlain && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">
-                      Notes
-                    </h4>
-                    <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                      {task.notePlain}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
+            <TaskDescription task={task} />
+
+            {/* Comments Section */}
+            <TaskComments taskId={taskId} />
           </div>
         </div>
       </div>
