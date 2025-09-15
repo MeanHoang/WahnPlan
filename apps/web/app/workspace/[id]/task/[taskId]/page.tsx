@@ -261,7 +261,7 @@ export default function TaskDetailPage(): JSX.Element {
         {/* Task Details */}
         <div className="p-6 flex justify-center items-center">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-4xl w-full flex flex-col items-center">
-              {/* Title */}
+            {/* Title */}
             <TaskTitle
               task={task}
               pendingUpdates={pendingUpdates}

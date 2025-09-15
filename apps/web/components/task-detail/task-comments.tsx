@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useCreateApi } from "@/hooks/use-create-api";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth-context";
+import { formatTime } from "@/lib/time-helpers";
 
 interface Comment {
   id: string;
@@ -62,10 +64,21 @@ interface TaskCommentsProps {
   taskId: string;
 }
 
-export function TaskComments({ taskId }: TaskCommentsProps) {
+export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
   const [newComment, setNewComment] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Force re-render every minute to update relative time
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Force re-render by updating a dummy state
+      setShowEmojiPicker((prev) => prev);
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch comments
   const {
@@ -125,27 +138,8 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
-    );
-
-    if (diffInHours < 1) {
-      return "Just now";
-    } else if (diffInHours < 24) {
-      return `${diffInHours}h ago`;
-    } else if (diffInHours < 48) {
-      return "Yesterday";
-    } else {
-      // Format like "Sep 5" to match the design
-      return date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-    }
-  };
+  // Use the helper function for consistent time formatting
+  const formatDate = (dateString: string) => formatTime(dateString);
 
   const getUserDisplayName = (user: Comment["author"]) => {
     return user.publicName || user.fullname || user.email;
@@ -290,9 +284,19 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
       {/* Add Comment Form */}
       <div className="flex gap-4">
         <div className="flex-shrink-0">
-          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-sm font-medium text-white">
-            U
-          </div>
+          {user?.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt={user.publicName || user.fullname || user.email}
+              className="w-8 h-8 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-sm font-medium text-white">
+              {(user?.publicName || user?.fullname || user?.email || "U")
+                .charAt(0)
+                .toUpperCase()}
+            </div>
+          )}
         </div>
         <div className="flex-1 w-64">
           <textarea
