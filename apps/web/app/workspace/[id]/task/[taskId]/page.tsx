@@ -162,6 +162,8 @@ export default function TaskDetailPage(): JSX.Element {
           "okr",
           "assigneeId",
           "reviewerId",
+          "testerId",
+          "isDone",
           "storyPoint",
           "sizeCard",
           "testCase",
@@ -182,7 +184,12 @@ export default function TaskDetailPage(): JSX.Element {
         ];
 
         if (allowedFields.includes(field)) {
-          updateData[field] = value;
+          // Handle boolean fields
+          if (field === "isDone") {
+            updateData[field] = value === "true";
+          } else {
+            updateData[field] = value;
+          }
         }
       });
 
@@ -385,22 +392,6 @@ export default function TaskDetailPage(): JSX.Element {
                 />
               </TaskAttributeRow>
 
-              {/* Developer */}
-              <TaskAttributeRow
-                icon={<Code className="h-5 w-5 text-gray-400" />}
-                label="Developer"
-              >
-                <input
-                  type="text"
-                  className="w-64 px-2 py-1 text-xs"
-                  placeholder="Empty"
-                  value={task.devMr || ""}
-                  onChange={(e) => {
-                    handleFieldChange("devMr", e.target.value);
-                  }}
-                />
-              </TaskAttributeRow>
-
               {/* Assignee */}
               <TaskAttributeRow
                 icon={<User className="h-5 w-5 text-gray-400" />}
@@ -472,6 +463,55 @@ export default function TaskDetailPage(): JSX.Element {
                 />
               </TaskAttributeRow>
 
+              {/* Tester */}
+              <TaskAttributeRow
+                icon={<User className="h-5 w-5 text-gray-400" />}
+                label="Tester"
+              >
+                <UserSelector
+                  value={pendingUpdates.testerId || task.tester?.id || ""}
+                  onChange={(value) => {
+                    handleFieldChange("testerId", value as string);
+                  }}
+                  users={availableUsers}
+                  placeholder="Select tester"
+                  multiple={false}
+                />
+              </TaskAttributeRow>
+
+              {/* BA User */}
+              <TaskAttributeRow
+                icon={<User className="h-5 w-5 text-gray-400" />}
+                label="BA User"
+              >
+                <UserSelector
+                  value={pendingUpdates.baId || task.baUser?.id || ""}
+                  onChange={(value) => {
+                    handleFieldChange("baId", value as string);
+                  }}
+                  users={availableUsers}
+                  placeholder="Select BA user"
+                  multiple={false}
+                />
+              </TaskAttributeRow>
+
+              {/* Is Done */}
+              <TaskAttributeRow
+                icon={<CheckSquare className="h-5 w-5 text-gray-400" />}
+                label="Is Done"
+              >
+                <input
+                  type="checkbox"
+                  className="w-4 h-4"
+                  checked={
+                    pendingUpdates.isDone === "true" || task.isDone || false
+                  }
+                  onChange={(e) => {
+                    handleFieldChange("isDone", e.target.checked.toString());
+                  }}
+                />
+              </TaskAttributeRow>
+
               {/* Story Points */}
               <TaskAttributeRow
                 icon={<CheckSquare className="h-5 w-5 text-gray-400" />}
@@ -488,10 +528,10 @@ export default function TaskDetailPage(): JSX.Element {
                 />
               </TaskAttributeRow>
 
-              {/* DEV | Development */}
+              {/* Merge Request */}
               <TaskAttributeRow
                 icon={<Code className="h-5 w-5 text-gray-400" />}
-                label="DEV|Development"
+                label="Merge Request"
               >
                 <input
                   type="text"
@@ -552,6 +592,74 @@ export default function TaskDetailPage(): JSX.Element {
                   }
                   onChange={(e) => {
                     handleFieldChange("goLive", e.target.value);
+                  }}
+                />
+              </TaskAttributeRow>
+
+              {/* Staging */}
+              <TaskAttributeRow
+                icon={<FileText className="h-5 w-5 text-gray-400" />}
+                label="Staging"
+              >
+                <input
+                  type="text"
+                  className="w-64 px-2 py-1 text-xs"
+                  placeholder="Empty"
+                  value={pendingUpdates.staging || task.staging || ""}
+                  onChange={(e) => {
+                    handleFieldChange("staging", e.target.value);
+                  }}
+                />
+              </TaskAttributeRow>
+
+              {/* Sprint */}
+              <TaskAttributeRow
+                icon={<FileText className="h-5 w-5 text-gray-400" />}
+                label="Sprint"
+              >
+                <input
+                  type="text"
+                  className="w-64 px-2 py-1 text-xs"
+                  placeholder="Empty"
+                  value={pendingUpdates.sprint || task.sprint || ""}
+                  onChange={(e) => {
+                    handleFieldChange("sprint", e.target.value);
+                  }}
+                />
+              </TaskAttributeRow>
+
+              {/* Feature Categories */}
+              <TaskAttributeRow
+                icon={<FileText className="h-5 w-5 text-gray-400" />}
+                label="Feature Categories"
+              >
+                <input
+                  type="text"
+                  className="w-64 px-2 py-1 text-xs"
+                  placeholder="Empty"
+                  value={
+                    pendingUpdates.featureCategories ||
+                    task.featureCategories ||
+                    ""
+                  }
+                  onChange={(e) => {
+                    handleFieldChange("featureCategories", e.target.value);
+                  }}
+                />
+              </TaskAttributeRow>
+
+              {/* Sprint Goal */}
+              <TaskAttributeRow
+                icon={<FileText className="h-5 w-5 text-gray-400" />}
+                label="Sprint Goal"
+              >
+                <input
+                  type="text"
+                  className="w-64 px-2 py-1 text-xs"
+                  placeholder="Empty"
+                  value={pendingUpdates.sprintGoal || task.sprintGoal || ""}
+                  onChange={(e) => {
+                    handleFieldChange("sprintGoal", e.target.value);
                   }}
                 />
               </TaskAttributeRow>

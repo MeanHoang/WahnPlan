@@ -8,6 +8,8 @@ export interface Task {
   okr?: string;
   assigneeId?: string;
   reviewerId?: string;
+  testerId?: string;
+  isDone?: boolean;
   storyPoint?: number;
   sizeCard?: string;
   testCase?: string;
@@ -42,6 +44,13 @@ export interface Task {
     avatarUrl?: string;
   };
   reviewer?: {
+    id: string;
+    email: string;
+    fullname?: string;
+    publicName?: string;
+    avatarUrl?: string;
+  };
+  tester?: {
     id: string;
     email: string;
     fullname?: string;

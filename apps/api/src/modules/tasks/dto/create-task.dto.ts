@@ -4,6 +4,7 @@ import {
   IsInt,
   IsDateString,
   IsObject,
+  IsBoolean,
 } from 'class-validator';
 
 export class CreateTaskDto {
@@ -40,6 +41,14 @@ export class CreateTaskDto {
   @IsOptional()
   @IsString()
   reviewerId?: string;
+
+  @IsOptional()
+  @IsString()
+  testerId?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isDone?: boolean;
 
   @IsOptional()
   @IsInt()

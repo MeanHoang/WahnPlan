@@ -120,6 +120,20 @@ export class TasksService {
       }
     }
 
+    if (createTaskDto.testerId) {
+      const tester = await this.prisma.workspaceMember.findFirst({
+        where: {
+          workspaceId: board.workspaceId,
+          userId: createTaskDto.testerId,
+        },
+      });
+      if (!tester) {
+        throw new BadRequestException(
+          'Tester is not a member of the workspace',
+        );
+      }
+    }
+
     const task = await this.prisma.task.create({
       data: {
         boardId: createTaskDto.boardId,
@@ -131,6 +145,8 @@ export class TasksService {
         okr: createTaskDto.okr,
         assigneeId: createTaskDto.assigneeId,
         reviewerId: createTaskDto.reviewerId,
+        testerId: createTaskDto.testerId,
+        isDone: createTaskDto.isDone,
         storyPoint: createTaskDto.storyPoint,
         sizeCard: createTaskDto.sizeCard,
         testCase: createTaskDto.testCase,
@@ -176,6 +192,15 @@ export class TasksService {
           },
         },
         reviewer: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        tester: {
           select: {
             id: true,
             email: true,
@@ -243,6 +268,8 @@ export class TasksService {
         okr: task.okr,
         assigneeId: task.assigneeId,
         reviewerId: task.reviewerId,
+        testerId: task.testerId,
+        isDone: task.isDone,
         storyPoint: task.storyPoint,
         sizeCard: task.sizeCard,
         testCase: task.testCase,
@@ -523,6 +550,15 @@ export class TasksService {
             avatarUrl: true,
           },
         },
+        tester: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
         baUser: {
           select: {
             id: true,
@@ -628,6 +664,15 @@ export class TasksService {
           },
         },
         reviewer: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        tester: {
           select: {
             id: true,
             email: true,
@@ -845,6 +890,15 @@ export class TasksService {
             avatarUrl: true,
           },
         },
+        tester: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
         baUser: {
           select: {
             id: true,
@@ -1016,6 +1070,20 @@ export class TasksService {
       }
     }
 
+    if (updateTaskDto.testerId) {
+      const tester = await this.prisma.workspaceMember.findFirst({
+        where: {
+          workspaceId: existingTask.board.workspaceId,
+          userId: updateTaskDto.testerId,
+        },
+      });
+      if (!tester) {
+        throw new BadRequestException(
+          'Tester is not a member of the workspace',
+        );
+      }
+    }
+
     // Get the latest version number
     const latestHistory = await this.prisma.taskHistory.findFirst({
       where: { taskId: id },
@@ -1062,6 +1130,15 @@ export class TasksService {
           },
         },
         reviewer: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        tester: {
           select: {
             id: true,
             email: true,
