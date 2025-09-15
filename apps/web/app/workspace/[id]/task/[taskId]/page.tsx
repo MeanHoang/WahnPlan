@@ -25,6 +25,14 @@ import { TaskAttributeRow } from "@/components/task-detail/task-attribute-row";
 import { TaskPriority, TaskInitiative, TaskStatus } from "@/types/task";
 import { ColoredSelect } from "@/components/task-detail/colored-select";
 import { UserSelector } from "@/components/task-detail/user-selector";
+import {
+  getPriorityStyle,
+  getStatusStyle,
+  getInitiativeStyle,
+  getStatusDotStyle,
+  getTaskAttributeClasses,
+  getStatusDotClasses,
+} from "@/lib/task-attribute-helpers";
 
 export default function TaskDetailPage(): JSX.Element {
   const { user, isLoading: authLoading } = useAuth();
@@ -39,6 +47,17 @@ export default function TaskDetailPage(): JSX.Element {
   const [pendingUpdates, setPendingUpdates] = useState<Record<string, string>>(
     {}
   );
+  const [titleRows, setTitleRows] = useState(1);
+
+  // Update title rows when title changes
+  useEffect(() => {
+    const currentTitle = pendingUpdates.title || task?.title || "";
+    const calculatedRows = Math.min(
+      3,
+      Math.max(1, Math.ceil(currentTitle.length / 15))
+    );
+    setTitleRows(calculatedRows);
+  }, [pendingUpdates.title, task?.title]);
 
   // Update API hook
   const { mutate: updateTask, loading: isUpdating } = useUpdateApi<
@@ -156,6 +175,7 @@ export default function TaskDetailPage(): JSX.Element {
 
         // Only include fields that exist in the CreateTaskDto
         const allowedFields = [
+          "title",
           "taskStatusId",
           "taskInitiativeId",
           "taskPriorityId",
@@ -273,7 +293,6 @@ export default function TaskDetailPage(): JSX.Element {
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <h1 className="text-3xl font-bold text-gray-900">{task.title}</h1>
             </div>
             <Button
               onClick={handleSaveChanges}
@@ -297,6 +316,24 @@ export default function TaskDetailPage(): JSX.Element {
         <div className="p-6 flex justify-center items-center">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-4xl w-full flex flex-col items-center">
             <div className="space-y-1 w-full max-w-2xl">
+              {/* Title */}
+              <div className="mb-6 ml-32">
+                <textarea
+                  className="w-full text-5xl font-bold text-gray-900 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded resize-none px-4 py-2"
+                  placeholder="Task title"
+                  value={pendingUpdates.title || task.title}
+                  onChange={(e) => {
+                    handleFieldChange("title", e.target.value);
+                  }}
+                  rows={titleRows}
+                  style={{
+                    height: "auto",
+                    overflow: "hidden",
+                    resize: "none",
+                  }}
+                />
+              </div>
+
               {/* Due Date */}
               <TaskAttributeRow
                 icon={<Calendar className="h-5 w-5 text-gray-400" />}

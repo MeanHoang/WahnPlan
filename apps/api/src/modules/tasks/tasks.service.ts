@@ -1206,6 +1206,8 @@ export class TasksService {
         okr: task.okr,
         assigneeId: task.assigneeId,
         reviewerId: task.reviewerId,
+        testerId: task.testerId,
+        isDone: task.isDone,
         storyPoint: task.storyPoint,
         sizeCard: task.sizeCard,
         testCase: task.testCase,

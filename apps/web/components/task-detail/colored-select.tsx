@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
+import { getTaskAttributeClasses } from "@/lib/task-attribute-helpers";
 
 interface SelectOption {
   id: string;
@@ -50,7 +51,7 @@ export function ColoredSelect({
 
     return {
       backgroundColor: `${option.color}40`,
-      color: "#374151", // Always use dark gray text for better readability
+      color: "#1f2937", // Use consistent text color from helper
     };
   };
 
@@ -68,7 +69,10 @@ export function ColoredSelect({
                 className="inline-block w-3 h-3 rounded-full"
                 style={{ backgroundColor: selectedOption.color }}
               />
-              <span style={getOptionStyle(selectedOption)}>
+              <span
+                className={getTaskAttributeClasses()}
+                style={getOptionStyle(selectedOption)}
+              >
                 {selectedOption.name}
               </span>
             </>
@@ -107,7 +111,12 @@ export function ColoredSelect({
                 className="inline-block w-3 h-3 rounded-full"
                 style={{ backgroundColor: option.color }}
               />
-              <span style={getOptionStyle(option)}>{option.name}</span>
+              <span
+                className={getTaskAttributeClasses()}
+                style={getOptionStyle(option)}
+              >
+                {option.name}
+              </span>
             </button>
           ))}
         </div>
