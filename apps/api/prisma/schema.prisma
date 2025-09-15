@@ -44,6 +44,7 @@ model User {
   createdTasks        Task[]            @relation("CreatedBy")
   assignedTasks       Task[]            @relation("AssignedTo")
   reviewingTasks      Task[]            @relation("ReviewedBy")
+  testedTasks         Task[]            @relation("TestedBy")
   baTasks             Task[]            @relation("BAUser")
   taskMembers         TaskMember[]
   taskHistoryChanges  TaskHistory[]
@@ -183,6 +184,8 @@ model Task {
   okr                String?
   assigneeId         String?   @map("assignee_id")
   reviewerId         String?   @map("reviewer_id")
+  testerId           String?   @map("tester_id")
+  isDone             Boolean   @default(false) @map("is_done")
   storyPoint         Int?      @map("story_point")
   sizeCard           String?   @map("size_card")
   testCase           String?   @map("test_case")
@@ -211,6 +214,7 @@ model Task {
   taskPriority    TaskPriority?    @relation(fields: [taskPriorityId], references: [id])
   assignee        User?            @relation("AssignedTo", fields: [assigneeId], references: [id])
   reviewer        User?            @relation("ReviewedBy", fields: [reviewerId], references: [id])
+  tester          User?            @relation("TestedBy", fields: [testerId], references: [id])
   baUser          User?            @relation("BAUser", fields: [baId], references: [id])
   createdBy       User             @relation("CreatedBy", fields: [createdById], references: [id])
   taskMembers     TaskMember[]
@@ -234,6 +238,8 @@ model TaskHistory {
   okr                String?
   assigneeId         String?   @map("assignee_id")
   reviewerId         String?   @map("reviewer_id")
+  testerId           String?   @map("tester_id")
+  isDone             Boolean?  @map("is_done")
   storyPoint         Int?      @map("story_point")
   sizeCard           String?   @map("size_card")
   testCase           String?   @map("test_case")
