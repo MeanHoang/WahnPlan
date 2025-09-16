@@ -7,6 +7,8 @@ import {
   Paperclip,
   MoreVertical,
   CheckSquare,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFetchApi } from "@/hooks/use-fetch-api";
@@ -73,6 +75,9 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(
     null
   );
+  const [showCommentMenu, setShowCommentMenu] = useState<string | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editCommentText, setEditCommentText] = useState("");
   const { toast } = useToast();
   const { user } = useAuth();
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -337,6 +342,79 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
     );
   };
 
+  // Check if current user can edit/delete comment
+  const canEditComment = (comment: Comment) => {
+    return comment.author.id === user?.id;
+  };
+
+  // Edit comment
+  const handleEditComment = (comment: Comment) => {
+    setEditingCommentId(comment.id);
+    setEditCommentText(comment.contentPlain);
+    setShowCommentMenu(null);
+  };
+
+  // Save edited comment
+  const handleSaveEdit = async (commentId: string) => {
+    if (!editCommentText.trim()) return;
+
+    try {
+      await apiRequest(`/task-comments/${commentId}`, {
+        method: "PATCH",
+        body: {
+          contentJson: { text: editCommentText },
+          contentPlain: editCommentText,
+        },
+      });
+
+      setEditingCommentId(null);
+      setEditCommentText("");
+      refetchComments();
+
+      toast({
+        title: "Success",
+        description: "Comment updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update comment",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Cancel edit
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditCommentText("");
+  };
+
+  // Delete comment
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm("Are you sure you want to delete this comment?")) return;
+
+    try {
+      await apiRequest(`/task-comments/${commentId}`, {
+        method: "DELETE",
+      });
+
+      setShowCommentMenu(null);
+      refetchComments();
+
+      toast({
+        title: "Success",
+        description: "Comment deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete comment",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Use the helper function for consistent time formatting
   const formatDate = (dateString: string) => formatTime(dateString);
 
@@ -361,17 +439,20 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
     );
   };
 
-  // Close reaction picker when clicking outside
+  // Close reaction picker and comment menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (showReactionPicker) {
         setShowReactionPicker(null);
       }
+      if (showCommentMenu) {
+        setShowCommentMenu(null);
+      }
     };
 
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
-  }, [showReactionPicker]);
+  }, [showReactionPicker, showCommentMenu]);
 
   return (
     <div className="mt-8 pt-6 border-t border-gray-200">
@@ -425,9 +506,37 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
                   </div>
 
                   {/* Comment Text */}
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">
-                    {comment.contentPlain}
-                  </p>
+                  {editingCommentId === comment.id ? (
+                    <div className="mb-2">
+                      <textarea
+                        value={editCommentText}
+                        onChange={(e) => setEditCommentText(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-md text-sm resize-none"
+                        rows={3}
+                        autoFocus
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleSaveEdit(comment.id)}
+                          disabled={!editCommentText.trim()}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleCancelEdit}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">
+                      {comment.contentPlain}
+                    </p>
+                  )}
 
                   {/* Attachments */}
                   {comment.commentAttachments?.length > 0 && (
@@ -511,20 +620,43 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
                     )}
                   </div>
 
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                  >
-                    <CheckSquare className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                  >
-                    <MoreVertical className="h-3 w-3" />
-                  </Button>
+                  {/* Comment Menu - only show for user's own comments */}
+                  {canEditComment(comment) && (
+                    <div className="relative">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                        onClick={() =>
+                          setShowCommentMenu(
+                            showCommentMenu === comment.id ? null : comment.id
+                          )
+                        }
+                      >
+                        <MoreVertical className="h-3 w-3" />
+                      </Button>
+
+                      {/* Comment Menu */}
+                      {showCommentMenu === comment.id && (
+                        <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 min-w-[120px]">
+                          <button
+                            onClick={() => handleEditComment(comment)}
+                            className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                          >
+                            <Edit className="h-3 w-3" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteComment(comment.id)}
+                            className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ))
