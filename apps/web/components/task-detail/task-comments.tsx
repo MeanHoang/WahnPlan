@@ -78,6 +78,7 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
   const [showCommentMenu, setShowCommentMenu] = useState<string | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editCommentText, setEditCommentText] = useState("");
+  const [showAllComments, setShowAllComments] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -147,7 +148,7 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
       }>(`/task-comments/task/${taskId}`, {
         query: {
           page: 1,
-          limit: 20,
+          limit: 50,
         },
       });
 
@@ -219,7 +220,7 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
       total: number;
       totalPages: number;
     };
-  }>(`/task-comments/task/${taskId}?page=1&limit=20`);
+  }>(`/task-comments/task/${taskId}?page=1&limit=50`);
 
   // Update local comments when data changes
   useEffect(() => {
@@ -418,6 +419,29 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
   // Use the helper function for consistent time formatting
   const formatDate = (dateString: string) => formatTime(dateString);
 
+  // Get comments to display based on showAllComments state
+  const getCommentsToDisplay = (): Comment[] => {
+    if (comments.length <= 1 || showAllComments) {
+      return comments;
+    }
+
+    // Show first and last comment only
+    const firstComment = comments[0];
+    const lastComment = comments[comments.length - 1];
+
+    if (!firstComment || !lastComment) {
+      return comments;
+    }
+
+    return [firstComment, lastComment];
+  };
+
+  // Get middle comments count
+  const getMiddleCommentsCount = () => {
+    if (comments.length <= 1) return 0;
+    return comments.length - 2;
+  };
+
   const getUserDisplayName = (user: Comment["author"]) => {
     return user.publicName || user.fullname || user.email;
   };
@@ -476,190 +500,215 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
               <p>No comments yet. Be the first to comment!</p>
             </div>
           ) : (
-            comments?.map((comment, index) => (
-              <div
-                key={comment.id}
-                className={`relative flex gap-4 transition-all duration-500 ease-in-out ${
-                  newCommentIds.has(comment.id)
-                    ? "bg-blue-50 border-l-4 border-blue-400 pl-2 py-2 rounded-r-md"
-                    : ""
-                }`}
-              >
-                {/* Avatar */}
-                <div className="flex-shrink-0 relative z-10">
-                  {getUserAvatar(comment.author)}
-                </div>
+            <>
+              {getCommentsToDisplay().map((comment, index) => (
+                <div key={comment.id}>
+                  <div
+                    className={`relative flex gap-4 transition-all duration-500 ease-in-out ${
+                      newCommentIds.has(comment.id)
+                        ? "bg-blue-50 border-l-4 border-blue-400 pl-2 py-2 rounded-r-md"
+                        : ""
+                    }`}
+                  >
+                    {/* Avatar */}
+                    <div className="flex-shrink-0 relative z-10">
+                      {getUserAvatar(comment.author)}
+                    </div>
 
-                {/* Comment Content */}
-                <div className="flex-1 min-w-0 w-64">
-                  {/* Comment Header */}
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-sm text-gray-900">
-                      {getUserDisplayName(comment.author)}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {formatDate(comment.createdAt)}
-                    </span>
-                    {comment.isEdited && (
-                      <span className="text-xs text-gray-400">(edited)</span>
-                    )}
-                  </div>
-
-                  {/* Comment Text */}
-                  {editingCommentId === comment.id ? (
-                    <div className="mb-2">
-                      <textarea
-                        value={editCommentText}
-                        onChange={(e) => setEditCommentText(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md text-sm resize-none"
-                        rows={3}
-                        autoFocus
-                      />
-                      <div className="flex gap-2 mt-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleSaveEdit(comment.id)}
-                          disabled={!editCommentText.trim()}
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={handleCancelEdit}
-                        >
-                          Cancel
-                        </Button>
+                    {/* Comment Content */}
+                    <div className="flex-1 min-w-0 w-64">
+                      {/* Comment Header */}
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-sm text-gray-900">
+                          {getUserDisplayName(comment.author)}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {formatDate(comment.createdAt)}
+                        </span>
+                        {comment.isEdited && (
+                          <span className="text-xs text-gray-400">
+                            (edited)
+                          </span>
+                        )}
                       </div>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">
-                      {comment.contentPlain}
-                    </p>
-                  )}
 
-                  {/* Attachments */}
-                  {comment.commentAttachments?.length > 0 && (
-                    <div className="mb-2 space-y-1">
-                      {comment.commentAttachments.map((attachment) => (
-                        <div
-                          key={attachment.id}
-                          className="flex items-center gap-2 text-xs text-blue-600 hover:text-blue-800"
-                        >
-                          <Paperclip className="h-3 w-3" />
-                          <a
-                            href={attachment.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:underline"
-                          >
-                            {attachment.fileName}
-                          </a>
+                      {/* Comment Text */}
+                      {editingCommentId === comment.id ? (
+                        <div className="mb-2">
+                          <textarea
+                            value={editCommentText}
+                            onChange={(e) => setEditCommentText(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-md text-sm resize-none"
+                            rows={3}
+                            autoFocus
+                          />
+                          <div className="flex gap-2 mt-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleSaveEdit(comment.id)}
+                              disabled={!editCommentText.trim()}
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={handleCancelEdit}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      ) : (
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">
+                          {comment.contentPlain}
+                        </p>
+                      )}
 
-                  {/* Reactions */}
-                  {comment.commentReactions?.length > 0 && (
-                    <div className="mb-2 flex flex-wrap gap-1">
-                      {Array.from(
-                        getReactionGroups(comment.commentReactions)
-                      ).map(([emoji, reactions]) => (
-                        <button
-                          key={emoji}
-                          onClick={() => handleAddReaction(comment.id, emoji)}
-                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-colors ${
-                            hasUserReacted(comment.commentReactions, emoji)
-                              ? "bg-blue-100 border-blue-300 text-blue-700"
-                              : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-                          }`}
-                        >
-                          <span>{emoji}</span>
-                          <span>{reactions.length}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                      {/* Attachments */}
+                      {comment.commentAttachments?.length > 0 && (
+                        <div className="mb-2 space-y-1">
+                          {comment.commentAttachments.map((attachment) => (
+                            <div
+                              key={attachment.id}
+                              className="flex items-center gap-2 text-xs text-blue-600 hover:text-blue-800"
+                            >
+                              <Paperclip className="h-3 w-3" />
+                              <a
+                                href={attachment.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline"
+                              >
+                                {attachment.fileName}
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
-                {/* Reaction Buttons - positioned on the right */}
-                <div className="flex-shrink-0 flex items-start gap-1 relative">
-                  <div className="relative">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                      onClick={() =>
-                        setShowReactionPicker(
-                          showReactionPicker === comment.id ? null : comment.id
-                        )
-                      }
-                    >
-                      <Smile className="h-3 w-3" />
-                    </Button>
-
-                    {/* Reaction Picker */}
-                    {showReactionPicker === comment.id && (
-                      <div className="absolute top-8 left-0 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10">
-                        <div className="flex gap-1">
-                          {commonEmojis.map((emoji) => (
+                      {/* Reactions */}
+                      {comment.commentReactions?.length > 0 && (
+                        <div className="mb-2 flex flex-wrap gap-1">
+                          {Array.from(
+                            getReactionGroups(comment.commentReactions)
+                          ).map(([emoji, reactions]) => (
                             <button
                               key={emoji}
                               onClick={() =>
                                 handleAddReaction(comment.id, emoji)
                               }
-                              className="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100 rounded transition-colors"
-                              disabled={false}
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-colors ${
+                                hasUserReacted(comment.commentReactions, emoji)
+                                  ? "bg-blue-100 border-blue-300 text-blue-700"
+                                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                              }`}
                             >
-                              {emoji}
+                              <span>{emoji}</span>
+                              <span>{reactions.length}</span>
                             </button>
                           ))}
                         </div>
+                      )}
+                    </div>
+
+                    {/* Reaction Buttons - positioned on the right */}
+                    <div className="flex-shrink-0 flex items-start gap-1 relative">
+                      <div className="relative">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                          onClick={() =>
+                            setShowReactionPicker(
+                              showReactionPicker === comment.id
+                                ? null
+                                : comment.id
+                            )
+                          }
+                        >
+                          <Smile className="h-3 w-3" />
+                        </Button>
+
+                        {/* Reaction Picker */}
+                        {showReactionPicker === comment.id && (
+                          <div className="absolute top-8 left-0 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10">
+                            <div className="flex gap-1">
+                              {commonEmojis.map((emoji) => (
+                                <button
+                                  key={emoji}
+                                  onClick={() =>
+                                    handleAddReaction(comment.id, emoji)
+                                  }
+                                  className="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100 rounded transition-colors"
+                                  disabled={false}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
 
-                  {/* Comment Menu - only show for user's own comments */}
-                  {canEditComment(comment) && (
-                    <div className="relative">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                        onClick={() =>
-                          setShowCommentMenu(
-                            showCommentMenu === comment.id ? null : comment.id
-                          )
-                        }
-                      >
-                        <MoreVertical className="h-3 w-3" />
-                      </Button>
+                      {/* Comment Menu - only show for user's own comments */}
+                      {canEditComment(comment) && (
+                        <div className="relative">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                            onClick={() =>
+                              setShowCommentMenu(
+                                showCommentMenu === comment.id
+                                  ? null
+                                  : comment.id
+                              )
+                            }
+                          >
+                            <MoreVertical className="h-3 w-3" />
+                          </Button>
 
-                      {/* Comment Menu */}
-                      {showCommentMenu === comment.id && (
-                        <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 min-w-[120px]">
-                          <button
-                            onClick={() => handleEditComment(comment)}
-                            className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                          >
-                            <Edit className="h-3 w-3" />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteComment(comment.id)}
-                            className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                            Delete
-                          </button>
+                          {/* Comment Menu */}
+                          {showCommentMenu === comment.id && (
+                            <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 min-w-[120px]">
+                              <button
+                                onClick={() => handleEditComment(comment)}
+                                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                              >
+                                <Edit className="h-3 w-3" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteComment(comment.id)}
+                                className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                                Delete
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Show More Button - between first and last comment */}
+                  {comments.length > 1 && !showAllComments && index === 0 && (
+                    <div className="flex justify-center py-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowAllComments(true)}
+                        className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                      >
+                        Show {getMiddleCommentsCount()} more comments
+                      </Button>
+                    </div>
                   )}
                 </div>
-              </div>
-            ))
+              ))}
+            </>
           )}
         </div>
       </div>
