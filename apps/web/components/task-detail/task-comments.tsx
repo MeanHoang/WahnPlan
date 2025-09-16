@@ -70,10 +70,16 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newCommentIds, setNewCommentIds] = useState<Set<string>>(new Set());
+  const [showReactionPicker, setShowReactionPicker] = useState<string | null>(
+    null
+  );
   const { toast } = useToast();
   const { user } = useAuth();
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastFetchTimeRef = useRef<number>(Date.now());
+
+  // Common emoji reactions
+  const commonEmojis = ["👍", "❤️", "😂", "😮", "😢", "😡", "🎉", "👏"];
 
   // Helper function to compare comments and detect changes
   const compareComments = useCallback(
@@ -283,6 +289,54 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
     }
   };
 
+  // Add reaction to comment
+  const handleAddReaction = async (commentId: string, emoji: string) => {
+    try {
+      const result = await apiRequest(`/comment-reactions/${commentId}`, {
+        method: "POST",
+        body: { emoji },
+      });
+
+      // Refetch comments to get updated reactions
+      refetchComments();
+      setShowReactionPicker(null);
+
+      toast({
+        title: "Success",
+        description: "Reaction added successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add reaction",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Group reactions by emoji
+  const getReactionGroups = (reactions: Comment["commentReactions"]) => {
+    const groups = new Map<string, Comment["commentReactions"]>();
+    reactions.forEach((reaction) => {
+      const emoji = reaction.emoji;
+      if (!groups.has(emoji)) {
+        groups.set(emoji, []);
+      }
+      groups.get(emoji)!.push(reaction);
+    });
+    return groups;
+  };
+
+  // Check if current user has reacted with specific emoji
+  const hasUserReacted = (
+    reactions: Comment["commentReactions"],
+    emoji: string
+  ) => {
+    return reactions.some(
+      (reaction) => reaction.emoji === emoji && reaction.user.id === user?.id
+    );
+  };
+
   // Use the helper function for consistent time formatting
   const formatDate = (dateString: string) => formatTime(dateString);
 
@@ -306,6 +360,18 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
       </div>
     );
   };
+
+  // Close reaction picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showReactionPicker) {
+        setShowReactionPicker(null);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [showReactionPicker]);
 
   return (
     <div className="mt-8 pt-6 border-t border-gray-200">
@@ -388,30 +454,63 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
                   {/* Reactions */}
                   {comment.commentReactions?.length > 0 && (
                     <div className="mb-2 flex flex-wrap gap-1">
-                      {comment.commentReactions.map((reaction) => (
-                        <span
-                          key={reaction.id}
-                          className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-xs border border-gray-200"
+                      {Array.from(
+                        getReactionGroups(comment.commentReactions)
+                      ).map(([emoji, reactions]) => (
+                        <button
+                          key={emoji}
+                          onClick={() => handleAddReaction(comment.id, emoji)}
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-colors ${
+                            hasUserReacted(comment.commentReactions, emoji)
+                              ? "bg-blue-100 border-blue-300 text-blue-700"
+                              : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                          }`}
                         >
-                          <span>{reaction.emoji}</span>
-                          <span className="text-gray-600">
-                            {getUserDisplayName(reaction.user)}
-                          </span>
-                        </span>
+                          <span>{emoji}</span>
+                          <span>{reactions.length}</span>
+                        </button>
                       ))}
                     </div>
                   )}
                 </div>
 
                 {/* Reaction Buttons - positioned on the right */}
-                <div className="flex-shrink-0 flex items-start gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                  >
-                    <Smile className="h-3 w-3" />
-                  </Button>
+                <div className="flex-shrink-0 flex items-start gap-1 relative">
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                      onClick={() =>
+                        setShowReactionPicker(
+                          showReactionPicker === comment.id ? null : comment.id
+                        )
+                      }
+                    >
+                      <Smile className="h-3 w-3" />
+                    </Button>
+
+                    {/* Reaction Picker */}
+                    {showReactionPicker === comment.id && (
+                      <div className="absolute top-8 left-0 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10">
+                        <div className="flex gap-1">
+                          {commonEmojis.map((emoji) => (
+                            <button
+                              key={emoji}
+                              onClick={() =>
+                                handleAddReaction(comment.id, emoji)
+                              }
+                              className="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100 rounded transition-colors"
+                              disabled={false}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <Button
                     variant="ghost"
                     size="sm"

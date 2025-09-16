@@ -55,23 +55,6 @@ export class TaskCommentsController {
     return this.taskCommentsService.remove(id, req.user.id);
   }
 
-  // Comment Reactions
-  @Post(':id/reactions')
-  addReaction(
-    @Param('id') commentId: string,
-    @Body() body: { emoji: string },
-    @Req() req: any,
-  ) {
-    if (!body.emoji) {
-      throw new BadRequestException('Emoji is required');
-    }
-    return this.taskCommentsService.addReaction(
-      commentId,
-      body.emoji,
-      req.user.id,
-    );
-  }
-
   // Comment Attachments
   @Post(':id/attachments')
   addAttachment(
