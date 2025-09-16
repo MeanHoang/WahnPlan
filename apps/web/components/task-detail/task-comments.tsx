@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Send,
   Smile,
@@ -14,6 +14,7 @@ import { useCreateApi } from "@/hooks/use-create-api";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { formatTime } from "@/lib/time-helpers";
+import { apiRequest } from "@/lib/api-request";
 
 interface Comment {
   id: string;
@@ -67,8 +68,122 @@ interface TaskCommentsProps {
 export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
   const [newComment, setNewComment] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newCommentIds, setNewCommentIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const { user } = useAuth();
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastFetchTimeRef = useRef<number>(Date.now());
+
+  // Helper function to compare comments and detect changes
+  const compareComments = useCallback(
+    (oldComments: Comment[], newComments: Comment[]) => {
+      const oldMap = new Map(
+        oldComments.map((comment) => [comment.id, comment])
+      );
+      const newMap = new Map(
+        newComments.map((comment) => [comment.id, comment])
+      );
+
+      const changes = {
+        newComments: [] as Comment[],
+        updatedComments: [] as Comment[],
+        hasChanges: false,
+      };
+
+      // Check for new comments
+      for (const newComment of newComments) {
+        if (!oldMap.has(newComment.id)) {
+          changes.newComments.push(newComment);
+          changes.hasChanges = true;
+        }
+      }
+
+      // Check for updated comments
+      for (const [id, newComment] of newMap) {
+        const oldComment = oldMap.get(id);
+        if (
+          oldComment &&
+          (oldComment.contentPlain !== newComment.contentPlain ||
+            oldComment.updatedAt !== newComment.updatedAt ||
+            oldComment.commentReactions.length !==
+              newComment.commentReactions.length ||
+            oldComment.commentAttachments.length !==
+              newComment.commentAttachments.length)
+        ) {
+          changes.updatedComments.push(newComment);
+          changes.hasChanges = true;
+        }
+      }
+
+      return changes;
+    },
+    []
+  );
+
+  // Smart polling function using apiRequest
+  const pollForUpdates = useCallback(async () => {
+    try {
+      // Use apiRequest with the same URL format as useFetchApi
+      const result = await apiRequest<{
+        comments: Comment[];
+        pagination: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+      }>(`/task-comments/task/${taskId}`, {
+        query: {
+          page: 1,
+          limit: 20,
+        },
+      });
+
+      if (result?.comments) {
+        // Sort comments: oldest first, newest last (like chat)
+        const newComments = result.comments.sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        const changes = compareComments(comments, newComments);
+
+        if (changes.hasChanges) {
+          setComments(newComments);
+
+          // Add new comments to highlight set
+          if (changes.newComments.length > 0) {
+            const newIds = new Set(changes.newComments.map((c) => c.id));
+            setNewCommentIds((prev) => new Set([...prev, ...newIds]));
+
+            // Remove highlight after 3 seconds
+            setTimeout(() => {
+              setNewCommentIds((prev) => {
+                const updated = new Set(prev);
+                newIds.forEach((id) => updated.delete(id));
+                return updated;
+              });
+            }, 3000);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error polling for comments:", error);
+    }
+  }, [comments, compareComments, taskId]);
+
+  // Start polling after initial load
+  useEffect(() => {
+    if (comments.length > 0) {
+      pollingIntervalRef.current = setInterval(pollForUpdates, 5000);
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, [comments.length, pollForUpdates]);
 
   // Force re-render every minute to update relative time
   useEffect(() => {
@@ -95,6 +210,18 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
     };
   }>(`/task-comments/task/${taskId}?page=1&limit=20`);
 
+  // Update local comments when data changes
+  useEffect(() => {
+    if (commentsData?.comments) {
+      // Sort comments: oldest first, newest last (like chat)
+      const sortedComments = commentsData.comments.sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      setComments(sortedComments);
+    }
+  }, [commentsData]);
+
   // Create comment
   const { mutate: createComment, loading: isCreating } = useCreateApi<
     {
@@ -104,9 +231,27 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
     },
     Comment
   >("/task-comments", {
-    onSuccess: () => {
+    onSuccess: (newCommentData) => {
       setNewComment("");
-      refetchComments();
+      // Optimistically add the new comment to local state and sort
+      setComments((prev) => {
+        const updated = [...prev, newCommentData];
+        return updated.sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      });
+      // Add to highlight set
+      setNewCommentIds((prev) => new Set([...prev, newCommentData.id]));
+      // Remove highlight after 3 seconds
+      setTimeout(() => {
+        setNewCommentIds((prev) => {
+          const updated = new Set(prev);
+          updated.delete(newCommentData.id);
+          return updated;
+        });
+      }, 3000);
+
       toast({
         title: "Success",
         description: "Comment added successfully",
@@ -169,7 +314,7 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
       {/* Comments List */}
       <div className="relative mb-6">
         {/* Vertical line connecting comments */}
-        {commentsData?.comments && commentsData.comments.length > 0 && (
+        {comments && comments.length > 0 && (
           <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200"></div>
         )}
 
@@ -179,13 +324,20 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
               <p className="mt-2 text-sm text-gray-500">Loading comments...</p>
             </div>
-          ) : commentsData?.comments?.length === 0 ? (
+          ) : comments?.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <p>No comments yet. Be the first to comment!</p>
             </div>
           ) : (
-            commentsData?.comments?.map((comment, index) => (
-              <div key={comment.id} className="relative flex gap-4">
+            comments?.map((comment, index) => (
+              <div
+                key={comment.id}
+                className={`relative flex gap-4 transition-all duration-500 ease-in-out ${
+                  newCommentIds.has(comment.id)
+                    ? "bg-blue-50 border-l-4 border-blue-400 pl-2 py-2 rounded-r-md"
+                    : ""
+                }`}
+              >
                 {/* Avatar */}
                 <div className="flex-shrink-0 relative z-10">
                   {getUserAvatar(comment.author)}
