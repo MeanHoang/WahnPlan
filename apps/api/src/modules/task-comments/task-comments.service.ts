@@ -9,10 +9,14 @@ import { CreateTaskCommentDto } from './dto/create-task-comment.dto';
 import { UpdateTaskCommentDto } from './dto/update-task-comment.dto';
 import { CommentQueryDto } from './dto/comment-query.dto';
 import { WorkspaceMemberRole } from '@prisma/client';
+import { NotificationHelperService } from '../../shared/notifications/notification-helper.service';
 
 @Injectable()
 export class TaskCommentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationHelper: NotificationHelperService,
+  ) {}
 
   async create(createCommentDto: CreateTaskCommentDto, userId: string) {
     // Check if user has permission to comment on task
@@ -139,6 +143,13 @@ export class TaskCommentsService {
         },
       },
     });
+
+    // Create notification for comment added
+    await this.notificationHelper.notifyCommentAdded(
+      createCommentDto.taskId,
+      comment.id,
+      userId,
+    );
 
     return comment;
   }

@@ -9,10 +9,14 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskFiltersDto } from './dto/task-filters.dto';
 import { WorkspaceMemberRole } from '@prisma/client';
+import { NotificationHelperService } from '../../shared/notifications/notification-helper.service';
 
 @Injectable()
 export class TasksService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationHelper: NotificationHelperService,
+  ) {}
 
   async create(createTaskDto: CreateTaskDto, userId: string) {
     // Check if user has permission to create task in board
@@ -290,6 +294,15 @@ export class TasksService {
         attachments: task.attachments as any,
       },
     });
+
+    // Create notifications for task members
+    if (createTaskDto.assigneeId && createTaskDto.assigneeId !== userId) {
+      await this.notificationHelper.notifyTaskAssigned(
+        task.id,
+        createTaskDto.assigneeId,
+        userId,
+      );
+    }
 
     return task;
   }
@@ -1229,7 +1242,135 @@ export class TasksService {
       },
     });
 
+    // Create notifications for task updates
+    await this.handleTaskUpdateNotifications(
+      id,
+      updateTaskDto,
+      existingTask,
+      userId,
+    );
+
     return task;
+  }
+
+  private async handleTaskUpdateNotifications(
+    taskId: string,
+    updateTaskDto: UpdateTaskDto,
+    existingTask: any,
+    userId: string,
+  ): Promise<void> {
+    const changes: string[] = [];
+
+    // Check for assignee change
+    if (
+      updateTaskDto.assigneeId &&
+      updateTaskDto.assigneeId !== existingTask.assigneeId
+    ) {
+      await this.notificationHelper.notifyTaskAssigned(
+        taskId,
+        updateTaskDto.assigneeId,
+        userId,
+      );
+      changes.push('assignee');
+    }
+
+    // Check for reviewer change
+    if (
+      updateTaskDto.reviewerId &&
+      updateTaskDto.reviewerId !== existingTask.reviewerId
+    ) {
+      await this.notificationHelper.notifyTaskReviewerAssigned(
+        taskId,
+        updateTaskDto.reviewerId,
+        userId,
+      );
+      changes.push('reviewer');
+    }
+
+    // Check for tester change
+    if (
+      updateTaskDto.testerId &&
+      updateTaskDto.testerId !== existingTask.testerId
+    ) {
+      await this.notificationHelper.notifyTaskTesterAssigned(
+        taskId,
+        updateTaskDto.testerId,
+        userId,
+      );
+      changes.push('tester');
+    }
+
+    // Check for status change
+    if (
+      updateTaskDto.taskStatusId &&
+      updateTaskDto.taskStatusId !== existingTask.taskStatusId
+    ) {
+      await this.notificationHelper.notifyTaskStatusChanged(
+        taskId,
+        existingTask.taskStatusId,
+        updateTaskDto.taskStatusId,
+        userId,
+      );
+      changes.push('status');
+    }
+
+    // Check for priority change
+    if (
+      updateTaskDto.taskPriorityId &&
+      updateTaskDto.taskPriorityId !== existingTask.taskPriorityId
+    ) {
+      await this.notificationHelper.notifyTaskPriorityChanged(
+        taskId,
+        existingTask.taskPriorityId,
+        updateTaskDto.taskPriorityId,
+        userId,
+      );
+      changes.push('priority');
+    }
+
+    // Check for completion status change
+    if (
+      updateTaskDto.isDone !== undefined &&
+      updateTaskDto.isDone !== existingTask.isDone
+    ) {
+      if (updateTaskDto.isDone) {
+        await this.notificationHelper.notifyTaskCompleted(taskId, userId);
+      }
+      changes.push('completion status');
+    }
+
+    // If there are other changes, create a general update notification
+    const otherChanges = [];
+    if (updateTaskDto.title && updateTaskDto.title !== existingTask.title)
+      otherChanges.push('title');
+    if (updateTaskDto.dueDate && updateTaskDto.dueDate !== existingTask.dueDate)
+      otherChanges.push('due date');
+    if (
+      updateTaskDto.descriptionJson &&
+      updateTaskDto.descriptionJson !== existingTask.descriptionJson
+    )
+      otherChanges.push('description');
+    if (
+      updateTaskDto.noteJson &&
+      updateTaskDto.noteJson !== existingTask.noteJson
+    )
+      otherChanges.push('notes');
+    if (updateTaskDto.sprint && updateTaskDto.sprint !== existingTask.sprint)
+      otherChanges.push('sprint');
+    if (
+      updateTaskDto.storyPoint &&
+      updateTaskDto.storyPoint !== existingTask.storyPoint
+    )
+      otherChanges.push('story points');
+
+    if (otherChanges.length > 0 || changes.length > 0) {
+      const allChanges = [...changes, ...otherChanges];
+      await this.notificationHelper.notifyTaskUpdated(
+        taskId,
+        userId,
+        allChanges,
+      );
+    }
   }
 
   async remove(id: string, userId: string) {

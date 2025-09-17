@@ -18,6 +18,7 @@ import { TaskMembersModule } from './modules/task-members/task-members.module';
 import { TaskCommentsModule } from './modules/task-comments/task-comments.module';
 import { CommentReactionsModule } from './modules/comment-reactions/comment-reactions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { NotificationHelperService } from './shared/notifications/notification-helper.service';
 
 @Module({
   imports: [
@@ -40,6 +41,6 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     NotificationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, NotificationHelperService],
 })
 export class AppModule {}
