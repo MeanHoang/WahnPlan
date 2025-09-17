@@ -17,6 +17,7 @@ import { TaskInitiativeModule } from './modules/task-initiative/task-initiative.
 import { TaskMembersModule } from './modules/task-members/task-members.module';
 import { TaskCommentsModule } from './modules/task-comments/task-comments.module';
 import { CommentReactionsModule } from './modules/comment-reactions/comment-reactions.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { CommentReactionsModule } from './modules/comment-reactions/comment-reac
     TaskMembersModule,
     TaskCommentsModule,
     CommentReactionsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
