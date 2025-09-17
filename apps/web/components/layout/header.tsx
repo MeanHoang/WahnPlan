@@ -81,9 +81,6 @@ export function Header({
         {/* Right side icons */}
         <div className="flex items-center space-x-2">
           <Button variant="ghost" size="sm" className="p-2">
-            <Bell className="h-5 w-5 text-gray-600" />
-          </Button>
-          <Button variant="ghost" size="sm" className="p-2">
             <HelpCircle className="h-5 w-5 text-gray-600" />
           </Button>
 
