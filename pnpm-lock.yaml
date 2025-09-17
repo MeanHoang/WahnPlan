@@ -241,6 +241,9 @@ importers:
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@tiptap/core':
+        specifier: 3.3.0
+        version: 3.3.0(@tiptap/pm@3.3.0)
       '@tiptap/extension-code-block':
         specifier: ^3.3.0
         version: 3.3.0(@tiptap/core@3.3.0(@tiptap/pm@3.3.0))(@tiptap/pm@3.3.0)
@@ -257,7 +260,7 @@ importers:
         specifier: ^3.3.0
         version: 3.3.0(@tiptap/extensions@3.3.0(@tiptap/core@3.3.0(@tiptap/pm@3.3.0))(@tiptap/pm@3.3.0))
       '@tiptap/pm':
-        specifier: ^3.3.0
+        specifier: 3.3.0
         version: 3.3.0
       '@tiptap/react':
         specifier: ^3.3.0

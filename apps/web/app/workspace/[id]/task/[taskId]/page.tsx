@@ -11,8 +11,8 @@ import { Task, TaskPriority, TaskInitiative, TaskStatus } from "@/types/task";
 import { TaskHeader } from "@/components/task-detail/task-header";
 import { TaskTitle } from "@/components/task-detail/task-title";
 import { TaskAttributes } from "@/components/task-detail/task-attributes";
-import { TaskDescription } from "@/components/task-detail/task-description";
 import { TaskComments } from "@/components/task-detail/task-comments";
+import { TaskNotes } from "@/components/task-detail/task-notes";
 
 export default function TaskDetailPage(): JSX.Element {
   const { user, isLoading: authLoading } = useAuth();
@@ -279,11 +279,11 @@ export default function TaskDetailPage(): JSX.Element {
               onFieldChange={handleFieldChange}
             />
 
-            {/* Description Section */}
-            <TaskDescription task={task} />
-
             {/* Comments Section */}
             <TaskComments taskId={taskId} />
+
+            {/* Notes Section */}
+            <TaskNotes task={task} onTaskUpdate={setTask} />
           </div>
         </div>
       </div>

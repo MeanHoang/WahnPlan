@@ -67,3 +67,49 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Resizable Image Styles */
+.ProseMirror .resizable-image-container {
+  position: relative;
+  display: inline-block;
+}
+
+.ProseMirror .resizable-image-container:hover .resize-handle {
+  opacity: 1;
+}
+
+.ProseMirror .resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #3b82f6;
+  border: 2px solid white;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+.ProseMirror .resize-handle.se {
+  bottom: -6px;
+  right: -6px;
+  cursor: se-resize;
+}
+
+.ProseMirror .resize-handle.sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: sw-resize;
+}
+
+.ProseMirror .resize-handle.ne {
+  top: -6px;
+  right: -6px;
+  cursor: ne-resize;
+}
+
+.ProseMirror .resize-handle.nw {
+  top: -6px;
+  left: -6px;
+  cursor: nw-resize;
+}
