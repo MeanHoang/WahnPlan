@@ -24,6 +24,7 @@
     "@repo/ui": "workspace:*",
     "@tiptap/core": "3.3.0",
     "@tiptap/extension-code-block": "^3.3.0",
+    "@tiptap/extension-heading": "^3.4.4",
     "@tiptap/extension-highlight": "^3.3.0",
     "@tiptap/extension-image": "^3.3.0",
     "@tiptap/extension-link": "^3.3.0",

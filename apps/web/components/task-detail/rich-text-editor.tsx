@@ -17,6 +17,7 @@ import {
   Link as LinkIcon,
   Paperclip,
   Video,
+  Save,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
@@ -36,19 +37,13 @@ export function RichTextEditor({
 }: RichTextEditorProps): JSX.Element {
   const [isEditing, setIsEditing] = useState(true); // Always start in editing mode
   const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const initialContentRef = useRef<any>(content);
+  const editorContentRef = useRef<any>(content);
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        bulletList: {
-          keepMarks: true,
-          keepAttributes: false,
-        },
-        orderedList: {
-          keepMarks: true,
-          keepAttributes: false,
-        },
-      }),
+      StarterKit,
       Image.extend({
         addPasteRules() {
           return []; // Disable default paste rules
@@ -186,12 +181,39 @@ export function RichTextEditor({
     },
   });
 
-  // Update editor content when prop changes
+  // Initialize content refs and editor content
   useEffect(() => {
-    if (editor && content && !hasChanges) {
+    if (!editor || !content) return;
+
+    // Only update editor content if it's different from what we have
+    const currentContent = editor.getJSON();
+    if (JSON.stringify(currentContent) !== JSON.stringify(content)) {
       editor.commands.setContent(content);
+      editorContentRef.current = content;
+      initialContentRef.current = content;
     }
-  }, [content, editor, hasChanges]);
+  }, [editor, content]);
+
+  // Track changes in editor content
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleUpdate = () => {
+      const newContent = editor.getJSON();
+      editorContentRef.current = newContent;
+
+      // Compare with initial content to determine if there are changes
+      const hasContentChanged =
+        JSON.stringify(newContent) !==
+        JSON.stringify(initialContentRef.current);
+      setHasChanges(hasContentChanged);
+    };
+
+    editor.on("update", handleUpdate);
+    return () => {
+      editor.off("update", handleUpdate);
+    };
+  }, [editor]);
 
   // Handle paste and drop events for images, videos and files
   useEffect(() => {
@@ -347,23 +369,33 @@ export function RichTextEditor({
     };
   }, [editor]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editor || !onSave) return;
 
-    const jsonContent = editor.getJSON();
-    const plainText = editor.getText();
+    setIsSaving(true);
+    try {
+      const jsonContent = editor.getJSON();
+      const plainText = editor.getText();
 
-    onSave(jsonContent, plainText);
-    setHasChanges(false);
-    // Keep editing mode open after save
+      await onSave(jsonContent, plainText);
+
+      // Update our reference content after successful save
+      initialContentRef.current = jsonContent;
+      editorContentRef.current = jsonContent;
+      setHasChanges(false);
+    } catch (error) {
+      console.error("Save failed:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
-    if (editor && content) {
-      editor.commands.setContent(content ?? "");
+    if (editor && initialContentRef.current) {
+      editor.commands.setContent(initialContentRef.current);
+      editorContentRef.current = initialContentRef.current;
     }
     setHasChanges(false);
-    // Keep editing mode open after cancel
   };
 
   if (!editor) {
@@ -371,217 +403,265 @@ export function RichTextEditor({
   }
 
   return (
-    <div className="border border-gray-200 rounded-lg">
+    <div className="border border-gray-200 rounded-lg shadow-sm">
       {/* Toolbar - Always visible since always editing */}
-      <div className="flex items-center gap-2 p-4 border-b border-gray-200 bg-gray-50">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`h-10 w-10 p-0 ${
-            editor.isActive("bold") ? "bg-gray-200" : ""
-          }`}
-        >
-          <Bold className="h-5 w-5" />
-        </Button>
+      <div className="flex items-center gap-1 p-3 border-b border-gray-200 bg-gray-50/50">
+        {/* Text Formatting */}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={`h-8 w-8 p-0 ${
+              editor.isActive("bold")
+                ? "bg-blue-100 text-blue-700"
+                : "hover:bg-gray-100"
+            }`}
+            title="Bold (Ctrl+B)"
+          >
+            <Bold className="h-4 w-4" />
+          </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`h-10 w-10 p-0 ${
-            editor.isActive("italic") ? "bg-gray-200" : ""
-          }`}
-        >
-          <Italic className="h-5 w-5" />
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            className={`h-8 w-8 p-0 ${
+              editor.isActive("italic")
+                ? "bg-blue-100 text-blue-700"
+                : "hover:bg-gray-100"
+            }`}
+            title="Italic (Ctrl+I)"
+          >
+            <Italic className="h-4 w-4" />
+          </Button>
+        </div>
 
-        <div className="w-px h-8 bg-gray-300 mx-2" />
+        <div className="w-px h-6 bg-gray-300 mx-2" />
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`h-10 w-10 p-0 ${
-            editor.isActive("bulletList") ? "bg-gray-200" : ""
-          }`}
-        >
-          <List className="h-5 w-5" />
-        </Button>
+        {/* Lists and Quotes */}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={`h-8 w-8 p-0 ${
+              editor.isActive("bulletList")
+                ? "bg-blue-100 text-blue-700"
+                : "hover:bg-gray-100"
+            }`}
+            title="Bullet List"
+          >
+            <List className="h-4 w-4" />
+          </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`h-10 w-10 p-0 ${
-            editor.isActive("orderedList") ? "bg-gray-200" : ""
-          }`}
-        >
-          <ListOrdered className="h-5 w-5" />
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={`h-8 w-8 p-0 ${
+              editor.isActive("orderedList")
+                ? "bg-blue-100 text-blue-700"
+                : "hover:bg-gray-100"
+            }`}
+            title="Numbered List"
+          >
+            <ListOrdered className="h-4 w-4" />
+          </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={`h-10 w-10 p-0 ${
-            editor.isActive("blockquote") ? "bg-gray-200" : ""
-          }`}
-        >
-          <Quote className="h-5 w-5" />
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            className={`h-8 w-8 p-0 ${
+              editor.isActive("blockquote")
+                ? "bg-blue-100 text-blue-700"
+                : "hover:bg-gray-100"
+            }`}
+            title="Quote"
+          >
+            <Quote className="h-4 w-4" />
+          </Button>
+        </div>
 
-        <div className="w-px h-8 bg-gray-300 mx-2" />
+        <div className="w-px h-6 bg-gray-300 mx-2" />
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            const url = window.prompt("Enter image URL:");
-            if (url) {
-              editor.chain().focus().setImage({ src: url }).run();
-            }
-          }}
-          className="h-10 w-10 p-0"
-        >
-          <ImageIcon className="h-5 w-5" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            const url = window.prompt("Enter video URL:");
-            if (url) {
-              editor
-                .chain()
-                .focus()
-                .insertContent(
-                  `<video controls style="max-width: 100%; height: auto;"><source src="${url}"></video>`
-                )
-                .run();
-            }
-          }}
-          className="h-10 w-10 p-0"
-        >
-          <Video className="h-5 w-5" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            const url = window.prompt("Enter URL:");
-            if (url) {
-              editor.chain().focus().setLink({ href: url }).run();
-            }
-          }}
-          className={`h-10 w-10 p-0 ${
-            editor.isActive("link") ? "bg-gray-200" : ""
-          }`}
-        >
-          <LinkIcon className="h-5 w-5" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            const input = document.createElement("input");
-            input.type = "file";
-            input.accept = "image/*,video/*,.pdf,.doc,.docx,.txt";
-            input.onchange = (e) => {
-              const file = (e.target as HTMLInputElement).files?.[0];
-              if (file) {
-                if (file.type.startsWith("image/")) {
-                  const reader = new FileReader();
-                  reader.onload = (e: any) => {
-                    const result = e.target?.result as string;
-                    if (result) {
-                      editor.chain().focus().setImage({ src: result }).run();
-                    }
-                  };
-                  reader.readAsDataURL(file);
-                } else if (file.type.startsWith("video/")) {
-                  const reader = new FileReader();
-                  reader.onload = (e: any) => {
-                    const result = e.target?.result as string;
-                    if (result) {
-                      editor
-                        .chain()
-                        .focus()
-                        .insertContent(
-                          `<video controls style="max-width: 100%; height: auto;"><source src="${result}" type="${file.type}"></video>`
-                        )
-                        .run();
-                    }
-                  };
-                  reader.readAsDataURL(file);
-                } else {
-                  editor
-                    .chain()
-                    .focus()
-                    .insertContent(
-                      `<span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-sm text-gray-700">📎 ${file.name}</span>`
-                    )
-                    .run();
-                }
+        {/* Media and Links */}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              const url = window.prompt("Enter image URL:");
+              if (url) {
+                editor.chain().focus().setImage({ src: url }).run();
               }
-            };
-            input.click();
-          }}
-          className="h-10 w-10 p-0"
-        >
-          <Paperclip className="h-5 w-5" />
-        </Button>
+            }}
+            className="h-8 w-8 p-0 hover:bg-gray-100"
+            title="Insert Image"
+          >
+            <ImageIcon className="h-4 w-4" />
+          </Button>
 
-        <div className="w-px h-8 bg-gray-300 mx-2" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              const url = window.prompt("Enter video URL:");
+              if (url) {
+                editor
+                  .chain()
+                  .focus()
+                  .insertContent(
+                    `<video controls style="max-width: 100%; height: auto;"><source src="${url}"></video>`
+                  )
+                  .run();
+              }
+            }}
+            className="h-8 w-8 p-0 hover:bg-gray-100"
+            title="Insert Video"
+          >
+            <Video className="h-4 w-4" />
+          </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().undo().run()}
-          disabled={!editor.can().undo()}
-          className="h-10 w-10 p-0"
-        >
-          <Undo className="h-5 w-5" />
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              const url = window.prompt("Enter URL:");
+              if (url) {
+                editor.chain().focus().setLink({ href: url }).run();
+              }
+            }}
+            className={`h-8 w-8 p-0 ${
+              editor.isActive("link")
+                ? "bg-blue-100 text-blue-700"
+                : "hover:bg-gray-100"
+            }`}
+            title="Insert Link"
+          >
+            <LinkIcon className="h-4 w-4" />
+          </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().redo().run()}
-          disabled={!editor.can().redo()}
-          className="h-10 w-10 p-0"
-        >
-          <Redo className="h-5 w-5" />
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              const input = document.createElement("input");
+              input.type = "file";
+              input.accept = "image/*,video/*,.pdf,.doc,.docx,.txt";
+              input.onchange = (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0];
+                if (file) {
+                  if (file.type.startsWith("image/")) {
+                    const reader = new FileReader();
+                    reader.onload = (e: any) => {
+                      const result = e.target?.result as string;
+                      if (result) {
+                        editor.chain().focus().setImage({ src: result }).run();
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  } else if (file.type.startsWith("video/")) {
+                    const reader = new FileReader();
+                    reader.onload = (e: any) => {
+                      const result = e.target?.result as string;
+                      if (result) {
+                        editor
+                          .chain()
+                          .focus()
+                          .insertContent(
+                            `<video controls style="max-width: 100%; height: auto;"><source src="${result}" type="${file.type}"></video>`
+                          )
+                          .run();
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  } else {
+                    editor
+                      .chain()
+                      .focus()
+                      .insertContent(
+                        `<span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-sm text-gray-700">📎 ${file.name}</span>`
+                      )
+                      .run();
+                  }
+                }
+              };
+              input.click();
+            }}
+            className="h-8 w-8 p-0 hover:bg-gray-100"
+            title="Upload File"
+          >
+            <Paperclip className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="w-px h-6 bg-gray-300 mx-2" />
+
+        {/* Undo/Redo */}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!editor.can().undo()}
+            className="h-8 w-8 p-0 hover:bg-gray-100 disabled:opacity-50"
+            title="Undo (Ctrl+Z)"
+          >
+            <Undo className="h-4 w-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().redo().run()}
+            disabled={!editor.can().redo()}
+            className="h-8 w-8 p-0 hover:bg-gray-100 disabled:opacity-50"
+            title="Redo (Ctrl+Y)"
+          >
+            <Redo className="h-4 w-4" />
+          </Button>
+        </div>
 
         <div className="flex-1" />
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleCancel}
-          className="h-10 px-4 text-sm"
-        >
-          Cancel
-        </Button>
-        <Button
-          size="sm"
-          onClick={handleSave}
-          disabled={!hasChanges}
-          className="h-10 px-4 text-sm"
-        >
-          Save
-        </Button>
+        {/* Save/Cancel */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCancel}
+            className="h-8 px-3 text-sm"
+          >
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={!hasChanges || isSaving}
+            className="h-8 px-3 text-sm"
+          >
+            {isSaving ? (
+              <>
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-3 w-3 mr-2" />
+                Save
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Editor Content */}
-      <div className="p-8 relative">
+      <div className="p-6 relative">
         <EditorContent
           editor={editor}
-          className="prose prose-xl max-w-none min-h-[500px] focus:outline-none border-none"
+          className="prose prose-lg max-w-none min-h-[400px] focus:outline-none border-none"
         />
       </div>
     </div>

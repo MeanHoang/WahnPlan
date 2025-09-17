@@ -421,11 +421,11 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
 
   // Get comments to display based on showAllComments state
   const getCommentsToDisplay = (): Comment[] => {
-    if (comments.length <= 1 || showAllComments) {
+    if (comments.length <= 2 || showAllComments) {
       return comments;
     }
 
-    // Show first and last comment only
+    // Show first and last comment only when there are 3+ comments
     const firstComment = comments[0];
     const lastComment = comments[comments.length - 1];
 
@@ -438,7 +438,7 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
 
   // Get middle comments count
   const getMiddleCommentsCount = () => {
-    if (comments.length <= 1) return 0;
+    if (comments.length <= 2) return 0;
     return comments.length - 2;
   };
 
@@ -489,7 +489,7 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
           <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200"></div>
         )}
 
-        <div className="space-y-6">
+        <div className="space-y-1">
           {commentsLoading ? (
             <div className="text-center py-4">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
@@ -694,8 +694,8 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
                   </div>
 
                   {/* Show More Button - between first and last comment */}
-                  {comments.length > 1 && !showAllComments && index === 0 && (
-                    <div className="flex justify-center py-4">
+                  {comments.length > 2 && !showAllComments && index === 0 && (
+                    <div className="flex justify-center">
                       <Button
                         variant="ghost"
                         size="sm"
