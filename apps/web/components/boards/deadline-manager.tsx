@@ -260,13 +260,13 @@ export function DeadlineManager({
                   <th className="text-left p-3 font-medium text-gray-700 w-64">
                     Task Title
                   </th>
-                  <th className="text-left p-3 font-medium text-gray-700 w-32">
+                  <th className="text-left p-3 font-medium text-gray-700 w-24">
                     Members
                   </th>
                   <th className="text-left p-3 font-medium text-gray-700 w-28">
                     Due Date
                   </th>
-                  <th className="text-left p-3 font-medium text-gray-700 w-24">
+                  <th className="text-left p-3 font-medium text-gray-700 w-32">
                     Due Status
                   </th>
                   <th className="text-left p-3 font-medium text-gray-700 w-28">

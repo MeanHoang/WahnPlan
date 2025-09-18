@@ -12,6 +12,8 @@ import {
   Target,
   Award,
   Activity,
+  PieChart,
+  LineChart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,10 +26,49 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { Task, TaskStatus, TaskPriority, TaskInitiative } from "@/types/task";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  LineChart as RechartsLineChart,
+  Line,
+  Area,
+  AreaChart,
+} from "recharts";
 
 interface AnalyticsDashboardProps {
   boardId: string;
 }
+
+// Chart colors
+const COLORS = {
+  primary: "#3b82f6",
+  secondary: "#10b981",
+  accent: "#f59e0b",
+  danger: "#ef4444",
+  purple: "#8b5cf6",
+  pink: "#ec4899",
+  indigo: "#6366f1",
+  teal: "#14b8a6",
+};
+
+const CHART_COLORS = [
+  "#3b82f6",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#ec4899",
+  "#6366f1",
+  "#14b8a6",
+];
 
 interface TaskAnalytics extends Task {
   assignee?: {
@@ -95,17 +136,14 @@ export function AnalyticsDashboard({
     "30d"
   );
 
-  // Fetch tasks data
-  const { data: tasksData, loading } = useFetchApi<TaskAnalytics[]>(
-    `/boards/${boardId}/tasks?includeAnalytics=true`
-  );
-
-  // Fetch board stats
-  const { data: boardStats } = useFetchApi<any>(`/boards/${boardId}/stats`);
+  // Fetch board data with tasks
+  const { data: boardData, loading } = useFetchApi<any>(`/boards/${boardId}`);
 
   // Calculate analytics
   const analytics = useMemo((): AnalyticsData => {
-    if (!tasksData) {
+    const tasksData: TaskAnalytics[] = boardData?.tasks || [];
+
+    if (!tasksData || tasksData.length === 0) {
       return {
         totalTasks: 0,
         completedTasks: 0,
@@ -273,7 +311,7 @@ export function AnalyticsDashboard({
       initiativeDistribution,
       monthlyTrend,
     };
-  }, [tasksData]);
+  }, [boardData]);
 
   const completionRate =
     analytics.totalTasks > 0
@@ -431,97 +469,130 @@ export function AnalyticsDashboard({
         </CardContent>
       </Card>
 
-      {/* Distribution Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Status Distribution */}
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Status Distribution Pie Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Status Distribution</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <PieChart className="h-5 w-5" />
+              Status Distribution
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {analytics.statusDistribution.map((item) => (
-                <div
-                  key={item.status}
-                  className="flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full" />
-                    <span className="text-sm font-medium">{item.status}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-sm font-bold">{item.count}</span>
-                    <span className="text-xs text-gray-500 ml-1">
-                      ({item.percentage.toFixed(1)}%)
-                    </span>
-                  </div>
-                </div>
-              ))}
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsPieChart>
+                  <Pie
+                    data={analytics.statusDistribution}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ status, percentage }: any) =>
+                      `${status} (${percentage.toFixed(1)}%)`
+                    }
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="count"
+                  >
+                    {analytics.statusDistribution.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={CHART_COLORS[index % CHART_COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </RechartsPieChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        {/* Priority Distribution */}
+        {/* Priority Distribution Bar Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Priority Distribution</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Priority Distribution
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {analytics.priorityDistribution.map((item) => (
-                <div
-                  key={item.priority}
-                  className="flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-orange-500 rounded-full" />
-                    <span className="text-sm font-medium">{item.priority}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-sm font-bold">{item.count}</span>
-                    <span className="text-xs text-gray-500 ml-1">
-                      ({item.percentage.toFixed(1)}%)
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Initiative Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Initiative Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {analytics.initiativeDistribution.map((item) => (
-                <div
-                  key={item.initiative}
-                  className="flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-purple-500 rounded-full" />
-                    <span className="text-sm font-medium">
-                      {item.initiative}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-sm font-bold">{item.count}</span>
-                    <span className="text-xs text-gray-500 ml-1">
-                      ({item.percentage.toFixed(1)}%)
-                    </span>
-                  </div>
-                </div>
-              ))}
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analytics.priorityDistribution}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="priority" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill={COLORS.primary} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Performance Metrics */}
+      {/* Initiative and Team Productivity Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Initiative Distribution */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Initiative Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={analytics.initiativeDistribution}
+                  layout="horizontal"
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="initiative" type="category" width={100} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill={COLORS.purple} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Team Productivity Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Team Productivity
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analytics.teamProductivity}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="userName" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar
+                    dataKey="completedTasks"
+                    fill={COLORS.secondary}
+                    name="Completed"
+                  />
+                  <Bar dataKey="totalTasks" fill={COLORS.accent} name="Total" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Performance Metrics with Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Average Completion Time */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -542,37 +613,106 @@ export function AnalyticsDashboard({
           </CardContent>
         </Card>
 
+        {/* Monthly Trend Line Chart */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
+              <LineChart className="h-5 w-5" />
               Monthly Trend
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {analytics.monthlyTrend.map((month) => (
-                <div
-                  key={month.month}
-                  className="flex items-center justify-between"
-                >
-                  <span className="text-sm font-medium">{month.month}</span>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 bg-green-500 rounded-full" />
-                      <span className="text-xs text-gray-600">
-                        {month.completed} completed
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                      <span className="text-xs text-gray-600">
-                        {month.created} created
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsLineChart data={analytics.monthlyTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="created"
+                    stroke={COLORS.primary}
+                    strokeWidth={3}
+                    name="Created"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="completed"
+                    stroke={COLORS.secondary}
+                    strokeWidth={3}
+                    name="Completed"
+                  />
+                </RechartsLineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Additional Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Task Completion Rate Area Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Completion Rate Trend
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={analytics.monthlyTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Area
+                    type="monotone"
+                    dataKey="completed"
+                    stackId="1"
+                    stroke={COLORS.secondary}
+                    fill={COLORS.secondary}
+                    fillOpacity={0.6}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="created"
+                    stackId="1"
+                    stroke={COLORS.primary}
+                    fill={COLORS.primary}
+                    fillOpacity={0.6}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Team Performance Comparison */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5" />
+              Team Performance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analytics.teamProductivity}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="userName" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar
+                    dataKey="completionRate"
+                    fill={COLORS.purple}
+                    name="Completion Rate %"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
