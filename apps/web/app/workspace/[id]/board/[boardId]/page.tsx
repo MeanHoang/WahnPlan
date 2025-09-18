@@ -49,9 +49,9 @@ export default function BoardDetailPage(): JSX.Element {
   const { data: boardData, loading: boardLoading } = useBoard(boardId);
 
   // Fetch unread count for notification badge
-  const { data: unreadData } = useFetchApi<{ unreadCount: number }>(
-    "/notifications/unread-count"
-  );
+  const { data: unreadData, refetch: refetchUnreadCount } = useFetchApi<{
+    unreadCount: number;
+  }>("/notifications/unread-count");
   const unreadCount = unreadData?.unreadCount || 0;
 
   // Tasks are now fetched by individual columns
@@ -271,6 +271,8 @@ export default function BoardDetailPage(): JSX.Element {
               <NotificationDropdown
                 isOpen={isNotificationDropdownOpen}
                 onClose={() => setIsNotificationDropdownOpen(false)}
+                onUnreadCountChange={refetchUnreadCount}
+                currentWorkspaceId={workspaceId}
               />
             </div>
 

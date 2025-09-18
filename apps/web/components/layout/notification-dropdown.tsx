@@ -23,17 +23,23 @@ import {
   NotificationResponse,
 } from "@/types/notification";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 interface NotificationDropdownProps {
   isOpen: boolean;
   onClose: () => void;
+  onUnreadCountChange?: () => void;
+  currentWorkspaceId?: string;
 }
 
 export function NotificationDropdown({
   isOpen,
   onClose,
+  onUnreadCountChange,
+  currentWorkspaceId,
 }: NotificationDropdownProps): JSX.Element {
   const { toast } = useToast();
+  const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
 
@@ -60,7 +66,7 @@ export function NotificationDropdown({
   const { mutate: markAllAsRead } = useUpdateApi<
     any,
     { message: string; count: number }
-  >("/notifications/mark-all-read");
+  >("/notifications");
   const { mutate: deleteNotification } = useUpdateApi<any, { message: string }>(
     "/notifications"
   );
@@ -131,14 +137,102 @@ export function NotificationDropdown({
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
 
+  const handleNotificationClick = async (notification: Notification) => {
+    console.log("Notification clicked:", notification);
+
+    // Check if this is a task-related notification
+    const taskRelatedTypes = [
+      NotificationType.TASK_ASSIGNED,
+      NotificationType.TASK_UPDATED,
+      NotificationType.TASK_COMPLETED,
+      NotificationType.TASK_STATUS_CHANGED,
+      NotificationType.TASK_PRIORITY_CHANGED,
+      NotificationType.TASK_DUE_SOON,
+      NotificationType.TASK_OVERDUE,
+      NotificationType.COMMENT_ADDED,
+      NotificationType.MENTION,
+    ];
+
+    console.log("Notification type:", notification.type);
+    console.log(
+      "Is task related:",
+      taskRelatedTypes.includes(notification.type)
+    );
+    console.log("Notification data:", notification.data);
+    console.log("Has taskId:", notification.data?.taskId);
+
+    if (
+      taskRelatedTypes.includes(notification.type) &&
+      notification.data?.taskId
+    ) {
+      try {
+        console.log(
+          "Fetching task details for taskId:",
+          notification.data.taskId
+        );
+
+        let workspaceId = currentWorkspaceId;
+
+        // If we don't have currentWorkspaceId, try to fetch from task
+        if (!workspaceId) {
+          const { apiRequest } = await import("@/lib/api-request");
+          const task = await apiRequest<any>(
+            `/tasks/${notification.data.taskId}`
+          );
+          console.log("Task details:", task);
+          workspaceId = task?.board?.workspace?.id;
+        }
+
+        if (workspaceId) {
+          const url = `/workspace/${workspaceId}/task/${notification.data.taskId}`;
+          console.log("Navigating to:", url);
+
+          // Mark as read before navigating
+          if (!notification.isRead) {
+            await handleMarkAsRead(notification.id);
+          }
+
+          // Navigate to the task detail page
+          router.push(url);
+          onClose();
+          return;
+        } else {
+          console.log("WorkspaceId not found");
+          toast({
+            title: "Error",
+            description: "Unable to determine workspace",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching task details:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load task details",
+          variant: "destructive",
+        });
+      }
+    }
+
+    // For non-task notifications or if task details couldn't be fetched, just mark as read
+    if (!notification.isRead) {
+      console.log("Marking notification as read");
+      await handleMarkAsRead(notification.id);
+    }
+  };
+
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      await markAsRead({
-        url: `/notifications/${notificationId}/read`,
-        method: "PATCH",
-      });
+      await markAsRead(
+        {},
+        {
+          endpoint: `/notifications/${notificationId}/read`,
+          method: "PATCH",
+        }
+      );
       refetch();
       refetchUnread();
+      onUnreadCountChange?.();
       toast({
         title: "Success",
         description: "Notification marked as read",
@@ -154,12 +248,16 @@ export function NotificationDropdown({
 
   const handleMarkAllAsRead = async () => {
     try {
-      await markAllAsRead({
-        url: "/notifications/mark-all-read",
-        method: "PATCH",
-      });
+      await markAllAsRead(
+        {},
+        {
+          endpoint: "/notifications/mark-all-read",
+          method: "PATCH",
+        }
+      );
       refetch();
       refetchUnread();
+      onUnreadCountChange?.();
       toast({
         title: "Success",
         description: "All notifications marked as read",
@@ -175,12 +273,18 @@ export function NotificationDropdown({
 
   const handleDeleteNotification = async (notificationId: string) => {
     try {
-      await deleteNotification({
-        url: `/notifications/${notificationId}`,
-        method: "DELETE",
-      });
+      // Use apiRequest directly for delete
+      const { apiRequest } = await import("@/lib/api-request");
+      await apiRequest<{ message: string }>(
+        `/notifications/${notificationId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
       refetch();
       refetchUnread();
+      onUnreadCountChange?.();
       toast({
         title: "Success",
         description: "Notification deleted",
@@ -270,11 +374,12 @@ export function NotificationDropdown({
             {filteredNotifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-4 hover:bg-gray-50 transition-colors ${
+                className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
                   !notification.isRead
                     ? "bg-blue-50 border-l-4 border-l-blue-500"
                     : ""
                 }`}
+                onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 mt-1">
@@ -307,7 +412,10 @@ export function NotificationDropdown({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleMarkAsRead(notification.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMarkAsRead(notification.id);
+                            }}
                             className="h-6 w-6 p-0 text-gray-400 hover:text-blue-600"
                           >
                             <Check className="h-3 w-3" />
@@ -316,9 +424,10 @@ export function NotificationDropdown({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() =>
-                            handleDeleteNotification(notification.id)
-                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteNotification(notification.id);
+                          }}
                           className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
                         >
                           <Trash2 className="h-3 w-3" />
