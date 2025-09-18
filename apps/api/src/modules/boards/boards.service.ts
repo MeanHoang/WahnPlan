@@ -151,6 +151,15 @@ export class BoardsService {
                 avatarUrl: true,
               },
             },
+            tester: {
+              select: {
+                id: true,
+                email: true,
+                fullname: true,
+                publicName: true,
+                avatarUrl: true,
+              },
+            },
             baUser: {
               select: {
                 id: true,
@@ -167,6 +176,19 @@ export class BoardsService {
                 fullname: true,
                 publicName: true,
                 avatarUrl: true,
+              },
+            },
+            taskMembers: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    fullname: true,
+                    publicName: true,
+                    avatarUrl: true,
+                  },
+                },
               },
             },
             taskStatus: true,
