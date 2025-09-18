@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Calendar,
   Clock,
@@ -67,6 +68,7 @@ export function DeadlineManager({
   boardId,
 }: DeadlineManagerProps): JSX.Element {
   const { toast } = useToast();
+  const router = useRouter();
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
 
   // Fetch board with tasks
@@ -153,6 +155,11 @@ export function DeadlineManager({
     setSelectedTasks((prev) =>
       prev.length === allTaskIds.length ? [] : allTaskIds
     );
+  };
+
+  const handleTaskClick = (taskId: string) => {
+    // Navigate to task detail page
+    router.push(`/workspace/${boardData?.workspaceId}/task/${taskId}`);
   };
 
   const handleSendNotification = async (task: TaskWithDeadline) => {
@@ -293,8 +300,14 @@ export function DeadlineManager({
                         className="rounded border-gray-300"
                       />
                     </td>
-                    <td className="p-3 font-medium truncate" title={task.title}>
-                      {task.title}
+                    <td className="p-3">
+                      <button
+                        onClick={() => handleTaskClick(task.id)}
+                        className="font-medium truncate text-left hover:text-blue-600 hover:underline transition-colors"
+                        title={task.title}
+                      >
+                        {task.title}
+                      </button>
                     </td>
                     <td className="p-3">
                       <div className="flex flex-wrap gap-1">
