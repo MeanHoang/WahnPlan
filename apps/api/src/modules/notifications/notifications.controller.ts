@@ -47,6 +47,11 @@ export class NotificationsController {
     return this.notificationsService.findOne(id, req.user.id);
   }
 
+  @Patch('mark-all-read')
+  markAllAsRead(@Req() req: any) {
+    return this.notificationsService.markAllAsRead(req.user.id);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -68,11 +73,6 @@ export class NotificationsController {
   @Patch(':id/unread')
   markAsUnread(@Param('id') id: string, @Req() req: any) {
     return this.notificationsService.markAsUnread(id, req.user.id);
-  }
-
-  @Patch('mark-all-read')
-  markAllAsRead(@Req() req: any) {
-    return this.notificationsService.markAllAsRead(req.user.id);
   }
 
   @Delete(':id')
