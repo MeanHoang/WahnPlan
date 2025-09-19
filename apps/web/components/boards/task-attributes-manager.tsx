@@ -13,6 +13,7 @@ import {
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useCreateApi } from "@/hooks/use-create-api";
 import { useTranslation } from "@/contexts/language-context";
+import { useToast } from "@/hooks/use-toast";
 import { SortableItem } from "@/components/boards/sortable-item";
 import { TaskAttributeDialog } from "@/components/boards/task-attribute-dialog";
 import {
@@ -46,6 +47,7 @@ export function TaskAttributesManager({
   boardId,
 }: TaskAttributesManagerProps): JSX.Element {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"create" | "edit">("create");
   const [editingItem, setEditingItem] = useState<TaskAttribute | null>(null);
@@ -244,11 +246,36 @@ export function TaskAttributesManager({
   };
 
   const handleDelete = async (item: TaskAttribute) => {
+    const taskCount = item._count?.tasks || 0;
+
+    if (taskCount > 0) {
+      const attributeName = "title" in item ? item.title : item.name;
+
+      const messageTemplate = t("taskAttributesManager.cannotDeleteInUse");
+      const description = messageTemplate
+        .replace("{{attributeName}}", attributeName)
+        .replace("{{taskCount}}", taskCount.toString());
+
+      toast({
+        title: t("common.error"),
+        description: description,
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!confirm(t("taskAttributesManager.confirmDelete"))) return;
     try {
       await deleteItem(item.id);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting item:", error);
+
+      // Generic error
+      toast({
+        title: t("common.error"),
+        description: error?.response?.data?.message || t("common.error"),
+        variant: "destructive",
+      });
     }
   };
 

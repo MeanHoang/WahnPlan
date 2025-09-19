@@ -616,7 +616,9 @@
     "initiative": "Sáng kiến",
     "no": "Không có",
     "yet": "chưa",
-    "createFirstOne": "Tạo cái đầu tiên để bắt đầu"
+    "createFirstOne": "Tạo cái đầu tiên để bắt đầu",
+    "cannotDeleteInUse": "Không thể xóa '{{attributeName}}' vì nó đang được sử dụng bởi {{taskCount}} nhiệm vụ. Vui lòng chuyển các nhiệm vụ này sang tùy chọn khác trước.",
+    "moveTasksFirst": "Vui lòng chuyển các nhiệm vụ sang {{attributeType}} khác trước khi xóa cái này."
   },
   "deadlineManager": {
     "daysOverdue": "ngày quá hạn",

@@ -616,7 +616,9 @@
     "initiative": "Initiative",
     "no": "No",
     "yet": "yet",
-    "createFirstOne": "Create your first one to get started"
+    "createFirstOne": "Create your first one to get started",
+    "cannotDeleteInUse": "Cannot delete '{{attributeName}}' because it is being used by {{taskCount}} task(s). Please move these tasks to another option first.",
+    "moveTasksFirst": "Please move the tasks to another {{attributeType}} before deleting this one."
   },
   "deadlineManager": {
     "daysOverdue": "days overdue",
