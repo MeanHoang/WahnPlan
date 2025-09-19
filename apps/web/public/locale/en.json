@@ -171,7 +171,28 @@
       "whenThisBoardWasCreated": "When this board was created",
       "titleRequired": "Board title is required",
       "updatedSuccess": "Board information updated successfully",
-      "updateFailed": "Failed to update board information"
+      "updateFailed": "Failed to update board information",
+      "dangerZone": "Danger Zone",
+      "dangerZoneDescription": "Irreversible and destructive actions",
+      "deleteBoardDescription": "Once you delete a board, there is no going back. Please be certain."
+    },
+    "delete": {
+      "deleteBoard": "Delete Board",
+      "warningMessage": "This action will permanently delete the board and all its associated data. This action cannot be undone.",
+      "whatWillBeDeleted": "The following data will be permanently deleted:",
+      "allTasks": "All tasks",
+      "allTaskStatuses": "All task statuses",
+      "allTaskPriorities": "All task priorities",
+      "allTaskInitiatives": "All task initiatives",
+      "allComments": "All comments",
+      "allMembers": "All members",
+      "boardSettings": "Board settings and configurations",
+      "actionCannotBeUndone": "This action cannot be undone!",
+      "confirmDeletion": "To confirm deletion, type the board name:",
+      "typeBoardNameToConfirm": "Type the exact board name to confirm deletion",
+      "confirmTextMismatch": "Board name does not match. Please type the exact board name.",
+      "deletedSuccessfully": "Board has been deleted successfully",
+      "deleteFailed": "Failed to delete board. Please try again."
     }
   },
   "task": {

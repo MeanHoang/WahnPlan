@@ -171,7 +171,28 @@
       "whenThisBoardWasCreated": "Khi bảng này được tạo",
       "titleRequired": "Tiêu đề bảng là bắt buộc",
       "updatedSuccess": "Cập nhật thông tin bảng thành công",
-      "updateFailed": "Không thể cập nhật thông tin bảng"
+      "updateFailed": "Không thể cập nhật thông tin bảng",
+      "dangerZone": "Vùng Nguy hiểm",
+      "dangerZoneDescription": "Các hành động không thể hoàn tác và có tính phá hủy",
+      "deleteBoardDescription": "Khi bạn xóa một bảng, không có cách nào để khôi phục. Vui lòng chắc chắn."
+    },
+    "delete": {
+      "deleteBoard": "Xóa Bảng",
+      "warningMessage": "Hành động này sẽ xóa vĩnh viễn bảng và tất cả dữ liệu liên quan. Hành động này không thể hoàn tác.",
+      "whatWillBeDeleted": "Dữ liệu sau sẽ bị xóa vĩnh viễn:",
+      "allTasks": "Tất cả nhiệm vụ",
+      "allTaskStatuses": "Tất cả trạng thái nhiệm vụ",
+      "allTaskPriorities": "Tất cả độ ưu tiên nhiệm vụ",
+      "allTaskInitiatives": "Tất cả sáng kiến nhiệm vụ",
+      "allComments": "Tất cả bình luận",
+      "allMembers": "Tất cả thành viên",
+      "boardSettings": "Cài đặt và cấu hình bảng",
+      "actionCannotBeUndone": "Hành động này không thể hoàn tác!",
+      "confirmDeletion": "Để xác nhận xóa, hãy nhập tên bảng:",
+      "typeBoardNameToConfirm": "Nhập chính xác tên bảng để xác nhận xóa",
+      "confirmTextMismatch": "Tên bảng không khớp. Vui lòng nhập chính xác tên bảng.",
+      "deletedSuccessfully": "Bảng đã được xóa thành công",
+      "deleteFailed": "Không thể xóa bảng. Vui lòng thử lại."
     }
   },
   "task": {

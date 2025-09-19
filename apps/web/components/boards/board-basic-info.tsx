@@ -16,15 +16,18 @@ import { useUpdateApi } from "@/hooks/use-update-api";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/contexts/language-context";
 import { Board } from "@/types/board-core";
+import { DeleteBoardDialog } from "./delete-board-dialog";
 
 interface BoardBasicInfoProps {
   board: Board;
   onBoardUpdate?: (updatedBoard: Board) => void;
+  onBoardDeleted?: () => void;
 }
 
 export function BoardBasicInfo({
   board,
   onBoardUpdate,
+  onBoardDeleted,
 }: BoardBasicInfoProps): JSX.Element {
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -269,6 +272,31 @@ export function BoardBasicInfo({
             <div className="text-sm text-gray-500">
               {new Date(board.createdAt).toLocaleDateString()}
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone */}
+      <Card className="border-0 shadow-sm border-red-200">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold text-red-600">
+            {t("board.basicInfo.dangerZone")}
+          </CardTitle>
+          <CardDescription className="text-sm text-gray-600">
+            {t("board.basicInfo.dangerZoneDescription")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
+            <div>
+              <h4 className="font-medium text-red-800">
+                {t("board.delete.deleteBoard")}
+              </h4>
+              <p className="text-sm text-red-600">
+                {t("board.basicInfo.deleteBoardDescription")}
+              </p>
+            </div>
+            <DeleteBoardDialog board={board} onBoardDeleted={onBoardDeleted} />
           </div>
         </CardContent>
       </Card>
