@@ -132,4 +132,24 @@ export class EmailService {
       throw new Error('Failed to send password reset email');
     }
   }
+
+  async sendNotificationEmail(
+    email: string,
+    subject: string,
+    htmlContent: string,
+  ): Promise<void> {
+    const mailOptions = {
+      from: this.configService.get('SMTP_FROM', 'noreply@wahnplan.com'),
+      to: email,
+      subject,
+      html: htmlContent,
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+    } catch (error) {
+      console.error('Failed to send notification email:', error);
+      throw new Error('Failed to send notification email');
+    }
+  }
 }

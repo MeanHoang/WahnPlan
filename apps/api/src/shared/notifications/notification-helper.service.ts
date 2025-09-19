@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../../modules/notifications/notifications.service';
+import { EmailService } from '../email/email.service';
 import { NotificationType } from '@prisma/client';
 
 @Injectable()
@@ -8,6 +9,7 @@ export class NotificationHelperService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
+    private emailService: EmailService,
   ) {}
 
   /**
@@ -47,6 +49,96 @@ export class NotificationHelperService {
   }
 
   /**
+   * Send email notification to user
+   */
+  async sendEmailNotification(
+    userId: string,
+    type: NotificationType,
+    title: string,
+    message: string,
+    data?: any,
+  ): Promise<void> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, publicName: true, fullname: true },
+      });
+
+      if (!user || !user.email) return;
+
+      const userName = user.publicName || user.fullname || 'User';
+
+      // Create email content based on notification type
+      const emailSubject = `WahnPlan Notification: ${title}`;
+      const emailHtml = this.generateEmailTemplate(
+        userName,
+        title,
+        message,
+        type,
+        data,
+      );
+
+      await this.emailService.sendNotificationEmail(
+        user.email,
+        emailSubject,
+        emailHtml,
+      );
+    } catch (error) {
+      console.error('Error sending email notification:', error);
+    }
+  }
+
+  /**
+   * Generate HTML email template for notifications
+   */
+  private generateEmailTemplate(
+    userName: string,
+    title: string,
+    message: string,
+    type: NotificationType,
+    data?: any,
+  ): string {
+    const taskUrl = data?.taskId
+      ? `${process.env.FRONTEND_URL}/task/${data.taskId}`
+      : '';
+    const actionButton = taskUrl
+      ? `
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${taskUrl}" style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+          View Task
+        </a>
+      </div>
+    `
+      : '';
+
+    return `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
+          <h1 style="color: white; margin: 0;">WahnPlan</h1>
+        </div>
+        
+        <div style="padding: 30px; background: #f9f9f9;">
+          <h2 style="color: #333; margin-bottom: 20px;">Hello ${userName}!</h2>
+          
+          <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+            <h3 style="color: #333; margin: 0 0 10px 0;">${title}</h3>
+            <p style="color: #666; line-height: 1.6; margin: 0;">${message}</p>
+          </div>
+          
+          ${actionButton}
+          
+          <div style="text-align: center; margin-top: 30px;">
+            <p style="color: #999; font-size: 14px;">
+              Best regards,<br>
+              The WahnPlan Team
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
    * Create notifications for task-related members
    */
   async createTaskNotification(
@@ -80,6 +172,14 @@ export class NotificationHelperService {
       }));
 
       await this.notificationsService.createBulkNotifications(notifications);
+
+      // Send email notifications to all target users
+      for (const userId of targetUserIds) {
+        await this.sendEmailNotification(userId, type, title, message, {
+          taskId,
+          ...data,
+        });
+      }
     } catch (error) {
       console.error('Error creating task notification:', error);
     }
