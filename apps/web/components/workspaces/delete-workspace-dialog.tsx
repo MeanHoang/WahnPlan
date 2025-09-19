@@ -16,18 +16,28 @@ import { Input } from "@/components/ui/input";
 import { useDeleteApi } from "@/hooks/use-delete-api";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/contexts/language-context";
-import { Board } from "@/types/board-core";
 import { useRouter } from "next/navigation";
 
-interface DeleteBoardDialogProps {
-  board: Board;
-  onBoardDeleted?: () => void;
+interface Workspace {
+  id: string;
+  name: string;
+  _count?: {
+    boards: number;
+    members: number;
+  };
 }
 
-export function DeleteBoardDialog({
-  board,
-  onBoardDeleted,
-}: DeleteBoardDialogProps): JSX.Element {
+interface DeleteWorkspaceDialogProps {
+  workspace: Workspace;
+  onWorkspaceDeleted?: () => void;
+  trigger?: any;
+}
+
+export function DeleteWorkspaceDialog({
+  workspace,
+  onWorkspaceDeleted,
+  trigger,
+}: DeleteWorkspaceDialogProps): JSX.Element {
   const { toast } = useToast();
   const { t } = useTranslation();
   const router = useRouter();
@@ -35,13 +45,15 @@ export function DeleteBoardDialog({
   const [confirmText, setConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { mutate: deleteBoard } = useDeleteApi(`/boards/${board.id}`);
+  const { mutate: deleteWorkspace } = useDeleteApi(
+    `/workspaces/${workspace.id}`
+  );
 
   const handleDelete = async () => {
-    if (confirmText !== board.title) {
+    if (confirmText !== workspace.name) {
       toast({
         title: t("common.error"),
-        description: t("board.delete.confirmTextMismatch"),
+        description: t("workspace.delete.confirmTextMismatch"),
         variant: "destructive",
       });
       return;
@@ -49,20 +61,20 @@ export function DeleteBoardDialog({
 
     setIsDeleting(true);
     try {
-      await deleteBoard();
+      await deleteWorkspace();
       toast({
         title: t("common.success"),
-        description: t("board.delete.deletedSuccessfully"),
+        description: t("workspace.delete.deletedSuccessfully"),
       });
       setIsOpen(false);
-      onBoardDeleted?.();
+      onWorkspaceDeleted?.();
       // Redirect to dashboard after successful deletion
       router.push("/dashboard");
     } catch (error) {
-      console.error("Error deleting board:", error);
+      console.error("Error deleting workspace:", error);
       toast({
         title: t("common.error"),
-        description: t("board.delete.deleteFailed"),
+        description: t("workspace.delete.deleteFailed"),
         variant: "destructive",
       });
     } finally {
@@ -80,68 +92,63 @@ export function DeleteBoardDialog({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button
-          variant="destructive"
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <Trash2 className="h-4 w-4" />
-          {t("board.delete.deleteBoard")}
-        </Button>
+        {trigger || (
+          <Button
+            variant="destructive"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            {t("workspace.delete.deleteWorkspace")}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
             <AlertTriangle className="h-5 w-5" />
-            {t("board.delete.deleteBoard")}
+            {t("workspace.delete.deleteWorkspace")}
           </DialogTitle>
           <div className="space-y-3">
             <p className="text-sm text-gray-600">
-              {t("board.delete.warningMessage")}
+              {t("workspace.delete.warningMessage")}
             </p>
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <h4 className="font-medium text-red-800 mb-2">
-                {t("board.delete.whatWillBeDeleted")}
+                {t("workspace.delete.whatWillBeDeleted")}
               </h4>
               <ul className="text-sm text-red-700 space-y-1">
                 <li>
-                  • {t("board.delete.allTasks")} ({board._count?.tasks || 0})
+                  • {t("workspace.delete.allBoards")} (
+                  {workspace._count?.boards || 0})
                 </li>
                 <li>
-                  • {t("board.delete.allTaskStatuses")} (
-                  {board._count?.taskStatuses || 0})
+                  • {t("workspace.delete.allMembers")} (
+                  {workspace._count?.members || 0})
                 </li>
-                <li>
-                  • {t("board.delete.allTaskPriorities")} (
-                  {board._count?.taskPriorities || 0})
-                </li>
-                <li>
-                  • {t("board.delete.allTaskInitiatives")} (
-                  {board._count?.taskInitiatives || 0})
-                </li>
-                <li>• {t("board.delete.allComments")}</li>
-                <li>• {t("board.delete.allMembers")}</li>
-                <li>• {t("board.delete.boardSettings")}</li>
+                <li>• {t("workspace.delete.allTasks")}</li>
+                <li>• {t("workspace.delete.allComments")}</li>
+                <li>• {t("workspace.delete.workspaceSettings")}</li>
               </ul>
             </div>
             <p className="text-sm font-medium text-red-600">
-              {t("board.delete.actionCannotBeUndone")}
+              {t("workspace.delete.actionCannotBeUndone")}
             </p>
           </div>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">
-              {t("board.delete.confirmDeletion")}
+              {t("workspace.delete.confirmDeletion")}
             </label>
             <Input
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
-              placeholder={board.title}
+              placeholder={workspace.name}
               className="border-red-200 focus:border-red-400"
             />
             <p className="text-xs text-gray-500">
-              {t("board.delete.typeBoardNameToConfirm")}
+              {t("workspace.delete.typeWorkspaceNameToConfirm")}
             </p>
           </div>
         </div>
@@ -156,7 +163,7 @@ export function DeleteBoardDialog({
           <Button
             variant="destructive"
             onClick={handleDelete}
-            disabled={isDeleting || confirmText !== board.title}
+            disabled={isDeleting || confirmText !== workspace.name}
             className="flex items-center gap-2"
           >
             {isDeleting ? (
@@ -164,7 +171,7 @@ export function DeleteBoardDialog({
             ) : (
               <Trash2 className="h-4 w-4" />
             )}
-            {t("board.delete.deleteBoard")}
+            {t("workspace.delete.deleteWorkspace")}
           </Button>
         </DialogFooter>
       </DialogContent>

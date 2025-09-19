@@ -40,6 +40,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/contexts/language-context";
 import { Workspace } from "@/types/workspace-core";
 import { TransferOwnershipModal } from "./transfer-ownership-modal";
+import { DeleteWorkspaceDialog } from "./delete-workspace-dialog";
 
 interface WorkspaceSettingsProps {
   workspaceId: string;
@@ -64,6 +65,10 @@ export function WorkspaceSettings({
 
   const { data: members } = useFetchApi<any[]>(
     `/workspaces/${workspaceId}/members`
+  );
+
+  const { data: boards } = useFetchApi<any[]>(
+    `/workspaces/${workspaceId}/boards`
   );
 
   // Get current user info
@@ -324,7 +329,7 @@ export function WorkspaceSettings({
                 <span className="text-gray-600">
                   {t("workspaceSettings.boards")}
                 </span>
-                <span className="font-medium">0</span>
+                <span className="font-medium">{boards?.length || 0}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">
@@ -365,13 +370,27 @@ export function WorkspaceSettings({
                   {t("workspaceSettings.transferOwnership")}
                 </Button>
               )}
-              <Button
-                variant="outline"
-                className="w-full justify-start text-red-600 hover:text-red-700"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                {t("workspaceSettings.deleteWorkspace")}
-              </Button>
+              {isOwner && workspace && (
+                <DeleteWorkspaceDialog
+                  workspace={{
+                    id: workspace.id,
+                    name: workspace.name,
+                    _count: {
+                      boards: boards?.length || 0,
+                      members: members?.length || 0,
+                    },
+                  }}
+                  trigger={
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      {t("workspaceSettings.deleteWorkspace")}
+                    </Button>
+                  }
+                />
+              )}
             </CardContent>
           </Card>
         </div>

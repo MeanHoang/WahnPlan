@@ -138,7 +138,23 @@
     "getStartedCreatingBoard": "Get started by creating your first board to organize your tasks.",
     "tasks": "tasks",
     "statuses": "statuses",
-    "created": "Created"
+    "created": "Created",
+    "delete": {
+      "deleteWorkspace": "Delete Workspace",
+      "warningMessage": "This action will permanently delete the workspace and all its associated data. This action cannot be undone.",
+      "whatWillBeDeleted": "The following data will be permanently deleted:",
+      "allBoards": "All boards",
+      "allMembers": "All members",
+      "allTasks": "All tasks",
+      "allComments": "All comments",
+      "workspaceSettings": "Workspace settings and configurations",
+      "actionCannotBeUndone": "This action cannot be undone!",
+      "confirmDeletion": "To confirm deletion, type the workspace name:",
+      "typeWorkspaceNameToConfirm": "Type the exact workspace name to confirm deletion",
+      "confirmTextMismatch": "Workspace name does not match. Please type the exact workspace name.",
+      "deletedSuccessfully": "Workspace has been deleted successfully",
+      "deleteFailed": "Failed to delete workspace. Please try again."
+    }
   },
   "board": {
     "title": "Board",

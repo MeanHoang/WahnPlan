@@ -138,7 +138,23 @@
     "getStartedCreatingBoard": "Bắt đầu bằng cách tạo bảng đầu tiên để tổ chức nhiệm vụ của bạn.",
     "tasks": "nhiệm vụ",
     "statuses": "trạng thái",
-    "created": "Tạo"
+    "created": "Tạo",
+    "delete": {
+      "deleteWorkspace": "Xóa Không gian làm việc",
+      "warningMessage": "Hành động này sẽ xóa vĩnh viễn không gian làm việc và tất cả dữ liệu liên quan. Hành động này không thể hoàn tác.",
+      "whatWillBeDeleted": "Dữ liệu sau sẽ bị xóa vĩnh viễn:",
+      "allBoards": "Tất cả bảng",
+      "allMembers": "Tất cả thành viên",
+      "allTasks": "Tất cả nhiệm vụ",
+      "allComments": "Tất cả bình luận",
+      "workspaceSettings": "Cài đặt và cấu hình không gian làm việc",
+      "actionCannotBeUndone": "Hành động này không thể hoàn tác!",
+      "confirmDeletion": "Để xác nhận xóa, hãy nhập tên không gian làm việc:",
+      "typeWorkspaceNameToConfirm": "Nhập chính xác tên không gian làm việc để xác nhận xóa",
+      "confirmTextMismatch": "Tên không gian làm việc không khớp. Vui lòng nhập chính xác tên không gian làm việc.",
+      "deletedSuccessfully": "Không gian làm việc đã được xóa thành công",
+      "deleteFailed": "Không thể xóa không gian làm việc. Vui lòng thử lại."
+    }
   },
   "board": {
     "title": "Bảng",
