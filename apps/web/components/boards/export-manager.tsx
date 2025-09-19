@@ -29,22 +29,22 @@ import {
 // import { Checkbox } from "@/components/ui/checkbox";
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useToast } from "@/hooks/use-toast";
-import { Task, TaskStatus, TaskPriority, TaskInitiative } from "@/types/task";
+import { Task, TaskStatus } from "@/types/task";
+import { apiRequest } from "@/lib/api-request";
+import {
+  getStatusStyle,
+  getTaskAttributeClasses,
+} from "@/lib/task-attribute-helpers";
 
 interface ExportManagerProps {
   boardId: string;
 }
 
 interface ExportFilters {
-  dateFrom: string;
-  dateTo: string;
-  assigneeIds: string[];
+  createdAtFrom: string;
+  createdAtTo: string;
   statusIds: string[];
-  priorityIds: string[];
-  initiativeIds: string[];
-  includeCompleted: boolean;
-  includeInProgress: boolean;
-  includeOverdue: boolean;
+  isDone: boolean | null; // null = all, true = done only, false = not done only
 }
 
 interface ExportData {
@@ -60,39 +60,17 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [filters, setFilters] = useState<ExportFilters>({
-    dateFrom: "",
-    dateTo: "",
-    assigneeIds: [],
+    createdAtFrom: "",
+    createdAtTo: "",
     statusIds: [],
-    priorityIds: [],
-    initiativeIds: [],
-    includeCompleted: true,
-    includeInProgress: true,
-    includeOverdue: true,
+    isDone: null, // null = all tasks
   });
 
-  // Fetch data for filters
-  const { data: tasksData } = useFetchApi<Task[]>(`/boards/${boardId}/tasks`);
+  // For export, we don't need to fetch all tasks upfront
+  // The export API will handle fetching all data based on filters
   const { data: statusesData } = useFetchApi<TaskStatus[]>(
     `/task-status?boardId=${boardId}`
   );
-  const { data: prioritiesData } = useFetchApi<TaskPriority[]>(
-    `/task-priority?boardId=${boardId}`
-  );
-  const { data: initiativesData } = useFetchApi<TaskInitiative[]>(
-    `/task-initiative?boardId=${boardId}`
-  );
-
-  // Get unique assignees from tasks
-  const assignees = Array.from(
-    new Set(tasksData?.map((task) => task.assigneeId).filter(Boolean) || [])
-  ).map((id) => {
-    const task = tasksData?.find((t) => t.assigneeId === id);
-    return {
-      id: id!,
-      name: task?.assignee?.fullname || task?.assignee?.publicName || "Unknown",
-    };
-  });
 
   const handleFilterChange = (key: keyof ExportFilters, value: any) => {
     setFilters((prev) => ({
@@ -114,49 +92,79 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
     }));
   };
 
+  const handleSelectAll = (key: keyof ExportFilters, allValues: string[]) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: allValues,
+    }));
+  };
+
+  const handleDeselectAll = (key: keyof ExportFilters) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: [],
+    }));
+  };
+
   const generateExcelData = (data: ExportData) => {
     const headers = [
       "Task ID",
       "Title",
-      "Description",
+      "Due Date",
       "Status",
       "Priority",
       "Initiative",
+      "OKR",
       "Assignee",
       "Reviewer",
       "Tester",
-      "Story Points",
-      "Created Date",
-      "Due Date",
-      "Completed Date",
+      "BA User",
       "Is Done",
-      "Sprint",
-      "MR Link",
-      "Test Cases",
+      "Story Points",
+      "Size Card",
+      "Test Case",
       "Go Live Date",
+      "Dev MR",
+      "Staging",
+      "Sprint",
+      "Feature Categories",
+      "Sprint Goal",
+      "Created Date",
+      "Updated Date",
+      "Created By",
+      "Members",
+      "Attachments",
     ];
 
     const rows = data.tasks.map((task) => [
       task.id,
       task.title,
-      task.title, // Using title as description fallback
+      task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "",
       task.taskStatus?.title || "",
       task.taskPriority?.name || "",
       task.taskInitiative?.name || "",
+      task.okr || "",
       task.assignee?.fullname || task.assignee?.publicName || "",
       task.reviewer?.fullname || task.reviewer?.publicName || "",
       task.tester?.fullname || task.tester?.publicName || "",
-      task.storyPoint || 0,
-      task.createdAt ? new Date(task.createdAt).toLocaleDateString() : "",
-      task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "",
-      task.isDone && task.updatedAt
-        ? new Date(task.updatedAt).toLocaleDateString()
-        : "",
+      task.baUser?.fullname || task.baUser?.publicName || "",
       task.isDone ? "Yes" : "No",
+      task.storyPoint || 0,
+      task.sizeCard || "",
+      task.testCase || "",
+      task.goLive ? new Date(task.goLive).toLocaleDateString() : "",
+      task.devMr || "",
+      task.staging || "",
       task.sprint || "",
-      "", // mrLink not available
-      "", // testCases not available
-      "", // goLiveDate not available
+      task.featureCategories || "",
+      task.sprintGoal || "",
+      task.createdAt ? new Date(task.createdAt).toLocaleDateString() : "",
+      task.updatedAt ? new Date(task.updatedAt).toLocaleDateString() : "",
+      task.createdBy?.fullname || task.createdBy?.publicName || "",
+      task.taskMembers
+        ?.map((member) => member.user.fullname || member.user.publicName)
+        .join(", ") || "",
+      task.attachments ? JSON.stringify(task.attachments) : "",
     ]);
 
     return [headers, ...rows];
@@ -189,28 +197,22 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
     setIsExporting(true);
 
     try {
-      // Build query parameters
-      const params = new URLSearchParams();
-
-      if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
-      if (filters.dateTo) params.append("dateTo", filters.dateTo);
-      if (filters.assigneeIds.length > 0)
-        params.append("assigneeIds", filters.assigneeIds.join(","));
-      if (filters.statusIds.length > 0)
-        params.append("statusIds", filters.statusIds.join(","));
-      if (filters.priorityIds.length > 0)
-        params.append("priorityIds", filters.priorityIds.join(","));
-      if (filters.initiativeIds.length > 0)
-        params.append("initiativeIds", filters.initiativeIds.join(","));
-      params.append("includeCompleted", filters.includeCompleted.toString());
-      params.append("includeInProgress", filters.includeInProgress.toString());
-      params.append("includeOverdue", filters.includeOverdue.toString());
-
       // Fetch filtered data
-      const response = await fetch(
-        `/api/boards/${boardId}/tasks/export?${params.toString()}`
+      const data: ExportData = await apiRequest<ExportData>(
+        `/boards/${boardId}/tasks/export`,
+        {
+          query: {
+            createdAtFrom: filters.createdAtFrom,
+            createdAtTo: filters.createdAtTo,
+            statusIds:
+              filters.statusIds.length > 0
+                ? filters.statusIds.join(",")
+                : undefined,
+            isDone:
+              filters.isDone !== null ? filters.isDone.toString() : undefined,
+          },
+        }
       );
-      const data: ExportData = await response.json();
 
       // Calculate summary
       const totalStoryPoints = data.tasks.reduce(
@@ -245,44 +247,6 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
 
   return (
     <div className="space-y-6">
-      {/* Export Summary */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-800">
-            <FileSpreadsheet className="h-5 w-5" />
-            Export Tasks for Payroll
-          </CardTitle>
-          <CardDescription className="text-blue-600">
-            Export task data to Excel for salary calculation and reporting
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-white rounded-lg">
-              <p className="text-2xl font-bold text-blue-600">
-                {tasksData?.length || 0}
-              </p>
-              <p className="text-sm text-blue-600">Total Tasks</p>
-            </div>
-            <div className="text-center p-4 bg-white rounded-lg">
-              <p className="text-2xl font-bold text-blue-600">
-                {tasksData?.reduce(
-                  (sum, task) => sum + (task.storyPoint || 0),
-                  0
-                ) || 0}
-              </p>
-              <p className="text-sm text-blue-600">Story Points</p>
-            </div>
-            <div className="text-center p-4 bg-white rounded-lg">
-              <p className="text-2xl font-bold text-blue-600">
-                {tasksData?.filter((task) => task.isDone).length || 0}
-              </p>
-              <p className="text-sm text-blue-600">Completed</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Filters */}
       <Card>
         <CardHeader>
@@ -295,104 +259,102 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Date Range */}
+          {/* Created Date Range */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="dateFrom">From Date</Label>
+              <Label htmlFor="createdAtFrom">Created From Date</Label>
               <Input
-                id="dateFrom"
+                id="createdAtFrom"
                 type="date"
-                value={filters.dateFrom}
-                onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
+                value={filters.createdAtFrom}
+                onChange={(e) =>
+                  handleFilterChange("createdAtFrom", e.target.value)
+                }
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dateTo">To Date</Label>
+              <Label htmlFor="createdAtTo">Created To Date</Label>
               <Input
-                id="dateTo"
+                id="createdAtTo"
                 type="date"
-                value={filters.dateTo}
-                onChange={(e) => handleFilterChange("dateTo", e.target.value)}
+                value={filters.createdAtTo}
+                onChange={(e) =>
+                  handleFilterChange("createdAtTo", e.target.value)
+                }
               />
             </div>
           </div>
 
-          {/* Task Status Filters */}
+          {/* Is Done Filter */}
           <div className="space-y-3">
-            <Label>Task Status</Label>
+            <Label>Task Completion Status</Label>
             <div className="flex flex-wrap gap-4">
               <div className="flex items-center space-x-2">
                 <input
-                  type="checkbox"
-                  id="includeCompleted"
-                  checked={filters.includeCompleted}
-                  onChange={(e) =>
-                    handleFilterChange("includeCompleted", e.target.checked)
-                  }
+                  type="radio"
+                  id="isDoneAll"
+                  name="isDone"
+                  checked={filters.isDone === null}
+                  onChange={() => handleFilterChange("isDone", null)}
                   className="rounded border-gray-300"
                 />
-                <Label htmlFor="includeCompleted">Include Completed</Label>
+                <Label htmlFor="isDoneAll">All Tasks</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <input
-                  type="checkbox"
-                  id="includeInProgress"
-                  checked={filters.includeInProgress}
-                  onChange={(e) =>
-                    handleFilterChange("includeInProgress", e.target.checked)
-                  }
+                  type="radio"
+                  id="isDoneTrue"
+                  name="isDone"
+                  checked={filters.isDone === true}
+                  onChange={() => handleFilterChange("isDone", true)}
                   className="rounded border-gray-300"
                 />
-                <Label htmlFor="includeInProgress">Include In Progress</Label>
+                <Label htmlFor="isDoneTrue">Completed Only</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <input
-                  type="checkbox"
-                  id="includeOverdue"
-                  checked={filters.includeOverdue}
-                  onChange={(e) =>
-                    handleFilterChange("includeOverdue", e.target.checked)
-                  }
+                  type="radio"
+                  id="isDoneFalse"
+                  name="isDone"
+                  checked={filters.isDone === false}
+                  onChange={() => handleFilterChange("isDone", false)}
                   className="rounded border-gray-300"
                 />
-                <Label htmlFor="includeOverdue">Include Overdue</Label>
+                <Label htmlFor="isDoneFalse">Not Completed Only</Label>
               </div>
-            </div>
-          </div>
-
-          {/* Assignee Filter */}
-          <div className="space-y-3">
-            <Label>Assignees</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {assignees.map((assignee) => (
-                <div key={assignee.id} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id={`assignee-${assignee.id}`}
-                    checked={filters.assigneeIds.includes(assignee.id)}
-                    onChange={(e) =>
-                      handleArrayFilterChange(
-                        "assigneeIds",
-                        assignee.id,
-                        e.target.checked
-                      )
-                    }
-                    className="rounded border-gray-300"
-                  />
-                  <Label
-                    htmlFor={`assignee-${assignee.id}`}
-                    className="text-sm"
-                  >
-                    {assignee.name}
-                  </Label>
-                </div>
-              ))}
             </div>
           </div>
 
           {/* Status Filter */}
           <div className="space-y-3">
-            <Label>Statuses</Label>
+            <div className="flex items-center justify-between">
+              <Label>Statuses</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    handleSelectAll(
+                      "statusIds",
+                      statusesData?.map((s) => s.id) || []
+                    )
+                  }
+                  className="text-xs"
+                >
+                  Select All
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDeselectAll("statusIds")}
+                  className="text-xs"
+                >
+                  Clear All
+                </Button>
+              </div>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {statusesData?.map((status) => (
                 <div key={status.id} className="flex items-center space-x-2">
@@ -409,71 +371,16 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
                     }
                     className="rounded border-gray-300"
                   />
-                  <Label htmlFor={`status-${status.id}`} className="text-sm">
-                    {status.title}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Priority Filter */}
-          <div className="space-y-3">
-            <Label>Priorities</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {prioritiesData?.map((priority) => (
-                <div key={priority.id} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id={`priority-${priority.id}`}
-                    checked={filters.priorityIds.includes(priority.id)}
-                    onChange={(e) =>
-                      handleArrayFilterChange(
-                        "priorityIds",
-                        priority.id,
-                        e.target.checked
-                      )
-                    }
-                    className="rounded border-gray-300"
-                  />
                   <Label
-                    htmlFor={`priority-${priority.id}`}
-                    className="text-sm"
+                    htmlFor={`status-${status.id}`}
+                    className="text-sm flex items-center"
                   >
-                    {priority.name}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Initiative Filter */}
-          <div className="space-y-3">
-            <Label>Initiatives</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {initiativesData?.map((initiative) => (
-                <div
-                  key={initiative.id}
-                  className="flex items-center space-x-2"
-                >
-                  <input
-                    type="checkbox"
-                    id={`initiative-${initiative.id}`}
-                    checked={filters.initiativeIds.includes(initiative.id)}
-                    onChange={(e) =>
-                      handleArrayFilterChange(
-                        "initiativeIds",
-                        initiative.id,
-                        e.target.checked
-                      )
-                    }
-                    className="rounded border-gray-300"
-                  />
-                  <Label
-                    htmlFor={`initiative-${initiative.id}`}
-                    className="text-sm"
-                  >
-                    {initiative.name}
+                    <span
+                      className={`${getTaskAttributeClasses()}`}
+                      style={getStatusStyle(status)}
+                    >
+                      {status.title}
+                    </span>
                   </Label>
                 </div>
               ))}
@@ -489,7 +396,7 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
             <div>
               <h3 className="text-lg font-semibold">Ready to Export</h3>
               <p className="text-sm text-gray-600">
-                Export filtered tasks to Excel for payroll calculation
+                Export filtered tasks with all details to Excel file
               </p>
             </div>
             <Button

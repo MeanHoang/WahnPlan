@@ -417,4 +417,149 @@ export class BoardsService {
       initiativeCount,
     };
   }
+
+  async exportTasks(
+    boardId: string,
+    userId: string,
+    filters: {
+      createdAtFrom?: string;
+      createdAtTo?: string;
+      statusIds: string[];
+      isDone: boolean | null;
+    },
+  ) {
+    // Check if user has access to the board
+    const board = await this.prisma.board.findUnique({
+      where: { id: boardId },
+    });
+
+    if (!board) {
+      throw new NotFoundException('Board not found');
+    }
+
+    // Check if user is a member of the workspace
+    const member = await this.prisma.workspaceMember.findFirst({
+      where: {
+        workspaceId: board.workspaceId,
+        userId,
+        role: {
+          in: [
+            WorkspaceMemberRole.owner,
+            WorkspaceMemberRole.manager,
+            WorkspaceMemberRole.member,
+          ],
+        },
+      },
+    });
+
+    if (!member) {
+      throw new ForbiddenException('Access denied to this board');
+    }
+
+    // Build where clause for filtering
+    const whereClause: any = {
+      boardId,
+    };
+
+    // Date range filter
+    if (filters.createdAtFrom || filters.createdAtTo) {
+      whereClause.createdAt = {};
+      if (filters.createdAtFrom) {
+        whereClause.createdAt.gte = new Date(filters.createdAtFrom);
+      }
+      if (filters.createdAtTo) {
+        whereClause.createdAt.lte = new Date(filters.createdAtTo);
+      }
+    }
+
+    // Status filter
+    if (filters.statusIds.length > 0) {
+      whereClause.taskStatusId = {
+        in: filters.statusIds,
+      };
+    }
+
+    // Is Done filter
+    if (filters.isDone !== null) {
+      whereClause.isDone = filters.isDone;
+    }
+
+    // Fetch tasks with all related data
+    const tasks = await this.prisma.task.findMany({
+      where: whereClause,
+      include: {
+        taskStatus: true,
+        taskPriority: true,
+        taskInitiative: true,
+        assignee: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        reviewer: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        tester: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        baUser: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            publicName: true,
+            avatarUrl: true,
+          },
+        },
+        taskMembers: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                fullname: true,
+                publicName: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return {
+      tasks,
+      filters,
+      generatedAt: new Date(),
+      totalTasks: tasks.length,
+    };
+  }
 }

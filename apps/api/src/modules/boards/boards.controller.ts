@@ -33,14 +33,31 @@ export class BoardsController {
     return this.boardsService.findAll(workspaceId, req.user.id);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string, @Req() req: any) {
-    return this.boardsService.findOne(id, req.user.id);
-  }
-
   @Get(':id/stats')
   getStats(@Param('id') id: string, @Req() req: any) {
     return this.boardsService.getBoardStats(id, req.user.id);
+  }
+
+  @Get(':id/tasks/export')
+  exportTasks(
+    @Param('id') id: string,
+    @Req() req: any,
+    @Query('createdAtFrom') createdAtFrom?: string,
+    @Query('createdAtTo') createdAtTo?: string,
+    @Query('statusIds') statusIds?: string,
+    @Query('isDone') isDone?: string,
+  ) {
+    return this.boardsService.exportTasks(id, req.user.id, {
+      createdAtFrom,
+      createdAtTo,
+      statusIds: statusIds ? statusIds.split(',') : [],
+      isDone: isDone ? isDone === 'true' : null,
+    });
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string, @Req() req: any) {
+    return this.boardsService.findOne(id, req.user.id);
   }
 
   @Patch(':id')
