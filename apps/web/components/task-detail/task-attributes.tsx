@@ -307,7 +307,11 @@ export function TaskAttributes({
             <input
               type="checkbox"
               className="w-4 h-4"
-              checked={pendingUpdates.isDone === "true" || task.isDone || false}
+              checked={
+                pendingUpdates.isDone !== undefined
+                  ? pendingUpdates.isDone === "true"
+                  : task.isDone || false
+              }
               onChange={(e) => {
                 onFieldChange("isDone", e.target.checked.toString());
               }}

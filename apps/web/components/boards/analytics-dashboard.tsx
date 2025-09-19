@@ -76,18 +76,21 @@ interface TaskAnalytics extends Task {
     email: string;
     fullname?: string;
     publicName?: string;
+    avatarUrl?: string;
   };
   reviewer?: {
     id: string;
     email: string;
     fullname?: string;
     publicName?: string;
+    avatarUrl?: string;
   };
   tester?: {
     id: string;
     email: string;
     fullname?: string;
     publicName?: string;
+    avatarUrl?: string;
   };
   taskStatus?: TaskStatus;
   taskPriority?: TaskPriority;
@@ -103,6 +106,7 @@ interface AnalyticsData {
   teamProductivity: Array<{
     userId: string;
     userName: string;
+    avatarUrl?: string;
     completedTasks: number;
     totalTasks: number;
     completionRate: number;
@@ -186,19 +190,20 @@ export function AnalyticsDashboard({
     // Team productivity
     const userStats = new Map<
       string,
-      { completed: number; total: number; name: string }
+      { completed: number; total: number; name: string; avatarUrl?: string }
     >();
 
     tasksData.forEach((task) => {
       const assigneeId = task.assigneeId;
       const assigneeName =
-        task.assignee?.fullname || task.assignee?.publicName || "Unknown";
+        task.assignee?.publicName || task.assignee?.fullname || "Unknown";
 
       if (assigneeId) {
         const current = userStats.get(assigneeId) || {
           completed: 0,
           total: 0,
           name: assigneeName,
+          avatarUrl: task.assignee?.avatarUrl,
         };
         current.total++;
         if (task.isDone) current.completed++;
@@ -210,6 +215,7 @@ export function AnalyticsDashboard({
       ([userId, stats]) => ({
         userId,
         userName: stats.name,
+        avatarUrl: stats.avatarUrl,
         completedTasks: stats.completed,
         totalTasks: stats.total,
         completionRate:
@@ -435,11 +441,19 @@ export function AnalyticsDashboard({
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-blue-600">
-                      {member.userName.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
+                  {member.avatarUrl ? (
+                    <img
+                      src={member.avatarUrl}
+                      alt={member.userName}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-blue-600">
+                        {member.userName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                   <div>
                     <p className="font-medium text-gray-900">
                       {member.userName}

@@ -303,7 +303,7 @@ export function DeadlineManager({
                     <td className="p-3">
                       <button
                         onClick={() => handleTaskClick(task.id)}
-                        className="font-medium truncate text-left hover:text-blue-600 hover:underline transition-colors"
+                        className="font-medium text-left hover:text-blue-600 hover:underline transition-colors break-words"
                         title={task.title}
                       >
                         {task.title}
