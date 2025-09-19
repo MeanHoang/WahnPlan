@@ -198,7 +198,9 @@ export function AnalyticsDashboard({
     tasksData.forEach((task) => {
       const assigneeId = task.assigneeId;
       const assigneeName =
-        task.assignee?.publicName || task.assignee?.fullname || "Unknown";
+        task.assignee?.publicName ||
+        task.assignee?.fullname ||
+        t("analytics.unknown");
 
       if (assigneeId) {
         const current = userStats.get(assigneeId) || {
@@ -228,7 +230,7 @@ export function AnalyticsDashboard({
     // Status distribution
     const statusCounts = new Map<string, number>();
     tasksData.forEach((task) => {
-      const status = task.taskStatus?.title || "No Status";
+      const status = task.taskStatus?.title || t("analytics.noStatus");
       statusCounts.set(status, (statusCounts.get(status) || 0) + 1);
     });
 
@@ -243,7 +245,7 @@ export function AnalyticsDashboard({
     // Priority distribution
     const priorityCounts = new Map<string, number>();
     tasksData.forEach((task) => {
-      const priority = task.taskPriority?.name || "No Priority";
+      const priority = task.taskPriority?.name || t("analytics.noPriority");
       priorityCounts.set(priority, (priorityCounts.get(priority) || 0) + 1);
     });
 
@@ -258,7 +260,8 @@ export function AnalyticsDashboard({
     // Initiative distribution
     const initiativeCounts = new Map<string, number>();
     tasksData.forEach((task) => {
-      const initiative = task.taskInitiative?.name || "No Initiative";
+      const initiative =
+        task.taskInitiative?.name || t("analytics.noInitiative");
       initiativeCounts.set(
         initiative,
         (initiativeCounts.get(initiative) || 0) + 1
@@ -435,10 +438,10 @@ export function AnalyticsDashboard({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Team Productivity
+            {t("analytics.teamProductivity")}
           </CardTitle>
           <CardDescription>
-            Task completion rates by team member
+            {t("analytics.taskCompletionRates")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -467,8 +470,8 @@ export function AnalyticsDashboard({
                       {member.userName}
                     </p>
                     <p className="text-sm text-gray-600">
-                      {member.completedTasks}/{member.totalTasks} tasks
-                      completed
+                      {member.completedTasks}/{member.totalTasks}{" "}
+                      {t("analytics.tasksCompleted")}
                     </p>
                   </div>
                 </div>
@@ -498,7 +501,7 @@ export function AnalyticsDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PieChart className="h-5 w-5" />
-              Status Distribution
+              {t("analytics.statusDistribution")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -536,7 +539,7 @@ export function AnalyticsDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
-              Priority Distribution
+              {t("analytics.priorityDistribution")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -562,7 +565,7 @@ export function AnalyticsDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Initiative Distribution
+              {t("analytics.initiativeDistribution")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -588,7 +591,7 @@ export function AnalyticsDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Team Productivity
+              {t("analytics.teamProductivity")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -602,9 +605,13 @@ export function AnalyticsDashboard({
                   <Bar
                     dataKey="completedTasks"
                     fill={COLORS.secondary}
-                    name="Completed"
+                    name={t("analytics.completed")}
                   />
-                  <Bar dataKey="totalTasks" fill={COLORS.accent} name="Total" />
+                  <Bar
+                    dataKey="totalTasks"
+                    fill={COLORS.accent}
+                    name={t("analytics.total")}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -619,7 +626,7 @@ export function AnalyticsDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              Average Completion Time
+              {t("analytics.averageCompletionTime")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -627,9 +634,9 @@ export function AnalyticsDashboard({
               <p className="text-4xl font-bold text-blue-600">
                 {analytics.averageCompletionTime.toFixed(1)}
               </p>
-              <p className="text-lg text-gray-600">days</p>
+              <p className="text-lg text-gray-600">{t("analytics.days")}</p>
               <p className="text-sm text-gray-500 mt-2">
-                Average time from creation to completion
+                {t("analytics.averageTimeFromCreation")}
               </p>
             </div>
           </CardContent>
@@ -640,7 +647,7 @@ export function AnalyticsDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <LineChart className="h-5 w-5" />
-              Monthly Trend
+              {t("analytics.monthlyTrend")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -656,14 +663,14 @@ export function AnalyticsDashboard({
                     dataKey="created"
                     stroke={COLORS.primary}
                     strokeWidth={3}
-                    name="Created"
+                    name={t("analytics.created")}
                   />
                   <Line
                     type="monotone"
                     dataKey="completed"
                     stroke={COLORS.secondary}
                     strokeWidth={3}
-                    name="Completed"
+                    name={t("analytics.completed")}
                   />
                 </RechartsLineChart>
               </ResponsiveContainer>
@@ -679,7 +686,7 @@ export function AnalyticsDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Completion Rate Trend
+              {t("analytics.completionRateTrend")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -717,7 +724,7 @@ export function AnalyticsDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="h-5 w-5" />
-              Team Performance
+              {t("analytics.teamPerformance")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -731,7 +738,7 @@ export function AnalyticsDashboard({
                   <Bar
                     dataKey="completionRate"
                     fill={COLORS.purple}
-                    name="Completion Rate %"
+                    name={t("analytics.completionRate")}
                   />
                 </BarChart>
               </ResponsiveContainer>
