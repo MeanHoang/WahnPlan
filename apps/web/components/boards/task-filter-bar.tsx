@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { MultiSelect, MultiSelectDisplay } from "@/components/ui/multi-select";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { TaskStatus, TaskPriority, TaskInitiative } from "@/types/task";
+import { useTranslation } from "@/contexts/language-context";
 
 interface DateRange {
   from?: Date;
@@ -61,6 +62,7 @@ export function TaskFilterBar({
   selectedCreatedAtRange,
   onFiltersChange,
 }: TaskFilterBarProps): JSX.Element {
+  const { t } = useTranslation();
   const handleClearAllFilters = () => {
     onFiltersChange({
       statusIds: [],
@@ -116,7 +118,7 @@ export function TaskFilterBar({
                   createdAtRange: selectedCreatedAtRange,
                 });
               }}
-              placeholder="Priority"
+              placeholder={t("taskFilter.priority")}
             />
           </div>
 
@@ -142,7 +144,7 @@ export function TaskFilterBar({
                   createdAtRange: selectedCreatedAtRange,
                 });
               }}
-              placeholder="Status"
+              placeholder={t("taskFilter.status")}
             />
           </div>
 
@@ -168,7 +170,7 @@ export function TaskFilterBar({
                   createdAtRange: selectedCreatedAtRange,
                 });
               }}
-              placeholder="Initiative"
+              placeholder={t("taskFilter.initiative")}
             />
           </div>
 
@@ -196,7 +198,7 @@ export function TaskFilterBar({
                   createdAtRange: selectedCreatedAtRange,
                 });
               }}
-              placeholder="Assignee"
+              placeholder={t("taskFilter.assignee")}
             />
           </div>
 

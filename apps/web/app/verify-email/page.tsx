@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/contexts/language-context";
 import { apiService } from "@/lib/api-service";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 
@@ -21,13 +22,14 @@ export default function VerifyEmailPage(): JSX.Element {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const verifyEmail = async () => {
       const token = searchParams.get("token");
 
       if (!token) {
-        setError("No verification token found");
+        setError(t("auth.noVerificationToken"));
         setIsVerifying(false);
         return;
       }
@@ -37,19 +39,17 @@ export default function VerifyEmailPage(): JSX.Element {
         if (result.verified) {
           setIsVerified(true);
           toast({
-            title: "Email verified successfully!",
-            description:
-              "Your account has been verified. You can now use all features.",
+            title: t("auth.emailVerifiedSuccessfully"),
+            description: t("auth.accountFullyActivated"),
           });
         } else {
-          setError(result.message || "Verification failed");
+          setError(result.message || t("auth.verificationFailed"));
         }
       } catch (error: any) {
-        setError(error.message || "Verification failed");
+        setError(error.message || t("auth.verificationFailed"));
         toast({
-          title: "Verification failed",
-          description:
-            error.message || "Something went wrong. Please try again.",
+          title: t("auth.verificationFailedTitle"),
+          description: error.message || t("auth.somethingWentWrong"),
           variant: "destructive",
         });
       } finally {
@@ -76,10 +76,8 @@ export default function VerifyEmailPage(): JSX.Element {
             <div className="flex justify-center mb-4">
               <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
             </div>
-            <CardTitle>Verifying Email</CardTitle>
-            <CardDescription>
-              Please wait while we verify your email address...
-            </CardDescription>
+            <CardTitle>{t("auth.verifyingEmail")}</CardTitle>
+            <CardDescription>{t("auth.pleaseWaitVerifying")}</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -98,18 +96,20 @@ export default function VerifyEmailPage(): JSX.Element {
             )}
           </div>
           <CardTitle>
-            {isVerified ? "Email Verified!" : "Verification Failed"}
+            {isVerified
+              ? t("auth.emailVerifiedTitle")
+              : t("auth.verificationFailed")}
           </CardTitle>
           <CardDescription>
             {isVerified
-              ? "Your email has been successfully verified."
-              : error || "Something went wrong during verification."}
+              ? t("auth.emailVerifiedSuccessfully")
+              : error || t("auth.verificationFailedDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center">
           {isVerified ? (
             <Button onClick={handleGoToDashboard} className="w-full">
-              Go to Dashboard
+              {t("auth.goToDashboard")}
             </Button>
           ) : (
             <Button
@@ -117,7 +117,7 @@ export default function VerifyEmailPage(): JSX.Element {
               variant="outline"
               className="w-full"
             >
-              Go to Login
+              {t("auth.goToLogin")}
             </Button>
           )}
         </CardContent>

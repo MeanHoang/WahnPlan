@@ -12,6 +12,7 @@ interface DateRange {
   to?: Date;
 }
 import { useFetchApi } from "@/hooks/use-fetch-api";
+import { useTranslation } from "@/contexts/language-context";
 
 interface StatusColumnProps {
   status: TaskStatus;
@@ -46,6 +47,7 @@ export function StatusColumn({
   selectedCreatedAtRange,
   refreshTrigger,
 }: StatusColumnProps): JSX.Element {
+  const { t } = useTranslation();
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<any>(null);
@@ -204,8 +206,8 @@ export function StatusColumn({
           >
             <ChevronDown className="h-4 w-4 mr-2" />
             {loading
-              ? "Loading..."
-              : `Load ${Math.min(remainingTasks, TASKS_PER_PAGE)} more`}
+              ? t("common.loading")
+              : `${t("common.loadMore")} ${Math.min(remainingTasks, TASKS_PER_PAGE)}`}
           </Button>
         )}
 
@@ -216,7 +218,7 @@ export function StatusColumn({
           onClick={() => onAddTask?.(status.id)}
         >
           <Plus className="h-4 w-4 mr-2" />
-          New task
+          {t("common.newTask")}
         </Button>
       </div>
     </div>

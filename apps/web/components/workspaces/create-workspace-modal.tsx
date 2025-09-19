@@ -21,6 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/contexts/language-context";
 import { useCreateApi } from "@/hooks/use-create-api";
 import { CreateWorkspaceData } from "@/types/workspace-requests";
 import { Workspace } from "@/types/workspace-core";
@@ -45,6 +46,7 @@ export function CreateWorkspaceModal({
     visibility: "private",
   });
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { mutate: createWorkspace, loading } = useCreateApi<
     CreateWorkspaceData,
     Workspace
@@ -55,8 +57,8 @@ export function CreateWorkspaceModal({
 
     if (!formData.name.trim()) {
       toast({
-        title: "Error",
-        description: "Workspace name is required",
+        title: t("common.error"),
+        description: t("modals.createWorkspace.workspaceNameRequired"),
         variant: "destructive",
       });
       return;
@@ -65,8 +67,8 @@ export function CreateWorkspaceModal({
     try {
       const workspace = await createWorkspace(formData);
       toast({
-        title: "Success",
-        description: `Workspace "${workspace.name}" created successfully`,
+        title: t("common.success"),
+        description: `Workspace "${workspace.name}" ${t("modals.createWorkspace.workspaceCreatedSuccess")}`,
       });
 
       // Reset form
@@ -80,8 +82,8 @@ export function CreateWorkspaceModal({
       onWorkspaceCreated?.();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to create workspace. Please try again.",
+        title: t("common.error"),
+        description: t("modals.createWorkspace.failedToCreateWorkspace"),
         variant: "destructive",
       });
     }
@@ -98,20 +100,22 @@ export function CreateWorkspaceModal({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-          Create
+          {t("common.create")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create New Workspace</DialogTitle>
+          <DialogTitle>{t("modals.createWorkspace.title")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Workspace Name *</Label>
+            <Label htmlFor="name">
+              {t("modals.createWorkspace.workspaceName")} *
+            </Label>
             <Input
               id="name"
-              placeholder="Enter workspace name"
+              placeholder={t("modals.createWorkspace.enterWorkspaceName")}
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
               required
@@ -119,10 +123,12 @@ export function CreateWorkspaceModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">
+              {t("modals.createWorkspace.description")}
+            </Label>
             <Textarea
               id="description"
-              placeholder="Describe your workspace (optional)"
+              placeholder={t("modals.createWorkspace.describeWorkspace")}
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
               rows={3}
@@ -130,7 +136,9 @@ export function CreateWorkspaceModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="visibility">Visibility</Label>
+            <Label htmlFor="visibility">
+              {t("modals.createWorkspace.visibility")}
+            </Label>
             <Select
               value={formData.visibility}
               onValueChange={(value: "public" | "private") =>
@@ -138,11 +146,17 @@ export function CreateWorkspaceModal({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select visibility" />
+                <SelectValue
+                  placeholder={t("modals.createWorkspace.selectVisibility")}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="private">Private</SelectItem>
-                <SelectItem value="public">Public</SelectItem>
+                <SelectItem value="private">
+                  {t("modals.createWorkspace.private")}
+                </SelectItem>
+                <SelectItem value="public">
+                  {t("modals.createWorkspace.public")}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -154,10 +168,12 @@ export function CreateWorkspaceModal({
               onClick={() => setOpen(false)}
               disabled={loading}
             >
-              Cancel
+              {t("modals.createWorkspace.cancel")}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create Workspace"}
+              {loading
+                ? t("modals.createWorkspace.creating")
+                : t("modals.createWorkspace.createWorkspace")}
             </Button>
           </div>
         </form>

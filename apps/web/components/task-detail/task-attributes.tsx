@@ -20,6 +20,7 @@ import { ColoredSelect } from "@/components/task-detail/colored-select";
 import { UserSelector } from "@/components/task-detail/user-selector";
 import { Task, TaskPriority, TaskInitiative, TaskStatus } from "@/types/task";
 import { useState } from "react";
+import { useTranslation } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 
 interface TaskAttributesProps {
@@ -48,6 +49,7 @@ export function TaskAttributes({
   onFieldChange,
 }: TaskAttributesProps): JSX.Element {
   const [showAllFields, setShowAllFields] = useState(false);
+  const { t } = useTranslation();
 
   // Basic fields (always visible)
   const basicFields = [
@@ -86,7 +88,7 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<Calendar className="h-5 w-5 text-gray-400" />}
-            label="Due date"
+            label={t("taskAttributes.dueDate")}
           >
             <input
               type="date"
@@ -108,7 +110,7 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<Flag className="h-5 w-5 text-gray-400" />}
-            label="Priority"
+            label={t("taskAttributes.priority")}
           >
             <ColoredSelect
               value={
@@ -118,7 +120,7 @@ export function TaskAttributes({
                 onFieldChange("taskPriorityId", value);
               }}
               options={priorities || []}
-              placeholder="Empty"
+              placeholder={t("taskAttributes.empty")}
             />
           </TaskAttributeRow>
         );
@@ -127,7 +129,7 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<Target className="h-5 w-5 text-gray-400" />}
-            label="Initiative"
+            label={t("taskAttributes.initiative")}
           >
             <ColoredSelect
               value={
@@ -137,7 +139,7 @@ export function TaskAttributes({
                 onFieldChange("taskInitiativeId", value);
               }}
               options={initiatives || []}
-              placeholder="Empty"
+              placeholder={t("taskAttributes.empty")}
             />
           </TaskAttributeRow>
         );
@@ -146,12 +148,12 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<FileText className="h-5 w-5 text-gray-400" />}
-            label="OKR"
+            label={t("taskAttributes.okr")}
           >
             <input
               type="text"
               className="w-64 px-2 py-1 text-xs"
-              placeholder="Empty"
+              placeholder={t("taskAttributes.empty")}
               value={pendingUpdates.okr || task.okr || ""}
               onChange={(e) => {
                 onFieldChange("okr", e.target.value);
@@ -164,7 +166,7 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<Flag className="h-5 w-5 text-gray-400" />}
-            label="Status"
+            label={t("taskAttributes.status")}
           >
             <ColoredSelect
               value={pendingUpdates.taskStatusId || task.taskStatus?.id || ""}
@@ -178,7 +180,7 @@ export function TaskAttributes({
                   color: status.color,
                 })) || []
               }
-              placeholder="Empty"
+              placeholder={t("taskAttributes.empty")}
             />
           </TaskAttributeRow>
         );
@@ -187,7 +189,7 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<User className="h-5 w-5 text-gray-400" />}
-            label="Assignee"
+            label={t("taskAttributes.assignee")}
           >
             <UserSelector
               value={pendingUpdates.assigneeId || task.assignee?.id || ""}
@@ -195,7 +197,7 @@ export function TaskAttributes({
                 onFieldChange("assigneeId", value as string);
               }}
               users={availableUsers}
-              placeholder="Select assignee"
+              placeholder={t("taskAttributes.selectAssignee")}
               multiple={false}
             />
           </TaskAttributeRow>
@@ -205,7 +207,7 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<Users className="h-5 w-5 text-gray-400" />}
-            label="Members"
+            label={t("taskAttributes.members")}
           >
             <UserSelector
               value={
@@ -220,7 +222,7 @@ export function TaskAttributes({
                 );
               }}
               users={availableUsers}
-              placeholder="Select members"
+              placeholder={t("taskAttributes.selectMembers")}
               multiple={true}
             />
           </TaskAttributeRow>
@@ -230,12 +232,12 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<FileText className="h-5 w-5 text-gray-400" />}
-            label="Figma"
+            label={t("taskAttributes.figma")}
           >
             <input
               type="text"
               className="w-64 px-2 py-1 text-xs"
-              placeholder="Empty"
+              placeholder={t("taskAttributes.empty")}
               value={task.attachments || ""}
               onChange={(e) => {
                 onFieldChange("attachments", e.target.value);
@@ -248,7 +250,7 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<User className="h-5 w-5 text-gray-400" />}
-            label="Reviewer"
+            label={t("taskAttributes.reviewer")}
           >
             <UserSelector
               value={pendingUpdates.reviewerId || task.reviewer?.id || ""}
@@ -256,7 +258,7 @@ export function TaskAttributes({
                 onFieldChange("reviewerId", value as string);
               }}
               users={availableUsers}
-              placeholder="Select reviewer"
+              placeholder={t("taskAttributes.selectReviewer")}
               multiple={false}
             />
           </TaskAttributeRow>
@@ -266,7 +268,7 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<User className="h-5 w-5 text-gray-400" />}
-            label="Tester"
+            label={t("taskAttributes.tester")}
           >
             <UserSelector
               value={pendingUpdates.testerId || task.tester?.id || ""}
@@ -274,7 +276,7 @@ export function TaskAttributes({
                 onFieldChange("testerId", value as string);
               }}
               users={availableUsers}
-              placeholder="Select tester"
+              placeholder={t("taskAttributes.selectTester")}
               multiple={false}
             />
           </TaskAttributeRow>
@@ -284,7 +286,7 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<User className="h-5 w-5 text-gray-400" />}
-            label="BA User"
+            label={t("taskAttributes.baUser")}
           >
             <UserSelector
               value={pendingUpdates.baId || task.baUser?.id || ""}
@@ -292,7 +294,7 @@ export function TaskAttributes({
                 onFieldChange("baId", value as string);
               }}
               users={availableUsers}
-              placeholder="Select BA user"
+              placeholder={t("taskAttributes.selectBaUser")}
               multiple={false}
             />
           </TaskAttributeRow>
@@ -302,7 +304,7 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<CheckSquare className="h-5 w-5 text-gray-400" />}
-            label="Is Done"
+            label={t("taskAttributes.isDone")}
           >
             <input
               type="checkbox"
@@ -323,12 +325,12 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<CheckSquare className="h-5 w-5 text-gray-400" />}
-            label="Story points"
+            label={t("taskAttributes.storyPoints")}
           >
             <input
               type="number"
               className="w-64 px-2 py-1 text-xs"
-              placeholder="Empty"
+              placeholder={t("taskAttributes.empty")}
               value={pendingUpdates.storyPoint || task.storyPoint || ""}
               onChange={(e) => {
                 onFieldChange("storyPoint", e.target.value);
@@ -341,12 +343,12 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<Code className="h-5 w-5 text-gray-400" />}
-            label="Merge Request"
+            label={t("taskAttributes.mergeRequest")}
           >
             <input
               type="text"
               className="w-64 px-2 py-1 text-xs"
-              placeholder="Empty"
+              placeholder={t("taskAttributes.empty")}
               value={pendingUpdates.devMr || task.devMr || ""}
               onChange={(e) => {
                 onFieldChange("devMr", e.target.value);
@@ -359,12 +361,12 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<FileText className="h-5 w-5 text-gray-400" />}
-            label="Size card"
+            label={t("taskAttributes.sizeCard")}
           >
             <input
               type="text"
               className="w-64 px-2 py-1 text-xs"
-              placeholder="Empty"
+              placeholder={t("taskAttributes.empty")}
               value={pendingUpdates.sizeCard || task.sizeCard || ""}
               onChange={(e) => {
                 onFieldChange("sizeCard", e.target.value);
@@ -377,12 +379,12 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<CheckSquare className="h-5 w-5 text-gray-400" />}
-            label="Test case"
+            label={t("taskAttributes.testCase")}
           >
             <input
               type="text"
               className="w-64 px-2 py-1 text-xs"
-              placeholder="Empty"
+              placeholder={t("taskAttributes.empty")}
               value={pendingUpdates.testCase || task.testCase || ""}
               onChange={(e) => {
                 onFieldChange("testCase", e.target.value);
@@ -395,7 +397,7 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<Play className="h-5 w-5 text-gray-400" />}
-            label="Go-live"
+            label={t("taskAttributes.goLive")}
           >
             <input
               type="date"
@@ -417,12 +419,12 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<FileText className="h-5 w-5 text-gray-400" />}
-            label="Staging"
+            label={t("taskAttributes.staging")}
           >
             <input
               type="text"
               className="w-64 px-2 py-1 text-xs"
-              placeholder="Empty"
+              placeholder={t("taskAttributes.empty")}
               value={pendingUpdates.staging || task.staging || ""}
               onChange={(e) => {
                 onFieldChange("staging", e.target.value);
@@ -435,12 +437,12 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<FileText className="h-5 w-5 text-gray-400" />}
-            label="Sprint"
+            label={t("taskAttributes.sprint")}
           >
             <input
               type="text"
               className="w-64 px-2 py-1 text-xs"
-              placeholder="Empty"
+              placeholder={t("taskAttributes.empty")}
               value={pendingUpdates.sprint || task.sprint || ""}
               onChange={(e) => {
                 onFieldChange("sprint", e.target.value);
@@ -453,12 +455,12 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<FileText className="h-5 w-5 text-gray-400" />}
-            label="Feature Categories"
+            label={t("taskAttributes.featureCategories")}
           >
             <input
               type="text"
               className="w-64 px-2 py-1 text-xs"
-              placeholder="Empty"
+              placeholder={t("taskAttributes.empty")}
               value={
                 pendingUpdates.featureCategories || task.featureCategories || ""
               }
@@ -473,12 +475,12 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<FileText className="h-5 w-5 text-gray-400" />}
-            label="Sprint Goal"
+            label={t("taskAttributes.sprintGoal")}
           >
             <input
               type="text"
               className="w-64 px-2 py-1 text-xs"
-              placeholder="Empty"
+              placeholder={t("taskAttributes.empty")}
               value={pendingUpdates.sprintGoal || task.sprintGoal || ""}
               onChange={(e) => {
                 onFieldChange("sprintGoal", e.target.value);
@@ -491,7 +493,7 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<Clock className="h-5 w-5 text-gray-400" />}
-            label="Created Date"
+            label={t("taskAttributes.createdDate")}
           >
             <span className="text-sm text-gray-600">
               {task.createdAt
@@ -511,7 +513,7 @@ export function TaskAttributes({
         return (
           <TaskAttributeRow
             icon={<UserPlus className="h-5 w-5 text-gray-400" />}
-            label="Created By"
+            label={t("taskAttributes.createdBy")}
           >
             <div className="flex items-center gap-2">
               {task.createdBy?.avatarUrl && (
@@ -567,12 +569,13 @@ export function TaskAttributes({
             {showAllFields ? (
               <>
                 <ChevronUp className="h-3 w-3" />
-                Show Less
+                {t("taskAttributes.showLess")}
               </>
             ) : (
               <>
                 <ChevronDown className="h-3 w-3" />
-                Load More ({additionalFields.length} more fields)
+                {t("taskAttributes.loadMore")} ({additionalFields.length}{" "}
+                {t("taskAttributes.moreFields")})
               </>
             )}
           </Button>

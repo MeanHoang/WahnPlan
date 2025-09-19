@@ -11,6 +11,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Task, TaskPriority, TaskInitiative, TaskStatus } from "@/types/task";
+import { useTranslation } from "@/contexts/language-context";
 
 interface DateRange {
   from?: Date;
@@ -50,6 +51,7 @@ export function TaskTableView({
   boardId,
   filters,
 }: TaskTableViewProps): JSX.Element {
+  const { t } = useTranslation();
   const [sortField, setSortField] = useState<string>("createdAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
@@ -240,7 +242,7 @@ export function TaskTableView({
             onClick={() => handleSort("title")}
           >
             <FileText className="h-4 w-4" />
-            Task name
+            {t("taskTable.taskName")}
             {sortField === "title" && (
               <span className="text-xs">
                 {sortDirection === "asc" ? "↑" : "↓"}
@@ -252,7 +254,7 @@ export function TaskTableView({
             onClick={() => handleSort("createdAt")}
           >
             <Calendar className="h-4 w-4" />
-            Created time
+            {t("taskTable.createdTime")}
             {sortField === "createdAt" && (
               <span className="text-xs">
                 {sortDirection === "asc" ? "↑" : "↓"}
@@ -261,14 +263,14 @@ export function TaskTableView({
           </div>
           <div className="w-[180px] flex items-center gap-2">
             <User className="h-4 w-4" />
-            Members
+            {t("taskTable.members")}
           </div>
           <div
             className="w-[100px] flex items-center gap-2 cursor-pointer hover:text-gray-900"
             onClick={() => handleSort("sizeCard")}
           >
             <FileText className="h-4 w-4" />
-            Size card
+            {t("taskTable.sizeCard")}
             {sortField === "sizeCard" && (
               <span className="text-xs">
                 {sortDirection === "asc" ? "↑" : "↓"}
@@ -280,7 +282,7 @@ export function TaskTableView({
             onClick={() => handleSort("priority")}
           >
             <Flag className="h-4 w-4" />
-            Priority
+            {t("taskTable.priority")}
             {sortField === "priority" && (
               <span className="text-xs">
                 {sortDirection === "asc" ? "↑" : "↓"}
@@ -292,7 +294,7 @@ export function TaskTableView({
             onClick={() => handleSort("initiative")}
           >
             <Target className="h-4 w-4" />
-            Initiative
+            {t("taskTable.initiative")}
             {sortField === "initiative" && (
               <span className="text-xs">
                 {sortDirection === "asc" ? "↑" : "↓"}
@@ -304,7 +306,7 @@ export function TaskTableView({
             onClick={() => handleSort("status")}
           >
             <Target className="h-4 w-4" />
-            Status
+            {t("taskTable.status")}
             {sortField === "status" && (
               <span className="text-xs">
                 {sortDirection === "asc" ? "↑" : "↓"}
@@ -316,7 +318,7 @@ export function TaskTableView({
             onClick={() => handleSort("dueDate")}
           >
             <Calendar className="h-4 w-4" />
-            Due date
+            {t("taskTable.dueDate")}
             {sortField === "dueDate" && (
               <span className="text-xs">
                 {sortDirection === "asc" ? "↑" : "↓"}
@@ -331,8 +333,8 @@ export function TaskTableView({
         {sortedTasks.length === 0 ? (
           <div className="px-6 py-12 text-center text-gray-500">
             <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p className="text-lg font-medium">No tasks found</p>
-            <p className="text-sm">You don't have any assigned tasks yet.</p>
+            <p className="text-lg font-medium">{t("taskTable.noTasksFound")}</p>
+            <p className="text-sm">{t("taskTable.noAssignedTasks")}</p>
           </div>
         ) : (
           sortedTasks.map((task) => (
@@ -474,7 +476,9 @@ export function TaskTableView({
             disabled={loading || fetchLoading}
             className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading || fetchLoading ? "Loading..." : "Load More"}
+            {loading || fetchLoading
+              ? t("common.loading")
+              : t("common.loadMore")}
           </button>
         </div>
       )}

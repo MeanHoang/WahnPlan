@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useFetchApi } from "@/hooks/use-fetch-api";
+import { useTranslation } from "@/contexts/language-context";
 import { Task, TaskStatus, TaskPriority, TaskInitiative } from "@/types/task";
 import {
   BarChart,
@@ -136,6 +137,7 @@ interface AnalyticsData {
 export function AnalyticsDashboard({
   boardId,
 }: AnalyticsDashboardProps): JSX.Element {
+  const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d" | "all">(
     "30d"
   );
@@ -329,7 +331,7 @@ export function AnalyticsDashboard({
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading analytics...</p>
+          <p className="mt-2 text-gray-600">{t("analytics.loading")}</p>
         </div>
       </div>
     );
@@ -348,12 +350,12 @@ export function AnalyticsDashboard({
             className="px-4"
           >
             {range === "7d"
-              ? "7 Days"
+              ? t("analytics.timeRange.7d")
               : range === "30d"
-                ? "30 Days"
+                ? t("analytics.timeRange.30d")
                 : range === "90d"
-                  ? "90 Days"
-                  : "All Time"}
+                  ? t("analytics.timeRange.90d")
+                  : t("analytics.timeRange.all")}
           </Button>
         ))}
       </div>
@@ -365,7 +367,9 @@ export function AnalyticsDashboard({
             <div className="flex items-center gap-2">
               <Target className="h-5 w-5 text-blue-600" />
               <div>
-                <p className="text-sm font-medium text-blue-600">Total Tasks</p>
+                <p className="text-sm font-medium text-blue-600">
+                  {t("analytics.totalTasks")}
+                </p>
                 <p className="text-2xl font-bold text-blue-700">
                   {analytics.totalTasks}
                 </p>
@@ -379,7 +383,9 @@ export function AnalyticsDashboard({
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-600" />
               <div>
-                <p className="text-sm font-medium text-green-600">Completed</p>
+                <p className="text-sm font-medium text-green-600">
+                  {t("analytics.completed")}
+                </p>
                 <p className="text-2xl font-bold text-green-700">
                   {analytics.completedTasks}
                 </p>
@@ -397,7 +403,7 @@ export function AnalyticsDashboard({
               <Activity className="h-5 w-5 text-orange-600" />
               <div>
                 <p className="text-sm font-medium text-orange-600">
-                  In Progress
+                  {t("analytics.inProgress")}
                 </p>
                 <p className="text-2xl font-bold text-orange-700">
                   {analytics.inProgressTasks}
@@ -412,7 +418,9 @@ export function AnalyticsDashboard({
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />
               <div>
-                <p className="text-sm font-medium text-red-600">Overdue</p>
+                <p className="text-sm font-medium text-red-600">
+                  {t("analytics.overdue")}
+                </p>
                 <p className="text-2xl font-bold text-red-700">
                   {analytics.overdueTasks}
                 </p>

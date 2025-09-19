@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useBoard } from "@/hooks/use-board-api";
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/contexts/language-context";
 import { NotificationDropdown } from "@/components/layout/notification-dropdown";
 import { BoardViewRenderer } from "@/components/boards/board-view-renderer";
 import { CreateTaskModal } from "@/components/boards/create-task-modal";
@@ -30,6 +31,7 @@ import { Task, TaskStatus, TaskPriority, TaskInitiative } from "@/types/task";
 export default function BoardDetailPage(): JSX.Element {
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useParams();
   const workspaceId = params.id as string;
@@ -119,8 +121,8 @@ export default function BoardDetailPage(): JSX.Element {
   useEffect(() => {
     if (statusesError) {
       toast({
-        title: "Error",
-        description: "Failed to load task statuses. Please try again.",
+        title: t("common.error"),
+        description: t("boardPage.failedToLoadStatuses"),
         variant: "destructive",
       });
     }
@@ -129,8 +131,8 @@ export default function BoardDetailPage(): JSX.Element {
   useEffect(() => {
     if (prioritiesError) {
       toast({
-        title: "Error",
-        description: "Failed to load task priorities. Please try again.",
+        title: t("common.error"),
+        description: t("boardPage.failedToLoadPriorities"),
         variant: "destructive",
       });
     }
@@ -139,8 +141,8 @@ export default function BoardDetailPage(): JSX.Element {
   useEffect(() => {
     if (initiativesError) {
       toast({
-        title: "Error",
-        description: "Failed to load task initiatives. Please try again.",
+        title: t("common.error"),
+        description: t("boardPage.failedToLoadInitiatives"),
         variant: "destructive",
       });
     }
@@ -149,8 +151,8 @@ export default function BoardDetailPage(): JSX.Element {
   useEffect(() => {
     if (assigneesError) {
       toast({
-        title: "Error",
-        description: "Failed to load workspace members. Please try again.",
+        title: t("common.error"),
+        description: t("boardPage.failedToLoadMembers"),
         variant: "destructive",
       });
     }
@@ -189,8 +191,8 @@ export default function BoardDetailPage(): JSX.Element {
     // Trigger refresh of all columns by updating refreshKey
     setRefreshKey((prev) => prev + 1);
     toast({
-      title: "Success",
-      description: "Task created successfully!",
+      title: t("common.success"),
+      description: t("boardPage.taskCreatedSuccess"),
       variant: "default",
     });
   };
@@ -216,7 +218,7 @@ export default function BoardDetailPage(): JSX.Element {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -286,7 +288,7 @@ export default function BoardDetailPage(): JSX.Element {
               className="flex items-center gap-2"
             >
               <Settings className="h-4 w-4" />
-              Settings
+              {t("boardPage.settings")}
             </Button>
           </div>
         </div>
@@ -306,7 +308,7 @@ export default function BoardDetailPage(): JSX.Element {
               onClick={() => setSelectedView("by-status")}
             >
               <Grid3X3 className="h-4 w-4" />
-              Master board
+              {t("boardPage.masterBoard")}
             </div>
             <div
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-colors ${
@@ -317,7 +319,7 @@ export default function BoardDetailPage(): JSX.Element {
               onClick={() => setSelectedView("by-assignee")}
             >
               <Users className="h-4 w-4" />
-              By assignee
+              {t("boardPage.byAssignee")}
             </div>
             <div
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-colors ${
@@ -328,7 +330,7 @@ export default function BoardDetailPage(): JSX.Element {
               onClick={() => setSelectedView("mine")}
             >
               <User className="h-4 w-4" />
-              Mine
+              {t("boardPage.mine")}
             </div>
             <div
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-colors ${
@@ -339,7 +341,7 @@ export default function BoardDetailPage(): JSX.Element {
               onClick={() => setSelectedView("table")}
             >
               <BarChart className="h-4 w-4" />
-              Table Board
+              {t("boardPage.tableBoard")}
             </div>
           </div>
 
@@ -370,7 +372,7 @@ export default function BoardDetailPage(): JSX.Element {
               }}
             >
               <Plus className="h-4 w-4" />
-              New
+              {t("common.new")}
             </Button>
           </div>
         </div>

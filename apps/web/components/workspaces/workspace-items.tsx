@@ -9,6 +9,7 @@ import {
   Plus,
 } from "lucide-react";
 import { Workspace } from "@/types/workspace-core";
+import { useTranslation } from "@/contexts/language-context";
 
 interface WorkspaceItemsProps {
   workspace: Workspace;
@@ -25,6 +26,8 @@ export function WorkspaceItems({
   onItemClick,
   currentUserRole,
 }: WorkspaceItemsProps): JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <div>
       {/* Workspace Header */}
@@ -67,7 +70,7 @@ export function WorkspaceItems({
             className="w-full flex items-center space-x-3 p-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors"
           >
             <Layout className="h-4 w-4 text-gray-500" />
-            <span>Boards</span>
+            <span>{t("workspaceItems.boards")}</span>
           </button>
 
           <button
@@ -75,7 +78,7 @@ export function WorkspaceItems({
             className="w-full flex items-center space-x-3 p-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors"
           >
             <Users className="h-4 w-4 text-gray-500" />
-            <span>Members</span>
+            <span>{t("workspaceItems.members")}</span>
             <Plus className="h-4 w-4 text-gray-500 ml-auto" />
           </button>
 
@@ -85,7 +88,7 @@ export function WorkspaceItems({
               className="w-full flex items-center space-x-3 p-2 text-sm text-gray-700 hover:bg-gray-50 rounded transition-colors"
             >
               <Settings className="h-4 w-4 text-gray-500" />
-              <span>Settings</span>
+              <span>{t("workspaceItems.settings")}</span>
             </button>
           )}
         </div>

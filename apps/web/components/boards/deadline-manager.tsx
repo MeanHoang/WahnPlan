@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useCreateApi } from "@/hooks/use-create-api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/contexts/language-context";
 import {
   getStatusStyle,
   getTaskAttributeClasses,
@@ -67,6 +68,7 @@ interface TaskWithDeadline extends Task {
 export function DeadlineManager({
   boardId,
 }: DeadlineManagerProps): JSX.Element {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const router = useRouter();
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
@@ -121,13 +123,13 @@ export function DeadlineManager({
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
 
     if (days < 0) {
-      return `${Math.abs(days)} days overdue`;
+      return `${Math.abs(days)} ${t("deadlineManager.daysOverdue")}`;
     } else if (days === 0) {
-      return "Due today";
+      return t("deadlineManager.dueToday");
     } else if (days === 1) {
-      return "Due tomorrow";
+      return t("deadlineManager.dueTomorrow");
     } else {
-      return `${days} days remaining`;
+      return `${days} ${t("deadlineManager.daysRemaining")}`;
     }
   };
 
@@ -178,8 +180,8 @@ export function DeadlineManager({
           await sendNotification({
             userId: recipientId,
             type: "task_due_soon",
-            title: "Task Deadline Reminder",
-            message: `Task "${task.title}" is due ${formatTimeRemaining(task.dueDate!)}`,
+            title: t("deadlineManager.taskDeadlineReminder"),
+            message: `${t("deadlineManager.task")} "${task.title}" ${t("deadlineManager.isDue")} ${formatTimeRemaining(task.dueDate!)}`,
             data: {
               taskId: task.id,
               boardId: task.boardId,
@@ -190,13 +192,13 @@ export function DeadlineManager({
       }
 
       toast({
-        title: "Notification Sent",
-        description: `Deadline reminder sent for "${task.title}"`,
+        title: t("deadlineManager.notificationSent"),
+        description: `${t("deadlineManager.deadlineReminderSent")} "${task.title}"`,
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to send notification",
+        title: t("common.error"),
+        description: t("deadlineManager.failedToSendNotification"),
         variant: "destructive",
       });
     }
@@ -217,13 +219,13 @@ export function DeadlineManager({
 
       setSelectedTasks([]);
       toast({
-        title: "Bulk Notification Sent",
-        description: `Sent reminders for ${selectedTasks.length} tasks`,
+        title: t("deadlineManager.bulkNotificationSent"),
+        description: `${t("deadlineManager.sentRemindersFor")} ${selectedTasks.length} ${t("deadlineManager.tasks")}`,
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to send bulk notifications",
+        title: t("common.error"),
+        description: t("deadlineManager.failedToSendBulkNotifications"),
         variant: "destructive",
       });
     }
@@ -250,8 +252,8 @@ export function DeadlineManager({
                 className="text-xs"
               >
                 {selectedTasks.length === tasks.length
-                  ? "Deselect All"
-                  : "Select All"}
+                  ? t("deadlineManager.deselectAll")
+                  : t("deadlineManager.selectAll")}
               </Button>
             )}
           </div>
@@ -262,25 +264,25 @@ export function DeadlineManager({
               <thead>
                 <tr className="border-b">
                   <th className="text-left p-3 font-medium text-gray-700 w-16">
-                    Select
+                    {t("deadlineManager.select")}
                   </th>
                   <th className="text-left p-3 font-medium text-gray-700 w-64">
-                    Task Title
+                    {t("deadlineManager.taskTitle")}
                   </th>
                   <th className="text-left p-3 font-medium text-gray-700 w-24">
-                    Members
+                    {t("deadlineManager.members")}
                   </th>
                   <th className="text-left p-3 font-medium text-gray-700 w-28">
-                    Due Date
+                    {t("deadlineManager.dueDate")}
                   </th>
                   <th className="text-left p-3 font-medium text-gray-700 w-32">
-                    Due Status
+                    {t("deadlineManager.dueStatus")}
                   </th>
                   <th className="text-left p-3 font-medium text-gray-700 w-28">
-                    Task Status
+                    {t("deadlineManager.taskStatus")}
                   </th>
                   <th className="text-left p-3 font-medium text-gray-700 w-24">
-                    Actions
+                    {t("deadlineManager.actions")}
                   </th>
                 </tr>
               </thead>
@@ -348,14 +350,15 @@ export function DeadlineManager({
                               <User className="h-3 w-3 text-gray-400" />
                             </div>
                             <span className="text-sm text-gray-500">
-                              No members
+                              {t("deadlineManager.noMembers")}
                             </span>
                           </div>
                         )}
                         {task.taskMembers && task.taskMembers.length > 3 && (
                           <div className="flex items-center">
                             <span className="text-xs text-gray-500 ml-1">
-                              +{task.taskMembers.length - 3} more
+                              +{task.taskMembers.length - 3}{" "}
+                              {t("deadlineManager.more")}
                             </span>
                           </div>
                         )}
@@ -367,7 +370,7 @@ export function DeadlineManager({
                         <span className="text-sm">
                           {task.dueDate
                             ? new Date(task.dueDate).toLocaleDateString()
-                            : "No due date"}
+                            : t("deadlineManager.noDueDate")}
                         </span>
                       </div>
                     </td>
@@ -388,7 +391,7 @@ export function DeadlineManager({
                         <span
                           className={`${getTaskAttributeClasses()} bg-gray-100 text-gray-500`}
                         >
-                          No status
+                          {t("deadlineManager.noStatus")}
                         </span>
                       )}
                     </td>
@@ -400,7 +403,7 @@ export function DeadlineManager({
                         className="flex items-center gap-1"
                       >
                         <Bell className="h-4 w-4" />
-                        Notify
+                        {t("deadlineManager.notify")}
                       </Button>
                     </td>
                   </tr>
@@ -418,7 +421,9 @@ export function DeadlineManager({
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading deadline tasks...</p>
+          <p className="mt-2 text-gray-600">
+            {t("deadlineManager.loadingDeadlineTasks")}
+          </p>
         </div>
       </div>
     );
@@ -435,7 +440,9 @@ export function DeadlineManager({
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />
               <div>
-                <p className="text-sm font-medium text-red-600">Overdue</p>
+                <p className="text-sm font-medium text-red-600">
+                  {t("deadlineManager.overdue")}
+                </p>
                 <p className="text-2xl font-bold text-red-700">
                   {overdue.length}
                 </p>
@@ -449,7 +456,9 @@ export function DeadlineManager({
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-orange-600" />
               <div>
-                <p className="text-sm font-medium text-orange-600">Due Soon</p>
+                <p className="text-sm font-medium text-orange-600">
+                  {t("deadlineManager.dueSoon")}
+                </p>
                 <p className="text-2xl font-bold text-orange-700">
                   {dueSoon.length}
                 </p>
@@ -463,7 +472,9 @@ export function DeadlineManager({
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-blue-600" />
               <div>
-                <p className="text-sm font-medium text-blue-600">Due Later</p>
+                <p className="text-sm font-medium text-blue-600">
+                  {t("deadlineManager.dueLater")}
+                </p>
                 <p className="text-2xl font-bold text-blue-700">
                   {dueLater.length}
                 </p>
@@ -477,7 +488,9 @@ export function DeadlineManager({
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-gray-600" />
               <div>
-                <p className="text-sm font-medium text-gray-600">Total</p>
+                <p className="text-sm font-medium text-gray-600">
+                  {t("deadlineManager.total")}
+                </p>
                 <p className="text-2xl font-bold text-gray-700">{totalTasks}</p>
               </div>
             </div>
@@ -491,14 +504,14 @@ export function DeadlineManager({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-blue-700">
-                {selectedTasks.length} task(s) selected
+                {selectedTasks.length} {t("deadlineManager.tasksSelected")}
               </p>
               <Button
                 onClick={handleBulkNotification}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <Bell className="h-4 w-4 mr-2" />
-                Send Bulk Notification
+                {t("deadlineManager.sendBulkNotification")}
               </Button>
             </div>
           </CardContent>
@@ -506,18 +519,20 @@ export function DeadlineManager({
       )}
 
       {/* Task Tables */}
-      {renderTaskTable(overdue, "Overdue Tasks")}
-      {renderTaskTable(dueSoon, "Due Soon (Next 3 Days)")}
-      {renderTaskTable(dueLater, "Due Later")}
+      {renderTaskTable(overdue, t("deadlineManager.overdueTasks"))}
+      {renderTaskTable(dueSoon, t("deadlineManager.dueSoonNext3Days"))}
+      {renderTaskTable(dueLater, t("deadlineManager.dueLater"))}
 
       {totalTasks === 0 && (
         <Card>
           <CardContent className="p-12 text-center">
             <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              All caught up!
+              {t("deadlineManager.allCaughtUp")}
             </h3>
-            <p className="text-gray-600">No tasks with deadlines found.</p>
+            <p className="text-gray-600">
+              {t("deadlineManager.noTasksWithDeadlines")}
+            </p>
           </CardContent>
         </Card>
       )}

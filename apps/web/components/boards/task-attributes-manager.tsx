@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useCreateApi } from "@/hooks/use-create-api";
+import { useTranslation } from "@/contexts/language-context";
 import { SortableItem } from "@/components/boards/sortable-item";
 import { TaskAttributeDialog } from "@/components/boards/task-attribute-dialog";
 import {
@@ -42,6 +43,7 @@ interface TaskAttributesManagerProps {
 }
 
 export function TaskAttributesManager({ boardId }: TaskAttributesManagerProps) {
+  const { t } = useTranslation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"create" | "edit">("create");
   const [editingItem, setEditingItem] = useState<TaskAttribute | null>(null);
@@ -240,7 +242,7 @@ export function TaskAttributesManager({ boardId }: TaskAttributesManagerProps) {
   };
 
   const handleDelete = async (item: TaskAttribute) => {
-    if (!confirm("Are you sure you want to delete this item?")) return;
+    if (!confirm(t("taskAttributesManager.confirmDelete"))) return;
     try {
       await deleteItem(item.id);
     } catch (error) {
@@ -311,7 +313,9 @@ export function TaskAttributesManager({ boardId }: TaskAttributesManagerProps) {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading attributes...</p>
+          <p className="mt-2 text-gray-600">
+            {t("taskAttributesManager.loading")}
+          </p>
         </div>
       </div>
     );
@@ -329,7 +333,7 @@ export function TaskAttributesManager({ boardId }: TaskAttributesManagerProps) {
           onClick={() => setActiveTab("status")}
           className="px-4"
         >
-          Statuses
+          {t("taskAttributesManager.statuses")}
         </Button>
         <Button
           variant={activeTab === "priority" ? "default" : "ghost"}
@@ -337,7 +341,7 @@ export function TaskAttributesManager({ boardId }: TaskAttributesManagerProps) {
           onClick={() => setActiveTab("priority")}
           className="px-4"
         >
-          Priorities
+          {t("taskAttributesManager.priorities")}
         </Button>
         <Button
           variant={activeTab === "initiative" ? "default" : "ghost"}
@@ -345,7 +349,7 @@ export function TaskAttributesManager({ boardId }: TaskAttributesManagerProps) {
           onClick={() => setActiveTab("initiative")}
           className="px-4"
         >
-          Initiatives
+          {t("taskAttributesManager.initiatives")}
         </Button>
       </div>
 
@@ -355,18 +359,21 @@ export function TaskAttributesManager({ boardId }: TaskAttributesManagerProps) {
           <div className="flex justify-between items-center">
             <div>
               <CardTitle className="text-lg font-semibold">
-                {activeTab === "status" && "Task Statuses"}
-                {activeTab === "priority" && "Task Priorities"}
-                {activeTab === "initiative" && "Task Initiatives"}
+                {activeTab === "status" &&
+                  t("taskAttributesManager.taskStatuses")}
+                {activeTab === "priority" &&
+                  t("taskAttributesManager.taskPriorities")}
+                {activeTab === "initiative" &&
+                  t("taskAttributesManager.taskInitiatives")}
               </CardTitle>
               <CardDescription className="text-sm text-gray-600">
-                Manage{" "}
+                {t("taskAttributesManager.manage")}{" "}
                 {activeTab === "status"
-                  ? "statuses"
+                  ? t("taskAttributesManager.statuses")
                   : activeTab === "priority"
-                    ? "priorities"
-                    : "initiatives"}{" "}
-                for tasks in this board
+                    ? t("taskAttributesManager.priorities")
+                    : t("taskAttributesManager.initiatives")}{" "}
+                {t("taskAttributesManager.forTasksInBoard")}
               </CardDescription>
             </div>
             <Button
@@ -375,12 +382,12 @@ export function TaskAttributesManager({ boardId }: TaskAttributesManagerProps) {
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="h-4 w-4" />
-              Add{" "}
+              {t("taskAttributesManager.add")}{" "}
               {activeTab === "status"
-                ? "Status"
+                ? t("taskAttributesManager.status")
                 : activeTab === "priority"
-                  ? "Priority"
-                  : "Initiative"}
+                  ? t("taskAttributesManager.priority")
+                  : t("taskAttributesManager.initiative")}
             </Button>
           </div>
         </CardHeader>
@@ -410,16 +417,16 @@ export function TaskAttributesManager({ boardId }: TaskAttributesManagerProps) {
                       <Plus className="h-6 w-6 text-gray-400" />
                     </div>
                     <p className="text-sm font-medium text-gray-600 mb-1">
-                      No{" "}
+                      {t("taskAttributesManager.no")}{" "}
                       {activeTab === "status"
-                        ? "statuses"
+                        ? t("taskAttributesManager.statuses")
                         : activeTab === "priority"
-                          ? "priorities"
-                          : "initiatives"}{" "}
-                      yet
+                          ? t("taskAttributesManager.priorities")
+                          : t("taskAttributesManager.initiatives")}{" "}
+                      {t("taskAttributesManager.yet")}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Create your first one to get started
+                      {t("taskAttributesManager.createFirstOne")}
                     </p>
                   </div>
                 )}

@@ -20,6 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { loginSchema, type LoginFormData } from "@/lib/validations";
 import { useAuth } from "@/contexts/auth-context";
+import { useTranslation } from "@/contexts/language-context";
 import { EmailVerificationModal } from "@/components/auth/email-verification-modal";
 
 export default function LoginPage(): JSX.Element {
@@ -30,6 +31,7 @@ export default function LoginPage(): JSX.Element {
   const router = useRouter();
   const { toast } = useToast();
   const { login } = useAuth();
+  const { t } = useTranslation();
 
   const {
     register,
@@ -49,20 +51,20 @@ export default function LoginPage(): JSX.Element {
         setUserEmail(data.email);
         setShowVerificationModal(true);
         toast({
-          title: "Email verification required",
-          description: "Please verify your email to access all features.",
+          title: t("auth.emailVerificationRequired"),
+          description: t("auth.verifyEmailDescription"),
         });
       } else {
         toast({
-          title: "Login successful!",
-          description: "Welcome back to WahnPlan.",
+          title: t("auth.loginSuccessful"),
+          description: t("auth.welcomeBackToWahnPlan"),
         });
         router.push("/dashboard");
       }
     } catch (error: any) {
       toast({
-        title: "Login failed",
-        description: error.message || "Invalid email or password.",
+        title: t("auth.loginFailed"),
+        description: error.message || t("auth.invalidEmailOrPassword"),
         variant: "destructive",
       });
     } finally {
@@ -72,8 +74,8 @@ export default function LoginPage(): JSX.Element {
 
   const handleEmailVerified = () => {
     toast({
-      title: "Email verified!",
-      description: "Your account is now fully activated.",
+      title: t("auth.emailVerifiedSuccess"),
+      description: t("auth.accountFullyActivated"),
     });
     router.push("/dashboard");
   };
@@ -83,21 +85,21 @@ export default function LoginPage(): JSX.Element {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
-            Welcome Back
+            {t("auth.welcomeBack")}
           </CardTitle>
           <CardDescription className="text-center">
-            Sign in to your WahnPlan account
+            {t("auth.signInToAccount")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("auth.email")}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t("auth.enterEmail")}
                 {...register("email")}
                 className={errors.email ? "border-red-500" : ""}
               />
@@ -108,12 +110,12 @@ export default function LoginPage(): JSX.Element {
 
             {/* Password */}
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("auth.password")}</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
+                  placeholder={t("auth.enterPassword")}
                   {...register("password")}
                   className={errors.password ? "border-red-500 pr-10" : "pr-10"}
                 />
@@ -143,21 +145,21 @@ export default function LoginPage(): JSX.Element {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing In...
+                  {t("auth.signingIn")}
                 </>
               ) : (
-                "Sign In"
+                t("auth.signIn")
               )}
             </Button>
 
             {/* Register Link */}
             <div className="text-center text-sm">
-              Don't have an account?{" "}
+              {t("auth.dontHaveAccount")}{" "}
               <Link
                 href="/register"
                 className="text-blue-600 hover:text-blue-800 font-medium"
               >
-                Create account
+                {t("auth.createAccount")}
               </Link>
             </div>
           </form>

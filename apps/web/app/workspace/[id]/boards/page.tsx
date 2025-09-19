@@ -14,12 +14,14 @@ import {
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { CreateBoardModal } from "@/components/boards/create-board-modal";
 import { useAuth } from "@/contexts/auth-context";
+import { useTranslation } from "@/contexts/language-context";
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { Board } from "@/types/board-core";
 import { Workspace } from "@/types/workspace-core";
 
 export default function WorkspaceBoardsPage(): JSX.Element {
   const { user, isLoading: authLoading } = useAuth();
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useParams();
   const workspaceId = params.id as string;
@@ -67,7 +69,7 @@ export default function WorkspaceBoardsPage(): JSX.Element {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -88,12 +90,12 @@ export default function WorkspaceBoardsPage(): JSX.Element {
               {workspace.name}
             </h1>
             <p className="text-gray-600 mt-2">
-              {workspace.description || "Manage your project boards and tasks"}
+              {workspace.description || t("workspace.manageProjectBoards")}
             </p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm text-gray-500">Boards</p>
+              <p className="text-sm text-gray-500">{t("navigation.boards")}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {boards.length}
               </p>
@@ -106,7 +108,7 @@ export default function WorkspaceBoardsPage(): JSX.Element {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Boards
+                {t("workspace.totalBoards")}
               </CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -114,29 +116,33 @@ export default function WorkspaceBoardsPage(): JSX.Element {
               <div className="text-2xl font-bold">{boards.length}</div>
               <p className="text-xs text-muted-foreground">
                 {boards.length === 0
-                  ? "No boards yet"
-                  : "Active project boards"}
+                  ? t("workspace.noBoardsYet")
+                  : t("workspace.activeProjectBoards")}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t("workspace.totalTasks")}
+              </CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 {boards.reduce((sum, board) => sum + board._count.tasks, 0)}
               </div>
-              <p className="text-xs text-muted-foreground">Across all boards</p>
+              <p className="text-xs text-muted-foreground">
+                {t("workspace.acrossAllBoards")}
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Workspace Members
+                {t("workspace.workspaceMembers")}
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -144,7 +150,9 @@ export default function WorkspaceBoardsPage(): JSX.Element {
               <div className="text-2xl font-bold">
                 {workspace.members.length}
               </div>
-              <p className="text-xs text-muted-foreground">Team members</p>
+              <p className="text-xs text-muted-foreground">
+                {t("workspace.teamMembers")}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -153,7 +161,7 @@ export default function WorkspaceBoardsPage(): JSX.Element {
         <div className="mb-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold text-gray-900">
-              Your boards
+              {t("workspace.yourBoards")}
             </h2>
             <CreateBoardModal
               workspaceId={workspaceId}
@@ -161,7 +169,7 @@ export default function WorkspaceBoardsPage(): JSX.Element {
               trigger={
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                   <Plus className="h-4 w-4 mr-2" />
-                  Create new board
+                  {t("workspace.createNewBoard")}
                 </Button>
               }
             />
@@ -170,7 +178,9 @@ export default function WorkspaceBoardsPage(): JSX.Element {
           {boardsLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="ml-3 text-gray-600">Loading boards...</p>
+              <p className="ml-3 text-gray-600">
+                {t("workspace.loadingBoards")}
+              </p>
             </div>
           ) : boards.length === 0 ? (
             <div className="text-center py-12">
@@ -178,10 +188,10 @@ export default function WorkspaceBoardsPage(): JSX.Element {
                 <BarChart3 className="h-12 w-12 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No boards yet
+                {t("workspace.noBoardsYet")}
               </h3>
               <p className="text-gray-600 mb-6">
-                Get started by creating your first board to organize your tasks.
+                {t("workspace.getStartedCreatingBoard")}
               </p>
               <CreateBoardModal
                 workspaceId={workspaceId}
@@ -212,11 +222,16 @@ export default function WorkspaceBoardsPage(): JSX.Element {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between text-sm text-gray-500">
-                      <span>{board._count.tasks} tasks</span>
-                      <span>{board._count.taskStatuses} statuses</span>
+                      <span>
+                        {board._count.tasks} {t("workspace.tasks")}
+                      </span>
+                      <span>
+                        {board._count.taskStatuses} {t("workspace.statuses")}
+                      </span>
                     </div>
                     <div className="mt-3 text-xs text-gray-400">
-                      Created {new Date(board.createdAt).toLocaleDateString()}
+                      {t("workspace.created")}{" "}
+                      {new Date(board.createdAt).toLocaleDateString()}
                     </div>
                   </CardContent>
                 </Card>

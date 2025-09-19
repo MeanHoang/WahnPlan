@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
+import { useTranslation } from "@/contexts/language-context";
 
 interface UserDropdownProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export function UserDropdown({
 }: UserDropdownProps): JSX.Element | null {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const getInitials = (name: string) => {
     return name
@@ -52,7 +54,7 @@ export function UserDropdown({
           {/* Account Section */}
           <div className="mb-4">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-              Account
+              {t("userDropdown.account")}
             </h3>
             <div className="flex items-center space-x-3 mb-3">
               {user?.avatarUrl ? (
@@ -81,14 +83,14 @@ export function UserDropdown({
                 size="sm"
                 className="w-full justify-start text-sm"
               >
-                Switch accounts
+                {t("userDropdown.switchAccounts")}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 className="w-full justify-start text-sm"
               >
-                Manage account
+                {t("userDropdown.manageAccount")}
                 <ExternalLink className="ml-auto h-4 w-4" />
               </Button>
             </div>
@@ -110,7 +112,7 @@ export function UserDropdown({
                 }}
               >
                 <User className="mr-2 h-4 w-4" />
-                Profile and visibility
+                {t("userDropdown.profileAndVisibility")}
               </Button>
               <Button
                 variant="ghost"
@@ -118,7 +120,7 @@ export function UserDropdown({
                 className="w-full justify-start text-sm"
               >
                 <Activity className="mr-2 h-4 w-4" />
-                Activity
+                {t("userDropdown.activity")}
               </Button>
               <Button
                 variant="ghost"
@@ -126,7 +128,7 @@ export function UserDropdown({
                 className="w-full justify-start text-sm bg-gray-100"
               >
                 <CreditCard className="mr-2 h-4 w-4" />
-                Cards
+                {t("userDropdown.cards")}
               </Button>
               <Button
                 variant="ghost"
@@ -134,7 +136,7 @@ export function UserDropdown({
                 className="w-full justify-start text-sm"
               >
                 <Settings className="mr-2 h-4 w-4" />
-                Settings
+                {t("userDropdown.settings")}
               </Button>
               <Button
                 variant="ghost"
@@ -142,7 +144,7 @@ export function UserDropdown({
                 className="w-full justify-start text-sm"
               >
                 <Palette className="mr-2 h-4 w-4" />
-                Theme
+                {t("userDropdown.theme")}
                 <ChevronRight className="ml-auto h-4 w-4" />
               </Button>
             </div>
@@ -156,7 +158,7 @@ export function UserDropdown({
               className="w-full justify-start text-sm"
             >
               <Users className="mr-2 h-4 w-4" />
-              Create Workspace
+              {t("userDropdown.createWorkspace")}
             </Button>
             <Button
               variant="ghost"
@@ -164,7 +166,7 @@ export function UserDropdown({
               className="w-full justify-start text-sm"
             >
               <HelpCircle className="mr-2 h-4 w-4" />
-              Help
+              {t("userDropdown.help")}
             </Button>
             <Button
               variant="ghost"
@@ -172,7 +174,7 @@ export function UserDropdown({
               className="w-full justify-start text-sm"
             >
               <Keyboard className="mr-2 h-4 w-4" />
-              Shortcuts
+              {t("userDropdown.shortcuts")}
             </Button>
           </div>
 
@@ -187,7 +189,7 @@ export function UserDropdown({
             onClick={logout}
           >
             <LogOut className="mr-2 h-4 w-4" />
-            Log out
+            {t("userDropdown.logOut")}
           </Button>
         </div>
       </div>

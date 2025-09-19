@@ -37,6 +37,7 @@ import {
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useUpdateApi } from "@/hooks/use-update-api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/contexts/language-context";
 import { Workspace } from "@/types/workspace-core";
 import { TransferOwnershipModal } from "./transfer-ownership-modal";
 
@@ -55,6 +56,7 @@ export function WorkspaceSettings({
     visibility: "private",
   });
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const { data: workspace, loading: workspaceLoading } = useFetchApi<Workspace>(
     `/workspaces/${workspaceId}`
@@ -79,15 +81,15 @@ export function WorkspaceSettings({
     {
       onSuccess: () => {
         toast({
-          title: "Success",
-          description: "Workspace settings updated successfully",
+          title: t("common.success"),
+          description: t("workspaceSettings.settingsUpdatedSuccess"),
         });
         setIsEditing(false);
       },
       onError: () => {
         toast({
-          title: "Error",
-          description: "Failed to update workspace settings",
+          title: t("common.error"),
+          description: t("workspaceSettings.failedToUpdateSettings"),
           variant: "destructive",
         });
       },
@@ -142,10 +144,10 @@ export function WorkspaceSettings({
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center">
             <Settings className="h-6 w-6 mr-3" />
-            Workspace Settings
+            {t("workspaceSettings.title")}
           </h1>
           <p className="text-gray-600 mt-1">
-            Manage your workspace information and preferences
+            {t("workspaceSettings.description")}
           </p>
         </div>
         {isOwner && (
@@ -158,7 +160,7 @@ export function WorkspaceSettings({
                   disabled={isUpdating}
                 >
                   <X className="h-4 w-4 mr-2" />
-                  Cancel
+                  {t("workspaceSettings.cancel")}
                 </Button>
                 <Button
                   onClick={handleSave}
@@ -166,7 +168,9 @@ export function WorkspaceSettings({
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  {isUpdating ? "Saving..." : "Save Changes"}
+                  {isUpdating
+                    ? t("workspaceSettings.saving")
+                    : t("workspaceSettings.saveChanges")}
                 </Button>
               </>
             ) : (
@@ -175,7 +179,7 @@ export function WorkspaceSettings({
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <Edit3 className="h-4 w-4 mr-2" />
-                Edit Settings
+                {t("workspaceSettings.editSettings")}
               </Button>
             )}
           </div>
@@ -189,10 +193,10 @@ export function WorkspaceSettings({
             <Shield className="h-5 w-5 text-yellow-600 mr-3" />
             <div>
               <h3 className="text-sm font-medium text-yellow-800">
-                Read-only Access
+                {t("workspaceSettings.readOnlyAccess")}
               </h3>
               <p className="text-sm text-yellow-700 mt-1">
-                Only workspace owners can modify these settings.
+                {t("workspaceSettings.readOnlyDescription")}
               </p>
             </div>
           </div>
@@ -207,25 +211,29 @@ export function WorkspaceSettings({
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Building2 className="h-5 w-5 mr-2" />
-                Basic Information
+                {t("workspaceSettings.basicInformation")}
               </CardTitle>
               <CardDescription>
-                Update your workspace name and description
+                {t("workspaceSettings.basicInformationDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="name">Workspace Name</Label>
+                <Label htmlFor="name">
+                  {t("workspaceSettings.workspaceName")}
+                </Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   disabled={!isEditing || !isOwner}
-                  placeholder="Enter workspace name"
+                  placeholder={t("workspaceSettings.enterWorkspaceName")}
                 />
               </div>
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">
+                  {t("workspaceSettings.description")}
+                </Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -233,7 +241,7 @@ export function WorkspaceSettings({
                     handleInputChange("description", e.target.value)
                   }
                   disabled={!isEditing || !isOwner}
-                  placeholder="Describe your workspace"
+                  placeholder={t("workspaceSettings.describeWorkspace")}
                   rows={3}
                 />
               </div>
@@ -245,15 +253,17 @@ export function WorkspaceSettings({
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Shield className="h-5 w-5 mr-2" />
-                Privacy & Access
+                {t("workspaceSettings.privacyAccess")}
               </CardTitle>
               <CardDescription>
-                Control who can see and join your workspace
+                {t("workspaceSettings.privacyAccessDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="visibility">Visibility</Label>
+                <Label htmlFor="visibility">
+                  {t("workspaceSettings.visibility")}
+                </Label>
                 <Select
                   value={formData.visibility}
                   onValueChange={(value) =>
@@ -268,13 +278,13 @@ export function WorkspaceSettings({
                     <SelectItem value="private">
                       <div className="flex items-center">
                         <Lock className="h-4 w-4 mr-2" />
-                        Private - Only invited members
+                        {t("workspaceSettings.privateDescription")}
                       </div>
                     </SelectItem>
                     <SelectItem value="public">
                       <div className="flex items-center">
                         <Globe className="h-4 w-4 mr-2" />
-                        Public - Anyone can join
+                        {t("workspaceSettings.publicDescription")}
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -289,11 +299,15 @@ export function WorkspaceSettings({
           {/* Workspace Info */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Workspace Info</CardTitle>
+              <CardTitle className="text-lg">
+                {t("workspaceSettings.workspaceInfo")}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Created</span>
+                <span className="text-gray-600">
+                  {t("workspaceSettings.created")}
+                </span>
                 <span className="font-medium">
                   {workspace?.createdAt
                     ? new Date(workspace.createdAt).toLocaleDateString()
@@ -301,17 +315,23 @@ export function WorkspaceSettings({
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Members</span>
+                <span className="text-gray-600">
+                  {t("workspaceSettings.members")}
+                </span>
                 <span className="font-medium">{members?.length || 0}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Boards</span>
+                <span className="text-gray-600">
+                  {t("workspaceSettings.boards")}
+                </span>
                 <span className="font-medium">0</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Status</span>
+                <span className="text-gray-600">
+                  {t("workspaceSettings.status")}
+                </span>
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  Active
+                  {t("workspaceSettings.active")}
                 </span>
               </div>
             </CardContent>
@@ -320,7 +340,9 @@ export function WorkspaceSettings({
           {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
+              <CardTitle className="text-lg">
+                {t("workspaceSettings.quickActions")}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button
@@ -331,7 +353,7 @@ export function WorkspaceSettings({
                 }
               >
                 <Users className="h-4 w-4 mr-2" />
-                Manage Members
+                {t("workspaceSettings.manageMembers")}
               </Button>
               {isOwner && (
                 <Button
@@ -340,7 +362,7 @@ export function WorkspaceSettings({
                   onClick={() => setShowTransferModal(true)}
                 >
                   <Crown className="h-4 w-4 mr-2" />
-                  Transfer Ownership
+                  {t("workspaceSettings.transferOwnership")}
                 </Button>
               )}
               <Button
@@ -348,7 +370,7 @@ export function WorkspaceSettings({
                 className="w-full justify-start text-red-600 hover:text-red-700"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                Delete Workspace
+                {t("workspaceSettings.deleteWorkspace")}
               </Button>
             </CardContent>
           </Card>

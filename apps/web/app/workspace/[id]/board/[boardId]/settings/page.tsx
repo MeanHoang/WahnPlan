@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { useBoard } from "@/hooks/use-board-api";
+import { useTranslation } from "@/contexts/language-context";
 import { Board } from "@/types/board-core";
 import { BoardBasicInfo } from "@/components/boards/board-basic-info";
 import { TaskAttributesManager } from "@/components/boards/task-attributes-manager";
@@ -25,6 +26,7 @@ type SettingsTab = "basic" | "attributes" | "deadline" | "analytics" | "export";
 
 export default function BoardSettingsPage(): JSX.Element {
   const { user, isLoading: authLoading } = useAuth();
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useParams();
   const workspaceId = params.id as string;
@@ -60,7 +62,7 @@ export default function BoardSettingsPage(): JSX.Element {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading board settings...</p>
+          <p className="mt-4 text-gray-600">{t("boardSettings.loading")}</p>
         </div>
       </div>
     );
@@ -86,7 +88,7 @@ export default function BoardSettingsPage(): JSX.Element {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-gray-700">
-                Board Settings
+                {t("boardSettings.title")}
               </h1>
               <p className="text-gray-600 mt-1">{board.title}</p>
             </div>
@@ -104,7 +106,7 @@ export default function BoardSettingsPage(): JSX.Element {
             className="flex items-center gap-2 px-4 py-3 whitespace-nowrap"
           >
             <Info className="h-4 w-4" />
-            Basic Info
+            {t("boardSettings.basicInfo")}
           </Button>
           <Button
             variant={activeTab === "attributes" ? "default" : "ghost"}
@@ -112,7 +114,7 @@ export default function BoardSettingsPage(): JSX.Element {
             className="flex items-center gap-2 px-4 py-3 whitespace-nowrap"
           >
             <Palette className="h-4 w-4" />
-            Attributes
+            {t("boardSettings.attributes")}
           </Button>
           <Button
             variant={activeTab === "deadline" ? "default" : "ghost"}
@@ -120,7 +122,7 @@ export default function BoardSettingsPage(): JSX.Element {
             className="flex items-center gap-2 px-4 py-3 whitespace-nowrap"
           >
             <Calendar className="h-4 w-4" />
-            Deadlines
+            {t("boardSettings.deadlines")}
           </Button>
           <Button
             variant={activeTab === "analytics" ? "default" : "ghost"}
@@ -128,7 +130,7 @@ export default function BoardSettingsPage(): JSX.Element {
             className="flex items-center gap-2 px-4 py-3 whitespace-nowrap"
           >
             <BarChart3 className="h-4 w-4" />
-            Analytics
+            {t("boardSettings.analytics")}
           </Button>
           <Button
             variant={activeTab === "export" ? "default" : "ghost"}
@@ -136,7 +138,7 @@ export default function BoardSettingsPage(): JSX.Element {
             className="flex items-center gap-2 px-4 py-3 whitespace-nowrap"
           >
             <Download className="h-4 w-4" />
-            Export
+            {t("boardSettings.export")}
           </Button>
         </div>
 

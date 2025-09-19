@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { useCreateApi } from "@/hooks/use-create-api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/contexts/language-context";
 import { TaskStatus, TaskPriority, TaskInitiative } from "@/types/task";
 
 interface CreateTaskModalProps {
@@ -55,6 +56,7 @@ export function CreateTaskModal({
   onSuccess,
 }: CreateTaskModalProps): JSX.Element {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     title: "",
     statusId: statusId,
@@ -77,9 +79,8 @@ export function CreateTaskModal({
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description:
-          error.message || "Failed to create task. Please try again.",
+        title: t("common.error"),
+        description: error.message || t("modals.createTask.failedToCreateTask"),
         variant: "destructive",
       });
     },
@@ -98,8 +99,8 @@ export function CreateTaskModal({
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
       toast({
-        title: "Validation Error",
-        description: "Task title is required.",
+        title: t("modals.createTask.validationError"),
+        description: t("modals.createTask.taskTitleRequired"),
         variant: "destructive",
       });
       return;
@@ -107,8 +108,8 @@ export function CreateTaskModal({
 
     if (!formData.statusId) {
       toast({
-        title: "Validation Error",
-        description: "Please select a status for the task.",
+        title: t("modals.createTask.validationError"),
+        description: t("modals.createTask.selectStatusRequired"),
         variant: "destructive",
       });
       return;
@@ -130,31 +131,31 @@ export function CreateTaskModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Create New Task</DialogTitle>
+          <DialogTitle>{t("modals.createTask.title")}</DialogTitle>
           <DialogDescription>
             {presetAssigneeId
-              ? `Add a new task for ${assignees.find((a) => a.id === presetAssigneeId)?.name || "selected assignee"}.`
-              : "Add a new task to this board."}
+              ? t("modals.createTask.descriptionForAssignee")
+              : t("modals.createTask.description")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Title */}
           <div>
-            <Label htmlFor="title">Title *</Label>
+            <Label htmlFor="title">{t("modals.createTask.titleLabel")} *</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, title: e.target.value }))
               }
-              placeholder="Enter task title"
+              placeholder={t("modals.createTask.enterTaskTitle")}
             />
           </div>
 
           {/* Status */}
           <div>
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="status">{t("modals.createTask.status")}</Label>
             <Select
               value={formData.statusId}
               onValueChange={(value) =>
@@ -162,7 +163,9 @@ export function CreateTaskModal({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select status" />
+                <SelectValue
+                  placeholder={t("modals.createTask.selectStatus")}
+                />
               </SelectTrigger>
               <SelectContent>
                 {statuses.map((status) => (
@@ -182,7 +185,7 @@ export function CreateTaskModal({
 
           {/* Priority */}
           <div>
-            <Label htmlFor="priority">Priority</Label>
+            <Label htmlFor="priority">{t("modals.createTask.priority")}</Label>
             <Select
               value={formData.priorityId}
               onValueChange={(value) =>
@@ -190,7 +193,9 @@ export function CreateTaskModal({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select priority" />
+                <SelectValue
+                  placeholder={t("modals.createTask.selectPriority")}
+                />
               </SelectTrigger>
               <SelectContent>
                 {priorities.map((priority) => (
@@ -210,7 +215,9 @@ export function CreateTaskModal({
 
           {/* Initiative */}
           <div>
-            <Label htmlFor="initiative">Initiative</Label>
+            <Label htmlFor="initiative">
+              {t("modals.createTask.initiative")}
+            </Label>
             <Select
               value={formData.initiativeId}
               onValueChange={(value) =>
@@ -218,7 +225,9 @@ export function CreateTaskModal({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select initiative" />
+                <SelectValue
+                  placeholder={t("modals.createTask.selectInitiative")}
+                />
               </SelectTrigger>
               <SelectContent>
                 {initiatives.map((initiative) => (
@@ -238,7 +247,7 @@ export function CreateTaskModal({
 
           {/* Assignee */}
           <div>
-            <Label htmlFor="assignee">Assignee</Label>
+            <Label htmlFor="assignee">{t("modals.createTask.assignee")}</Label>
             <Select
               value={formData.assigneeId}
               onValueChange={(value) =>
@@ -246,7 +255,9 @@ export function CreateTaskModal({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select assignee" />
+                <SelectValue
+                  placeholder={t("modals.createTask.selectAssignee")}
+                />
               </SelectTrigger>
               <SelectContent>
                 {assignees.map((assignee) => (
@@ -291,13 +302,15 @@ export function CreateTaskModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={loading}>
-            Cancel
+            {t("modals.createTask.cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={loading || !formData.title.trim()}
           >
-            {loading ? "Creating..." : "Create Task"}
+            {loading
+              ? t("modals.createTask.creating")
+              : t("modals.createTask.createTask")}
           </Button>
         </DialogFooter>
       </DialogContent>

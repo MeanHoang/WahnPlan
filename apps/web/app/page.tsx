@@ -11,9 +11,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth-context";
+import { useTranslation } from "@/contexts/language-context";
 
 export default function HomePage(): JSX.Element {
   const { user, isLoading } = useAuth();
+  const { t } = useTranslation();
   const router = useRouter();
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export default function HomePage(): JSX.Element {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -42,15 +44,15 @@ export default function HomePage(): JSX.Element {
       <Card className="w-full max-w-md text-center">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">
-            Welcome to WahnPlan
+            {t("home.welcomeToWahnPlan")}
           </CardTitle>
           <CardDescription>
-            Efficient project management platform
+            {t("home.efficientProjectManagement")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button onClick={() => router.push("/login")} className="w-full">
-            Get Started
+            {t("home.getStarted")}
           </Button>
         </CardContent>
       </Card>

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFetchApi } from "@/hooks/use-fetch-api";
+import { useTranslation } from "@/contexts/language-context";
 import { apiRequest } from "@/lib/api-request";
 import { Workspace } from "@/types/workspace-core";
 import { WorkspaceItems } from "@/components/workspaces/workspace-items";
@@ -28,6 +29,7 @@ export function Sidebar({
   onRefresh,
 }: SidebarProps): JSX.Element {
   const router = useRouter();
+  const { t } = useTranslation();
   const {
     data: workspaces,
     loading,
@@ -121,7 +123,7 @@ export function Sidebar({
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
-                Workspaces
+                {t("sidebar.workspaces")}
               </h2>
               <div className="flex items-center space-x-2">
                 <Button
@@ -165,7 +167,7 @@ export function Sidebar({
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                 <p className="mt-2 text-sm text-gray-600">
-                  Loading workspaces...
+                  {t("sidebar.loadingWorkspaces")}
                 </p>
               </div>
             )}
@@ -173,16 +175,18 @@ export function Sidebar({
             {error && (
               <div className="text-center py-8">
                 <p className="text-sm text-red-600">
-                  Failed to load workspaces
+                  {t("sidebar.failedToLoadWorkspaces")}
                 </p>
               </div>
             )}
 
             {workspaces && workspaces.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-sm text-gray-600">No workspaces found</p>
+                <p className="text-sm text-gray-600">
+                  {t("sidebar.noWorkspacesFound")}
+                </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Create your first workspace to get started
+                  {t("sidebar.createFirstWorkspace")}
                 </p>
               </div>
             )}

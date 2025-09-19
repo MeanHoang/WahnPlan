@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useCreateApi } from "@/hooks/use-create-api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/contexts/language-context";
 import { apiRequest } from "@/lib/api-request";
 import { Workspace } from "@/types/workspace-core";
 import { InviteMemberModal } from "./invite-member-modal";
@@ -55,6 +56,7 @@ export function MembersContent({
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const { data: workspace, loading: workspaceLoading } = useFetchApi<Workspace>(
     `/workspaces/${workspaceId}`
@@ -101,9 +103,8 @@ export function MembersContent({
     // If user is owner, show warning about transferring ownership
     if (currentUserRole === "owner") {
       toast({
-        title: "Transfer Ownership Required",
-        description:
-          "You must transfer ownership to another member before leaving the workspace.",
+        title: t("workspaceMembers.transferOwnershipRequired"),
+        description: t("workspaceMembers.transferOwnershipDescription"),
         variant: "destructive",
       });
       return;
@@ -131,13 +132,13 @@ export function MembersContent({
   const getRoleDisplayName = (role: string) => {
     switch (role) {
       case "owner":
-        return "Owner";
+        return t("workspaceMembers.owner");
       case "manager":
-        return "Manager";
+        return t("workspaceMembers.manager");
       case "member":
-        return "Member";
+        return t("workspaceMembers.member");
       case "guest":
-        return "Guest";
+        return t("workspaceMembers.guest");
       default:
         return role;
     }
@@ -156,11 +157,11 @@ export function MembersContent({
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-semibold text-gray-900">
-              {workspace?.name} - Workspace members ({members?.length || 0})
+              {workspace?.name} - {t("workspaceMembers.title")} (
+              {members?.length || 0})
             </h1>
             <p className="text-sm text-gray-600 mt-1">
-              Workspace members can view and join all Workspace visible boards
-              and create new boards in the Workspace.
+              {t("workspaceMembers.description")}
             </p>
           </div>
           <Button
@@ -168,7 +169,7 @@ export function MembersContent({
             className="bg-blue-600 hover:bg-blue-700 text-sm"
           >
             <UserPlus className="h-4 w-4 mr-2" />
-            Invite Workspace members
+            {t("workspaceMembers.inviteMembers")}
           </Button>
         </div>
       </div>
@@ -180,18 +181,15 @@ export function MembersContent({
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                Invite members to join you
+                {t("workspaceMembers.inviteMembersToJoin")}
               </h3>
               <p className="text-sm text-gray-600 mb-4">
-                Anyone with an invite link can join this free Workspace. You can
-                also disable and create a new invite link for this Workspace at
-                any time. Pending invitations count toward the 10 collaborator
-                limit.
+                {t("workspaceMembers.inviteDescription")}
               </p>
             </div>
             <Button variant="outline" size="sm" className="ml-4 text-sm">
               <Link className="h-4 w-4 mr-2" />
-              Invite with link
+              {t("workspaceMembers.inviteWithLink")}
             </Button>
           </div>
         </div>
@@ -201,7 +199,7 @@ export function MembersContent({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Filter by name"
+              placeholder={t("workspaceMembers.filterByName")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 text-sm"
@@ -214,19 +212,25 @@ export function MembersContent({
           {loading && (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-sm text-gray-600">Loading members...</p>
+              <p className="mt-2 text-sm text-gray-600">
+                {t("workspaceMembers.loadingMembers")}
+              </p>
             </div>
           )}
 
           {error && (
             <div className="text-center py-8">
-              <p className="text-sm text-red-600">Failed to load members</p>
+              <p className="text-sm text-red-600">
+                {t("workspaceMembers.failedToLoadMembers")}
+              </p>
             </div>
           )}
 
           {filteredMembers && filteredMembers.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-sm text-gray-600">No members found</p>
+              <p className="text-sm text-gray-600">
+                {t("workspaceMembers.noMembersFound")}
+              </p>
             </div>
           )}
 
@@ -281,7 +285,7 @@ export function MembersContent({
                       </div>
                     )}
                     <p className="text-xs text-gray-400 mt-1">
-                      Last active{" "}
+                      {t("workspaceMembers.lastActive")}{" "}
                       {new Date(member.createdAt).toLocaleDateString("en-US", {
                         month: "long",
                         year: "numeric",
@@ -305,7 +309,7 @@ export function MembersContent({
                       onClick={() => setShowTransferModal(true)}
                     >
                       <Crown className="h-3 w-3 mr-1" />
-                      Transfer Ownership
+                      {t("workspaceMembers.transferOwnership")}
                     </Button>
                   )}
                   {/* Show appropriate action based on user role and current user */}
@@ -322,7 +326,7 @@ export function MembersContent({
                             onClick={() => handleRemoveMember(member.id)}
                           >
                             <X className="h-3 w-3 mr-1" />
-                            Remove
+                            {t("workspaceMembers.remove")}
                           </Button>
                         )}
 
@@ -336,7 +340,9 @@ export function MembersContent({
                           disabled={isLeaving}
                         >
                           <X className="h-3 w-3 mr-1" />
-                          {isLeaving ? "Leaving..." : "Leave workspace"}
+                          {isLeaving
+                            ? t("workspaceMembers.leaving")
+                            : t("workspaceMembers.leaveWorkspace")}
                         </Button>
                       )}
                     </>

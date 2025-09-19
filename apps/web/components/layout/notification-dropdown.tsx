@@ -24,6 +24,7 @@ import {
 } from "@/types/notification";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/contexts/language-context";
 
 interface NotificationDropdownProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ export function NotificationDropdown({
   onUnreadCountChange,
   currentWorkspaceId,
 }: NotificationDropdownProps): JSX.Element {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -130,11 +132,11 @@ export function NotificationDropdown({
       (now.getTime() - new Date(date).getTime()) / 1000
     );
 
-    if (diffInSeconds < 60) return "Just now";
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 60) return t("notificationDropdown.justNow");
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}${t("notificationDropdown.mAgo")}`;
     if (diffInSeconds < 86400)
-      return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+      return `${Math.floor(diffInSeconds / 3600)}${t("notificationDropdown.hAgo")}`;
+    return `${Math.floor(diffInSeconds / 86400)}${t("notificationDropdown.dAgo")}`;
   };
 
   const handleNotificationClick = async (notification: Notification) => {
@@ -199,16 +201,16 @@ export function NotificationDropdown({
         } else {
           console.log("WorkspaceId not found");
           toast({
-            title: "Error",
-            description: "Unable to determine workspace",
+            title: t("common.error"),
+            description: t("notificationDropdown.unableToDetermineWorkspace"),
             variant: "destructive",
           });
         }
       } catch (error) {
         console.error("Error fetching task details:", error);
         toast({
-          title: "Error",
-          description: "Failed to load task details",
+          title: t("common.error"),
+          description: t("notificationDropdown.failedToLoadTaskDetails"),
           variant: "destructive",
         });
       }
@@ -234,13 +236,13 @@ export function NotificationDropdown({
       refetchUnread();
       onUnreadCountChange?.();
       toast({
-        title: "Success",
-        description: "Notification marked as read",
+        title: t("common.success"),
+        description: t("notificationDropdown.notificationMarkedAsRead"),
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to mark notification as read",
+        title: t("common.error"),
+        description: t("notificationDropdown.failedToMarkAsRead"),
         variant: "destructive",
       });
     }
@@ -259,13 +261,13 @@ export function NotificationDropdown({
       refetchUnread();
       onUnreadCountChange?.();
       toast({
-        title: "Success",
-        description: "All notifications marked as read",
+        title: t("common.success"),
+        description: t("notificationDropdown.allNotificationsMarkedAsRead"),
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to mark all notifications as read",
+        title: t("common.error"),
+        description: t("notificationDropdown.failedToMarkAllAsRead"),
         variant: "destructive",
       });
     }
@@ -286,13 +288,13 @@ export function NotificationDropdown({
       refetchUnread();
       onUnreadCountChange?.();
       toast({
-        title: "Success",
-        description: "Notification deleted",
+        title: t("common.success"),
+        description: t("notificationDropdown.notificationDeleted"),
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to delete notification",
+        title: t("common.error"),
+        description: t("notificationDropdown.failedToDeleteNotification"),
         variant: "destructive",
       });
     }
@@ -308,7 +310,7 @@ export function NotificationDropdown({
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t("notificationDropdown.notifications")}</h3>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
               <Button
@@ -318,7 +320,7 @@ export function NotificationDropdown({
                 className="text-blue-600 hover:text-blue-700"
               >
                 <CheckCheck className="h-4 w-4 mr-1" />
-                Mark all read
+                {t("notificationDropdown.markAllRead")}
               </Button>
             )}
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -337,7 +339,7 @@ export function NotificationDropdown({
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
-            All
+            {t("notificationDropdown.all")}
           </button>
           <button
             onClick={() => setActiveTab("unread")}
@@ -347,7 +349,7 @@ export function NotificationDropdown({
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
-            Unread ({unreadCount})
+            {t("notificationDropdown.unread")} ({unreadCount})
           </button>
         </div>
       </div>
@@ -357,16 +359,16 @@ export function NotificationDropdown({
         {loading ? (
           <div className="p-4 text-center text-gray-500">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2">Loading notifications...</p>
+            <p className="mt-2">{t("notificationDropdown.loadingNotifications")}</p>
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             <Bell className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p className="text-lg font-medium">No notifications</p>
+            <p className="text-lg font-medium">{t("notificationDropdown.noNotifications")}</p>
             <p className="text-sm">
               {activeTab === "unread"
-                ? "You're all caught up!"
-                : "You don't have any notifications yet."}
+                ? t("notificationDropdown.youAreAllCaughtUp")
+                : t("notificationDropdown.youDontHaveAnyNotificationsYet")}
             </p>
           </div>
         ) : (
@@ -454,7 +456,7 @@ export function NotificationDropdown({
               window.location.href = "/notifications";
             }}
           >
-            View all notifications
+            {t("notificationDropdown.viewAllNotifications")}
           </Button>
         </div>
       )}

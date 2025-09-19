@@ -5,6 +5,7 @@ import { User, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskCard } from "@/components/boards/task-card";
 import { useFetchApi } from "@/hooks/use-fetch-api";
+import { useTranslation } from "@/contexts/language-context";
 import { Task } from "@/types/task";
 
 interface AssigneeColumnProps {
@@ -25,6 +26,7 @@ export function AssigneeColumn({
   onTaskClick,
   onAddTask,
 }: AssigneeColumnProps): JSX.Element {
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -127,7 +129,7 @@ export function AssigneeColumn({
         ) : tasksError ? (
           <div className="text-center py-8">
             <p className="text-sm text-red-500">
-              Failed to load tasks. Please try again.
+              {t("assigneeColumn.failedToLoad")}
             </p>
             <Button
               variant="outline"
@@ -135,12 +137,14 @@ export function AssigneeColumn({
               onClick={() => refetchTasks()}
               className="mt-2"
             >
-              Retry
+              {t("common.retry")}
             </Button>
           </div>
         ) : !Array.isArray(tasks) || tasks.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-sm text-gray-500">No tasks assigned</p>
+            <p className="text-sm text-gray-500">
+              {t("assigneeColumn.noTasksAssigned")}
+            </p>
           </div>
         ) : Array.isArray(tasks) ? (
           tasks.map((task) => (
@@ -152,7 +156,9 @@ export function AssigneeColumn({
           ))
         ) : (
           <div className="text-center py-8">
-            <p className="text-sm text-red-500">Error loading tasks</p>
+            <p className="text-sm text-red-500">
+              {t("assigneeColumn.errorLoading")}
+            </p>
           </div>
         )}
 
@@ -163,7 +169,7 @@ export function AssigneeColumn({
           onClick={() => onAddTask?.(assignee.id)}
         >
           <Plus className="h-4 w-4 mr-2" />
-          New task
+          {t("common.newTask")}
         </Button>
       </div>
     </div>

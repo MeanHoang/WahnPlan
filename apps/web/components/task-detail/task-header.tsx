@@ -2,6 +2,7 @@
 
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/contexts/language-context";
 
 interface TaskHeaderProps {
   hasChanges: boolean;
@@ -16,6 +17,8 @@ export function TaskHeader({
   onBack,
   onSave,
 }: TaskHeaderProps): JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <div className="px-6 py-6 flex justify-center">
       <div className="flex items-center justify-between max-w-4xl w-full">
@@ -39,10 +42,10 @@ export function TaskHeader({
           }`}
         >
           {isUpdating
-            ? "Saving..."
+            ? t("taskHeader.saving")
             : hasChanges
-              ? "Save Changes"
-              : "No Changes"}
+              ? t("taskHeader.saveChanges")
+              : t("taskHeader.noChanges")}
         </Button>
       </div>
     </div>

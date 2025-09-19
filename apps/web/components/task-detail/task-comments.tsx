@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useCreateApi } from "@/hooks/use-create-api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 import { formatTime } from "@/lib/time-helpers";
 import { apiRequest } from "@/lib/api-request";
@@ -81,6 +82,7 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
   const [showAllComments, setShowAllComments] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastFetchTimeRef = useRef<number>(Date.now());
 
@@ -265,14 +267,14 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
       }, 3000);
 
       toast({
-        title: "Success",
-        description: "Comment added successfully",
+        title: t("common.success"),
+        description: t("taskDetail.commentAddedSuccess"),
       });
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: "Failed to add comment",
+        title: t("common.error"),
+        description: t("taskDetail.failedToAddComment"),
         variant: "destructive",
       });
     },
@@ -308,13 +310,13 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
       setShowReactionPicker(null);
 
       toast({
-        title: "Success",
-        description: "Reaction added successfully",
+        title: t("common.success"),
+        description: t("taskDetail.reactionAddedSuccess"),
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to add reaction",
+        title: t("common.error"),
+        description: t("taskDetail.failedToAddReaction"),
         variant: "destructive",
       });
     }
@@ -373,13 +375,13 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
       refetchComments();
 
       toast({
-        title: "Success",
-        description: "Comment updated successfully",
+        title: t("common.success"),
+        description: t("taskComments.commentUpdatedSuccess"),
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update comment",
+        title: t("common.error"),
+        description: t("taskComments.failedToUpdateComment"),
         variant: "destructive",
       });
     }
@@ -393,7 +395,7 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
 
   // Delete comment
   const handleDeleteComment = async (commentId: string) => {
-    if (!confirm("Are you sure you want to delete this comment?")) return;
+    if (!confirm(t("taskComments.confirmDeleteComment"))) return;
 
     try {
       await apiRequest(`/task-comments/${commentId}`, {
@@ -404,13 +406,13 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
       refetchComments();
 
       toast({
-        title: "Success",
-        description: "Comment deleted successfully",
+        title: t("common.success"),
+        description: t("taskComments.commentDeletedSuccess"),
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to delete comment",
+        title: t("common.error"),
+        description: t("taskComments.failedToDeleteComment"),
         variant: "destructive",
       });
     }
@@ -480,7 +482,9 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
 
   return (
     <div className="mt-8 pt-6 border-t border-gray-200">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Comments</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        {t("taskComments.comments")}
+      </h3>
 
       {/* Comments List */}
       <div className="relative mb-6">
@@ -493,11 +497,13 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
           {commentsLoading ? (
             <div className="text-center py-4">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-sm text-gray-500">Loading comments...</p>
+              <p className="mt-2 text-sm text-gray-500">
+                {t("taskComments.loadingComments")}
+              </p>
             </div>
           ) : comments?.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              <p>No comments yet. Be the first to comment!</p>
+              <p>{t("taskComments.noCommentsYet")}</p>
             </div>
           ) : (
             <>
@@ -527,7 +533,7 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
                         </span>
                         {comment.isEdited && (
                           <span className="text-xs text-gray-400">
-                            (edited)
+                            {t("taskComments.edited")}
                           </span>
                         )}
                       </div>
@@ -548,14 +554,14 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
                               onClick={() => handleSaveEdit(comment.id)}
                               disabled={!editCommentText.trim()}
                             >
-                              Save
+                              {t("taskComments.save")}
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={handleCancelEdit}
                             >
-                              Cancel
+                              {t("taskComments.cancel")}
                             </Button>
                           </div>
                         </div>
@@ -677,14 +683,14 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
                                 className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                               >
                                 <Edit className="h-3 w-3" />
-                                Edit
+                                {t("taskComments.edit")}
                               </button>
                               <button
                                 onClick={() => handleDeleteComment(comment.id)}
                                 className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                               >
                                 <Trash2 className="h-3 w-3" />
-                                Delete
+                                {t("taskComments.delete")}
                               </button>
                             </div>
                           )}
@@ -702,7 +708,9 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
                         onClick={() => setShowAllComments(true)}
                         className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50"
                       >
-                        Show {getMiddleCommentsCount()} more comments
+                        {t("taskComments.showMoreComments")}{" "}
+                        {getMiddleCommentsCount()}{" "}
+                        {t("taskComments.moreComments")}
                       </Button>
                     </div>
                   )}
@@ -735,7 +743,7 @@ export function TaskComments({ taskId }: TaskCommentsProps): JSX.Element {
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Add a comment..."
+            placeholder={t("taskComments.addComment")}
             className="w-full bg-transparent border-none outline-none resize-none text-sm text-gray-700 placeholder-gray-500 min-h-[60px]"
             rows={3}
           />

@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateApi } from "@/hooks/use-update-api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/contexts/language-context";
 import { Board } from "@/types/board-core";
 
 interface BoardBasicInfoProps {
@@ -23,10 +24,11 @@ interface BoardBasicInfoProps {
 
 export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     title: board.title,
-    description: board.description || "",
+    description: board.subtitle || "",
   });
 
   const { mutate: updateBoard, loading } = useUpdateApi<any, Board>(
@@ -37,7 +39,7 @@ export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
     setIsEditing(true);
     setFormData({
       title: board.title,
-      description: board.description || "",
+      description: board.subtitle || "",
     });
   };
 
@@ -45,7 +47,7 @@ export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
     setIsEditing(false);
     setFormData({
       title: board.title,
-      description: board.description || "",
+      description: board.subtitle || "",
     });
   };
 
@@ -53,8 +55,8 @@ export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
     try {
       if (!formData.title.trim()) {
         toast({
-          title: "Error",
-          description: "Board title is required",
+          title: t("common.error"),
+          description: t("board.basicInfo.titleRequired"),
           variant: "destructive",
         });
         return;
@@ -69,15 +71,15 @@ export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
         onBoardUpdate?.(updatedBoard);
         setIsEditing(false);
         toast({
-          title: "Success",
-          description: "Board information updated successfully",
+          title: t("common.success"),
+          description: t("board.basicInfo.updatedSuccess"),
         });
       }
     } catch (error) {
       console.error("Error updating board:", error);
       toast({
-        title: "Error",
-        description: "Failed to update board information",
+        title: t("common.error"),
+        description: t("board.basicInfo.updateFailed"),
         variant: "destructive",
       });
     }
@@ -97,10 +99,10 @@ export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
           <div className="flex justify-between items-center">
             <div>
               <CardTitle className="text-lg font-semibold">
-                Board Information
+                {t("board.basicInfo.boardInformation")}
               </CardTitle>
               <CardDescription className="text-sm text-gray-600">
-                Manage basic information and settings for this board
+                {t("board.basicInfo.manageBasicInformation")}
               </CardDescription>
             </div>
             {!isEditing && (
@@ -111,7 +113,7 @@ export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
                 className="flex items-center gap-2"
               >
                 <Edit3 className="h-4 w-4" />
-                Edit
+                {t("board.basicInfo.edit")}
               </Button>
             )}
           </div>
@@ -120,13 +122,13 @@ export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
           {/* Board Title */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">
-              Board Title
+              {t("board.basicInfo.boardTitle")}
             </label>
             {isEditing ? (
               <Input
                 value={formData.title}
                 onChange={(e) => handleInputChange("title", e.target.value)}
-                placeholder="Enter board title"
+                placeholder={t("board.basicInfo.enterBoardTitle")}
                 className="text-base font-medium"
                 maxLength={100}
               />
@@ -142,7 +144,7 @@ export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
           {/* Board Description */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">
-              Description
+              {t("board.basicInfo.description")}
             </label>
             {isEditing ? (
               <Textarea
@@ -150,19 +152,19 @@ export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
                 onChange={(e) =>
                   handleInputChange("description", e.target.value)
                 }
-                placeholder="Enter board description (optional)"
+                placeholder={t("board.basicInfo.enterBoardDescription")}
                 className="min-h-[100px] resize-none"
                 maxLength={500}
               />
             ) : (
               <div className="p-3 bg-gray-50 rounded-md border min-h-[100px]">
-                {board.description ? (
+                {board.subtitle ? (
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                    {board.description}
+                    {board.subtitle}
                   </p>
                 ) : (
                   <p className="text-sm text-gray-400 italic">
-                    No description provided
+                    {t("board.basicInfo.noDescriptionProvided")}
                   </p>
                 )}
               </div>
@@ -176,20 +178,24 @@ export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
                 {board._count?.tasks || 0}
               </div>
               <div className="text-sm text-blue-600 font-medium">
-                Total Tasks
+                {t("board.basicInfo.totalTasks")}
               </div>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <div className="text-2xl font-bold text-green-600">
                 {board._count?.taskStatuses || 0}
               </div>
-              <div className="text-sm text-green-600 font-medium">Statuses</div>
+              <div className="text-sm text-green-600 font-medium">
+                {t("board.basicInfo.statuses")}
+              </div>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <div className="text-2xl font-bold text-purple-600">
                 {board._count?.members || 0}
               </div>
-              <div className="text-sm text-purple-600 font-medium">Members</div>
+              <div className="text-sm text-purple-600 font-medium">
+                {t("board.basicInfo.members")}
+              </div>
             </div>
           </div>
 
@@ -203,7 +209,7 @@ export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
                 className="flex items-center gap-2"
               >
                 <X className="h-4 w-4" />
-                Cancel
+                {t("board.basicInfo.cancel")}
               </Button>
               <Button
                 onClick={handleSave}
@@ -216,7 +222,7 @@ export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
                 ) : (
                   <Check className="h-4 w-4" />
                 )}
-                Save Changes
+                {t("board.basicInfo.saveChanges")}
               </Button>
             </div>
           )}
@@ -227,28 +233,34 @@ export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-4">
           <CardTitle className="text-lg font-semibold">
-            Board Settings
+            {t("board.basicInfo.boardSettings")}
           </CardTitle>
           <CardDescription className="text-sm text-gray-600">
-            Additional configuration options for this board
+            {t("board.basicInfo.additionalConfigurationOptions")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div>
-              <h4 className="font-medium text-gray-900">Board Visibility</h4>
+              <h4 className="font-medium text-gray-900">
+                {t("board.basicInfo.boardVisibility")}
+              </h4>
               <p className="text-sm text-gray-600">
-                Control who can view and access this board
+                {t("board.basicInfo.controlWhoCanViewAndAccess")}
               </p>
             </div>
-            <div className="text-sm text-gray-500">Private Board</div>
+            <div className="text-sm text-gray-500">
+              {t("board.basicInfo.privateBoard")}
+            </div>
           </div>
 
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div>
-              <h4 className="font-medium text-gray-900">Created</h4>
+              <h4 className="font-medium text-gray-900">
+                {t("board.basicInfo.created")}
+              </h4>
               <p className="text-sm text-gray-600">
-                When this board was created
+                {t("board.basicInfo.whenThisBoardWasCreated")}
               </p>
             </div>
             <div className="text-sm text-gray-500">

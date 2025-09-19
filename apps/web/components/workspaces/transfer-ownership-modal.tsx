@@ -21,6 +21,7 @@ import {
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useCreateApi } from "@/hooks/use-create-api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/contexts/language-context";
 
 interface TransferOwnershipModalProps {
   isOpen: boolean;
@@ -37,6 +38,7 @@ export function TransferOwnershipModal({
   currentOwnerName,
   onSuccess,
 }: TransferOwnershipModalProps): JSX.Element {
+  const { t } = useTranslation();
   const [selectedMemberId, setSelectedMemberId] = useState<string>("");
   const { toast } = useToast();
 
@@ -55,16 +57,18 @@ export function TransferOwnershipModal({
     {
       onSuccess: () => {
         toast({
-          title: "Success",
-          description: "Workspace ownership transferred successfully",
+          title: t("common.success"),
+          description: t(
+            "transferOwnership.workspaceOwnershipTransferredSuccessfully"
+          ),
         });
         onSuccess?.();
         onClose();
       },
       onError: () => {
         toast({
-          title: "Error",
-          description: "Failed to transfer ownership",
+          title: t("common.error"),
+          description: t("transferOwnership.failedToTransferOwnership"),
           variant: "destructive",
         });
       },
@@ -74,8 +78,10 @@ export function TransferOwnershipModal({
   const handleTransfer = () => {
     if (!selectedMemberId) {
       toast({
-        title: "Error",
-        description: "Please select a member to transfer ownership to",
+        title: t("common.error"),
+        description: t(
+          "transferOwnership.pleaseSelectMemberToTransferOwnershipTo"
+        ),
         variant: "destructive",
       });
       return;
@@ -97,11 +103,10 @@ export function TransferOwnershipModal({
         <DialogHeader>
           <DialogTitle className="flex items-center">
             <Crown className="h-5 w-5 mr-2 text-yellow-600" />
-            Transfer Workspace Ownership
+            {t("transferOwnership.transferWorkspaceOwnership")}
           </DialogTitle>
           <DialogDescription>
-            Transfer ownership of this workspace to another member. You will
-            become a regular member.
+            {t("transferOwnership.transferOwnershipDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -112,7 +117,7 @@ export function TransferOwnershipModal({
               <Crown className="h-4 w-4 text-blue-600 mr-2" />
               <div>
                 <p className="text-sm font-medium text-blue-900">
-                  Current Owner
+                  {t("transferOwnership.currentOwner")}
                 </p>
                 <p className="text-sm text-blue-700">{currentOwnerName}</p>
               </div>
@@ -124,10 +129,11 @@ export function TransferOwnershipModal({
             <div className="flex items-start">
               <AlertTriangle className="h-4 w-4 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-yellow-900">Important</p>
+                <p className="text-sm font-medium text-yellow-900">
+                  {t("transferOwnership.important")}
+                </p>
                 <p className="text-sm text-yellow-700 mt-1">
-                  This action cannot be undone. The new owner will have full
-                  control over the workspace.
+                  {t("transferOwnership.thisActionCannotBeUndone")}
                 </p>
               </div>
             </div>
@@ -136,14 +142,16 @@ export function TransferOwnershipModal({
           {/* Member Selection */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">
-              Select New Owner
+              {t("transferOwnership.selectNewOwner")}
             </label>
             <Select
               value={selectedMemberId}
               onValueChange={setSelectedMemberId}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Choose a member..." />
+                <SelectValue
+                  placeholder={t("transferOwnership.chooseAMember")}
+                />
               </SelectTrigger>
               <SelectContent>
                 {eligibleMembers.map((member) => (
@@ -173,8 +181,7 @@ export function TransferOwnershipModal({
           {eligibleMembers.length === 0 && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
               <p className="text-sm text-gray-600">
-                No eligible members found. Add more members to transfer
-                ownership.
+                {t("transferOwnership.noEligibleMembersFound")}
               </p>
             </div>
           )}
@@ -186,7 +193,7 @@ export function TransferOwnershipModal({
             onClick={handleClose}
             disabled={isTransferring}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleTransfer}
@@ -198,7 +205,9 @@ export function TransferOwnershipModal({
             className="bg-yellow-600 hover:bg-yellow-700"
           >
             <Crown className="h-4 w-4 mr-2" />
-            {isTransferring ? "Transferring..." : "Transfer Ownership"}
+            {isTransferring
+              ? t("transferOwnership.transferring")
+              : t("transferOwnership.transferOwnership")}
           </Button>
         </DialogFooter>
       </DialogContent>

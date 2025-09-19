@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslation } from "@/contexts/language-context";
 import { TaskAttribute, TaskAttributeType } from "@/types/task-attributes";
 
 interface TaskAttributeDialogProps {
@@ -35,6 +36,7 @@ export function TaskAttributeDialog({
   dialogType,
   editingItem,
 }: TaskAttributeDialogProps): JSX.Element {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     title: "",
     name: "",
@@ -75,7 +77,9 @@ export function TaskAttributeDialog({
   };
 
   const getFieldLabel = () => {
-    return activeTab === "status" ? "Status Name" : "Name";
+    return activeTab === "status"
+      ? t("taskAttributeDialog.statusName")
+      : t("taskAttributeDialog.name");
   };
 
   const getPlaceholder = () => {
@@ -85,7 +89,9 @@ export function TaskAttributeDialog({
         : activeTab === "priority"
           ? "priority"
           : "initiative";
-    return `Enter ${type} name`;
+    return t(
+      `taskAttributeDialog.enter${type.charAt(0).toUpperCase() + type.slice(1)}Name`
+    );
   };
 
   const getDialogTitle = () => {
@@ -95,7 +101,7 @@ export function TaskAttributeDialog({
         : activeTab === "priority"
           ? "Priority"
           : "Initiative";
-    return `${dialogType === "create" ? "Create" : "Edit"} ${type}`;
+    return `${dialogType === "create" ? t("taskAttributeDialog.create") : t("taskAttributeDialog.edit")} ${type}`;
   };
 
   const getDialogDescription = () => {
@@ -105,7 +111,7 @@ export function TaskAttributeDialog({
         : activeTab === "priority"
           ? "task priority"
           : "task initiative";
-    return `${dialogType === "create" ? "Add a new" : "Update the"} ${type} for this board.`;
+    return `${dialogType === "create" ? t("taskAttributeDialog.addNew") : t("taskAttributeDialog.updateThe")} ${type} ${t("taskAttributeDialog.forThisBoard")}.`;
   };
 
   return (
@@ -131,7 +137,7 @@ export function TaskAttributeDialog({
             />
           </div>
           <div>
-            <Label htmlFor="color">Color</Label>
+            <Label htmlFor="color">{t("taskAttributeDialog.color")}</Label>
             <div className="flex items-center gap-3">
               <Input
                 id="color"
@@ -161,10 +167,12 @@ export function TaskAttributeDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button onClick={handleSubmit}>
-            {dialogType === "create" ? "Create" : "Update"}
+            {dialogType === "create"
+              ? t("taskAttributeDialog.create")
+              : t("taskAttributeDialog.update")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/contexts/language-context";
 import { useCreateApi } from "@/hooks/use-create-api";
 import { CreateBoardData } from "@/types/board-requests";
 import { Board } from "@/types/board-core";
@@ -39,6 +40,7 @@ export function CreateBoardModal({
     subtitle: "",
   });
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { mutate: createBoard, loading } = useCreateApi<CreateBoardData, Board>(
     "/boards"
   );
@@ -48,8 +50,8 @@ export function CreateBoardModal({
 
     if (!formData.title.trim()) {
       toast({
-        title: "Error",
-        description: "Board title is required",
+        title: t("common.error"),
+        description: t("modals.createBoard.boardTitleRequired"),
         variant: "destructive",
       });
       return;
@@ -62,8 +64,8 @@ export function CreateBoardModal({
         subtitle: formData.subtitle || undefined,
       });
       toast({
-        title: "Success",
-        description: `Board "${board.title}" created successfully`,
+        title: t("common.success"),
+        description: `Board "${board.title}" ${t("modals.createBoard.boardCreatedSuccess")}`,
       });
 
       // Reset form
@@ -76,8 +78,8 @@ export function CreateBoardModal({
       onBoardCreated?.();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to create board. Please try again.",
+        title: t("common.error"),
+        description: t("modals.createBoard.failedToCreateBoard"),
         variant: "destructive",
       });
     }
@@ -95,21 +97,23 @@ export function CreateBoardModal({
       <DialogTrigger asChild>
         {trigger ?? (
           <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-            Create Board
+            {t("modals.createBoard.createBoard")}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create New Board</DialogTitle>
+          <DialogTitle>{t("modals.createBoard.title")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Board Title *</Label>
+            <Label htmlFor="title">
+              {t("modals.createBoard.boardTitle")} *
+            </Label>
             <Input
               id="title"
-              placeholder="Enter board title"
+              placeholder={t("modals.createBoard.enterBoardTitle")}
               value={formData.title}
               onChange={(e) => handleInputChange("title", e.target.value)}
               required
@@ -117,10 +121,10 @@ export function CreateBoardModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="subtitle">Subtitle</Label>
+            <Label htmlFor="subtitle">{t("modals.createBoard.subtitle")}</Label>
             <Textarea
               id="subtitle"
-              placeholder="Describe your board (optional)"
+              placeholder={t("modals.createBoard.describeBoard")}
               value={formData.subtitle}
               onChange={(e) => handleInputChange("subtitle", e.target.value)}
               rows={3}
@@ -134,10 +138,12 @@ export function CreateBoardModal({
               onClick={() => setOpen(false)}
               disabled={loading}
             >
-              Cancel
+              {t("modals.createBoard.cancel")}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create Board"}
+              {loading
+                ? t("modals.createBoard.creating")
+                : t("modals.createBoard.createBoard")}
             </Button>
           </div>
         </form>

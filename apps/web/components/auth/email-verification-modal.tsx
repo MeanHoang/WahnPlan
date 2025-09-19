@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/contexts/language-context";
 import { apiService } from "@/lib/api-service";
 import { Loader2, Mail, RefreshCw } from "lucide-react";
 
@@ -28,20 +29,22 @@ export function EmailVerificationModal({
 }: EmailVerificationModalProps): JSX.Element {
   const [isResending, setIsResending] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const handleResendEmail = async () => {
     setIsResending(true);
     try {
       await apiService.resendVerificationEmail(email);
       toast({
-        title: "Verification email sent",
-        description:
-          "A new verification email has been sent to your email address.",
+        title: t("modals.emailVerification.verificationEmailSent"),
+        description: t(
+          "modals.emailVerification.verificationEmailSentDescription"
+        ),
       });
     } catch (error: any) {
       toast({
-        title: "Failed to resend email",
-        description: error.message || "Something went wrong. Please try again.",
+        title: t("modals.emailVerification.failedToResendEmail"),
+        description: error.message || t("auth.somethingWentWrong"),
         variant: "destructive",
       });
     } finally {
@@ -55,25 +58,24 @@ export function EmailVerificationModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />
-            Email Verification Required
+            {t("modals.emailVerification.title")}
           </DialogTitle>
           <DialogDescription>
-            Please verify your email address to access all features.
+            {t("modals.emailVerification.description")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="text-center space-y-2">
             <p className="text-sm text-gray-600">
-              We've sent a verification email to:
+              {t("modals.emailVerification.sentTo")}
             </p>
             <p className="font-medium text-gray-900">{email}</p>
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800">
-              Please check your email and click the verification link to
-              complete your registration.
+              {t("modals.emailVerification.checkEmail")}
             </p>
           </div>
 
@@ -87,18 +89,18 @@ export function EmailVerificationModal({
               {isResending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Sending...
+                  {t("modals.emailVerification.sending")}
                 </>
               ) : (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Resend Email
+                  {t("modals.emailVerification.resendEmail")}
                 </>
               )}
             </Button>
 
             <Button variant="outline" onClick={onClose} size="sm">
-              Close
+              {t("modals.emailVerification.close")}
             </Button>
           </div>
         </div>

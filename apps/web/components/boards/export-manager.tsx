@@ -29,6 +29,7 @@ import {
 // import { Checkbox } from "@/components/ui/checkbox";
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/contexts/language-context";
 import { Task, TaskStatus } from "@/types/task";
 import { apiRequest } from "@/lib/api-request";
 import {
@@ -58,6 +59,7 @@ interface ExportData {
 
 export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [isExporting, setIsExporting] = useState(false);
   const [filters, setFilters] = useState<ExportFilters>({
     createdAtFrom: "",
@@ -108,32 +110,32 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
 
   const generateExcelData = (data: ExportData) => {
     const headers = [
-      "Task ID",
-      "Title",
-      "Due Date",
-      "Status",
-      "Priority",
-      "Initiative",
-      "OKR",
-      "Assignee",
-      "Reviewer",
-      "Tester",
-      "BA User",
-      "Is Done",
-      "Story Points",
-      "Size Card",
-      "Test Case",
-      "Go Live Date",
-      "Dev MR",
-      "Staging",
-      "Sprint",
-      "Feature Categories",
-      "Sprint Goal",
-      "Created Date",
-      "Updated Date",
-      "Created By",
-      "Members",
-      "Attachments",
+      t("export.taskId"),
+      t("export.title"),
+      t("export.dueDate"),
+      t("export.status"),
+      t("export.priority"),
+      t("export.initiative"),
+      t("export.okr"),
+      t("export.assignee"),
+      t("export.reviewer"),
+      t("export.tester"),
+      t("export.baUser"),
+      t("export.isDone"),
+      t("export.storyPoints"),
+      t("export.sizeCard"),
+      t("export.testCase"),
+      t("export.goLiveDate"),
+      t("export.devMR"),
+      t("export.staging"),
+      t("export.sprint"),
+      t("export.featureCategories"),
+      t("export.sprintGoal"),
+      t("export.createdDate"),
+      t("export.updatedDate"),
+      t("export.createdBy"),
+      t("export.members"),
+      t("export.attachments"),
     ];
 
     const rows = data.tasks.map((task) => [
@@ -148,7 +150,7 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
       task.reviewer?.fullname || task.reviewer?.publicName || "",
       task.tester?.fullname || task.tester?.publicName || "",
       task.baUser?.fullname || task.baUser?.publicName || "",
-      task.isDone ? "Yes" : "No",
+      task.isDone ? t("common.yes") : t("common.no"),
       task.storyPoint || 0,
       task.sizeCard || "",
       task.testCase || "",
@@ -230,14 +232,14 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
       downloadExcel(exportData);
 
       toast({
-        title: "Export Successful",
-        description: `Exported ${data.totalTasks} tasks to Excel file`,
+        title: t("export.exportSuccessful"),
+        description: `${t("export.exported")} ${data.totalTasks} ${t("workspace.tasks")} ${t("export.toExcelFile")}`,
       });
     } catch (error) {
       console.error("Export error:", error);
       toast({
-        title: "Export Failed",
-        description: "Failed to export tasks. Please try again.",
+        title: t("export.exportFailed"),
+        description: t("export.failedToExportTasks"),
         variant: "destructive",
       });
     } finally {
@@ -252,17 +254,19 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
-            Export Filters
+            {t("export.filterTitle")}
           </CardTitle>
           <CardDescription>
-            Configure what data to include in the export
+            {t("export.configureDataToInclude")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Created Date Range */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="createdAtFrom">Created From Date</Label>
+              <Label htmlFor="createdAtFrom">
+                {t("export.createdFromDate")}
+              </Label>
               <Input
                 id="createdAtFrom"
                 type="date"
@@ -273,7 +277,7 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="createdAtTo">Created To Date</Label>
+              <Label htmlFor="createdAtTo">{t("export.createdToDate")}</Label>
               <Input
                 id="createdAtTo"
                 type="date"
@@ -287,7 +291,7 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
 
           {/* Is Done Filter */}
           <div className="space-y-3">
-            <Label>Task Completion Status</Label>
+            <Label>{t("export.taskCompletionStatus")}</Label>
             <div className="flex flex-wrap gap-4">
               <div className="flex items-center space-x-2">
                 <input
@@ -298,7 +302,7 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
                   onChange={() => handleFilterChange("isDone", null)}
                   className="rounded border-gray-300"
                 />
-                <Label htmlFor="isDoneAll">All Tasks</Label>
+                <Label htmlFor="isDoneAll">{t("export.allTasks")}</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <input
@@ -309,7 +313,7 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
                   onChange={() => handleFilterChange("isDone", true)}
                   className="rounded border-gray-300"
                 />
-                <Label htmlFor="isDoneTrue">Completed Only</Label>
+                <Label htmlFor="isDoneTrue">{t("export.completedOnly")}</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <input
@@ -320,7 +324,9 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
                   onChange={() => handleFilterChange("isDone", false)}
                   className="rounded border-gray-300"
                 />
-                <Label htmlFor="isDoneFalse">Not Completed Only</Label>
+                <Label htmlFor="isDoneFalse">
+                  {t("export.notCompletedOnly")}
+                </Label>
               </div>
             </div>
           </div>
@@ -328,7 +334,7 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
           {/* Status Filter */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label>Statuses</Label>
+              <Label>{t("export.statuses")}</Label>
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -342,7 +348,7 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
                   }
                   className="text-xs"
                 >
-                  Select All
+                  {t("export.selectAll")}
                 </Button>
                 <Button
                   type="button"
@@ -351,7 +357,7 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
                   onClick={() => handleDeselectAll("statusIds")}
                   className="text-xs"
                 >
-                  Clear All
+                  {t("export.clearAll")}
                 </Button>
               </div>
             </div>
@@ -394,9 +400,11 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold">Ready to Export</h3>
+              <h3 className="text-lg font-semibold">
+                {t("export.readyToExport")}
+              </h3>
               <p className="text-sm text-gray-600">
-                Export filtered tasks with all details to Excel file
+                {t("export.exportFilteredTasksDescription")}
               </p>
             </div>
             <Button
@@ -409,7 +417,7 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
               ) : (
                 <Download className="h-4 w-4" />
               )}
-              {isExporting ? "Exporting..." : "Export to Excel"}
+              {isExporting ? t("export.exporting") : t("export.exportToExcel")}
             </Button>
           </div>
         </CardContent>

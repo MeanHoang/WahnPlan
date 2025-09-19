@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Task } from "@/types/task";
 import { apiRequest } from "@/lib/api-request";
+import { useTranslation } from "@/contexts/language-context";
 import {
   getPriorityStyle,
   getStatusStyle,
@@ -30,6 +31,7 @@ export function TaskSearchModal({
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const { t } = useTranslation();
 
   // Debounced search effect
   useEffect(() => {
@@ -86,7 +88,9 @@ export function TaskSearchModal({
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[80vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Search Tasks</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {t("taskSearch.title")}
+          </h2>
           <Button
             variant="ghost"
             size="sm"
@@ -103,7 +107,7 @@ export function TaskSearchModal({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search tasks by name..."
+              placeholder={t("taskSearch.placeholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -117,7 +121,9 @@ export function TaskSearchModal({
           {loading && (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-600">Searching...</span>
+              <span className="ml-2 text-gray-600">
+                {t("taskSearch.searching")}
+              </span>
             </div>
           )}
 
@@ -128,7 +134,7 @@ export function TaskSearchModal({
               <div className="text-center py-8">
                 <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500">
-                  No tasks found matching "{searchQuery}"
+                  {t("taskSearch.noTasksFound")} "{searchQuery}"
                 </p>
               </div>
             )}
@@ -136,7 +142,10 @@ export function TaskSearchModal({
           {!loading && searchQuery.trim() && tasks.length > 0 && (
             <div className="space-y-3">
               <p className="text-sm text-gray-600 mb-4">
-                Found {tasks.length} task{tasks.length !== 1 ? "s" : ""}
+                {t("taskSearch.foundTasks")} {tasks.length}{" "}
+                {tasks.length !== 1
+                  ? t("taskSearch.tasks")
+                  : t("taskSearch.task")}
               </p>
               {tasks.map((task) => (
                 <div
@@ -183,7 +192,7 @@ export function TaskSearchModal({
                         {task.dueDate && (
                           <div className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            Due: {formatDate(task.dueDate)}
+                            {t("taskSearch.due")} {formatDate(task.dueDate)}
                           </div>
                         )}
 
@@ -198,7 +207,7 @@ export function TaskSearchModal({
 
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          Created: {formatDate(task.createdAt)}
+                          {t("taskSearch.created")} {formatDate(task.createdAt)}
                         </div>
                       </div>
                     </div>
@@ -211,7 +220,9 @@ export function TaskSearchModal({
           {!searchQuery.trim() && (
             <div className="text-center py-8">
               <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Start typing to search for tasks</p>
+              <p className="text-gray-500">
+                {t("taskSearch.startTypingToSearch")}
+              </p>
             </div>
           )}
         </div>
@@ -219,7 +230,7 @@ export function TaskSearchModal({
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 p-6 border-t border-gray-200">
           <Button variant="outline" onClick={onClose}>
-            Close
+            {t("taskSearch.close")}
           </Button>
         </div>
       </div>

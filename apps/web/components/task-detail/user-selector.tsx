@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Search, User, X } from "lucide-react";
+import { useTranslation } from "@/contexts/language-context";
 
 interface User {
   id: string;
@@ -28,6 +29,7 @@ export function UserSelector({
   multiple = false,
   className = "",
 }: UserSelectorProps): JSX.Element {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const selectRef = useRef<HTMLDivElement>(null);
@@ -147,7 +149,7 @@ export function UserSelector({
               <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search users..."
+                placeholder={t("userSelector.searchUsers")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-64 pl-8 pr-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -190,7 +192,7 @@ export function UserSelector({
               ))
             ) : (
               <div className="px-3 py-2 text-sm text-gray-500 text-center">
-                No users found
+                {t("userSelector.noUsersFound")}
               </div>
             )}
           </div>

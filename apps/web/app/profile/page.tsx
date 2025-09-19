@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { useUpdateApi } from "@/hooks/use-update-api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/contexts/language-context";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { AvatarUpload } from "@/components/ui/upload";
 import { useAvatarUpload } from "@/hooks/use-upload-api";
@@ -41,6 +42,7 @@ interface ProfileUpdateData {
 export default function ProfilePage(): JSX.Element {
   const { user, refreshAuth } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const { uploadAvatar, deleteAvatar } = useAvatarUpload();
   const [formData, setFormData] = useState<ProfileUpdateData>({
@@ -62,16 +64,16 @@ export default function ProfilePage(): JSX.Element {
     {
       onSuccess: (data) => {
         toast({
-          title: "Profile updated",
-          description: "Your profile has been updated successfully.",
+          title: t("profile.profileUpdated"),
+          description: t("profile.updateSuccess"),
         });
         setIsEditing(false);
         refreshAuth();
       },
       onError: (error) => {
         toast({
-          title: "Error",
-          description: "Failed to update profile. Please try again.",
+          title: t("common.error"),
+          description: t("profile.updateFailed"),
           variant: "destructive",
         });
       },
@@ -82,12 +84,11 @@ export default function ProfilePage(): JSX.Element {
     const newErrors: Partial<ProfileUpdateData> = {};
 
     if (formData.fullname && formData.fullname.length < 2) {
-      newErrors.fullname = "Full name must be at least 2 characters long";
+      newErrors.fullname = t("profile.fullnameMinLength");
     }
 
     if (formData.publicName && !/^[a-zA-Z0-9_-]+$/.test(formData.publicName)) {
-      newErrors.publicName =
-        "Public name can only contain letters, numbers, hyphens, and underscores";
+      newErrors.publicName = t("profile.publicNameInvalid");
     }
 
     setErrors(newErrors);
@@ -136,7 +137,7 @@ export default function ProfilePage(): JSX.Element {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -147,10 +148,10 @@ export default function ProfilePage(): JSX.Element {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-            <p className="mt-2 text-gray-600">
-              Manage your profile and visibility settings
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {t("profile.title")}
+            </h1>
+            <p className="mt-2 text-gray-600">{t("profile.description")}</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -158,10 +159,8 @@ export default function ProfilePage(): JSX.Element {
             <div className="lg:col-span-1">
               <Card>
                 <CardHeader>
-                  <CardTitle>Profile Overview</CardTitle>
-                  <CardDescription>
-                    Your public profile information
-                  </CardDescription>
+                  <CardTitle>{t("profile.overview")}</CardTitle>
+                  <CardDescription>{t("profile.overviewDesc")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="flex flex-col items-center text-center">
@@ -214,17 +213,23 @@ export default function ProfilePage(): JSX.Element {
 
                   <div className="pt-4 border-t">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Member since</span>
+                      <span className="text-gray-500">
+                        {t("profile.memberSince")}
+                      </span>
                       <span className="text-gray-900">
                         {new Date(user.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm mt-1">
-                      <span className="text-gray-500">Email verified</span>
+                      <span className="text-gray-500">
+                        {t("profile.emailVerified")}
+                      </span>
                       <span
                         className={`font-medium ${user.emailVerify ? "text-green-600" : "text-red-600"}`}
                       >
-                        {user.emailVerify ? "Verified" : "Not verified"}
+                        {user.emailVerify
+                          ? t("profile.verified")
+                          : t("profile.notVerified")}
                       </span>
                     </div>
                   </div>
@@ -238,9 +243,9 @@ export default function ProfilePage(): JSX.Element {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>Profile Settings</CardTitle>
+                      <CardTitle>{t("profile.settings")}</CardTitle>
                       <CardDescription>
-                        Update your profile information
+                        {t("profile.settingsDesc")}
                       </CardDescription>
                     </div>
                     <Button
@@ -248,7 +253,9 @@ export default function ProfilePage(): JSX.Element {
                       onClick={() => setIsEditing(!isEditing)}
                       disabled={isPending}
                     >
-                      {isEditing ? "Cancel" : "Edit Profile"}
+                      {isEditing
+                        ? t("common.cancel")
+                        : t("profile.editProfile")}
                     </Button>
                   </div>
                 </CardHeader>
@@ -256,7 +263,9 @@ export default function ProfilePage(): JSX.Element {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label htmlFor="fullname">Full Name</Label>
+                        <Label htmlFor="fullname">
+                          {t("profile.fullName")}
+                        </Label>
                         <Input
                           id="fullname"
                           value={formData.fullname || ""}
@@ -264,7 +273,7 @@ export default function ProfilePage(): JSX.Element {
                             handleInputChange("fullname", e.target.value)
                           }
                           disabled={!isEditing}
-                          placeholder="Enter your full name"
+                          placeholder={t("profile.enterFullName")}
                           className={errors.fullname ? "border-red-500" : ""}
                         />
                         {errors.fullname && (
@@ -275,7 +284,9 @@ export default function ProfilePage(): JSX.Element {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="publicName">Public Name</Label>
+                        <Label htmlFor="publicName">
+                          {t("profile.publicName")}
+                        </Label>
                         <Input
                           id="publicName"
                           value={formData.publicName || ""}
@@ -283,7 +294,7 @@ export default function ProfilePage(): JSX.Element {
                             handleInputChange("publicName", e.target.value)
                           }
                           disabled={!isEditing}
-                          placeholder="Enter your public name"
+                          placeholder={t("profile.enterPublicName")}
                           className={errors.publicName ? "border-red-500" : ""}
                         />
                         {errors.publicName ? (
@@ -292,13 +303,15 @@ export default function ProfilePage(): JSX.Element {
                           </p>
                         ) : (
                           <p className="text-xs text-gray-500">
-                            This is how others will see your name
+                            {t("profile.publicNameDesc")}
                           </p>
                         )}
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="jobTitle">Job Title</Label>
+                        <Label htmlFor="jobTitle">
+                          {t("profile.jobTitle")}
+                        </Label>
                         <Input
                           id="jobTitle"
                           value={formData.jobTitle || ""}
@@ -306,12 +319,14 @@ export default function ProfilePage(): JSX.Element {
                             handleInputChange("jobTitle", e.target.value)
                           }
                           disabled={!isEditing}
-                          placeholder="Enter your job title"
+                          placeholder={t("profile.enterJobTitle")}
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="organization">Organization</Label>
+                        <Label htmlFor="organization">
+                          {t("profile.organization")}
+                        </Label>
                         <Input
                           id="organization"
                           value={formData.organization || ""}
@@ -319,12 +334,14 @@ export default function ProfilePage(): JSX.Element {
                             handleInputChange("organization", e.target.value)
                           }
                           disabled={!isEditing}
-                          placeholder="Enter your organization"
+                          placeholder={t("profile.enterOrganization")}
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="location">Location</Label>
+                        <Label htmlFor="location">
+                          {t("profile.location")}
+                        </Label>
                         <Input
                           id="location"
                           value={formData.location || ""}
@@ -332,12 +349,14 @@ export default function ProfilePage(): JSX.Element {
                             handleInputChange("location", e.target.value)
                           }
                           disabled={!isEditing}
-                          placeholder="Enter your location"
+                          placeholder={t("profile.enterLocation")}
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="language">Language</Label>
+                        <Label htmlFor="language">
+                          {t("profile.language")}
+                        </Label>
                         <select
                           id="language"
                           value={formData.language || "en"}
@@ -347,14 +366,14 @@ export default function ProfilePage(): JSX.Element {
                           disabled={!isEditing}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
                         >
-                          <option value="en">English</option>
-                          <option value="vi">Vietnamese</option>
+                          <option value="en">{t("profile.english")}</option>
+                          <option value="vi">{t("profile.vietnamese")}</option>
                         </select>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="timezone">Timezone</Label>
+                      <Label htmlFor="timezone">{t("profile.timezone")}</Label>
                       <select
                         id="timezone"
                         value={formData.timezone || "UTC"}
@@ -383,10 +402,12 @@ export default function ProfilePage(): JSX.Element {
                           onClick={handleCancel}
                           disabled={isPending}
                         >
-                          Cancel
+                          {t("common.cancel")}
                         </Button>
                         <Button type="submit" disabled={isPending}>
-                          {isPending ? "Saving..." : "Save Changes"}
+                          {isPending
+                            ? t("profile.saving")
+                            : t("profile.saveChanges")}
                         </Button>
                       </div>
                     )}

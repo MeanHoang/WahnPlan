@@ -12,9 +12,11 @@ import {
 } from "@/components/ui/card";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/contexts/auth-context";
+import { useTranslation } from "@/contexts/language-context";
 
 export default function DashboardPage(): JSX.Element {
   const { user, isLoading, logout } = useAuth();
+  const { t } = useTranslation();
   const router = useRouter();
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export default function DashboardPage(): JSX.Element {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -50,61 +52,81 @@ export default function DashboardPage(): JSX.Element {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Welcome, {user.fullname || user.email}!
+              {t("dashboard.welcome")}, {user.fullname || user.email}!
             </h1>
             <p className="text-gray-600">
-              Manage your projects and tasks efficiently
+              {t("dashboard.manageProjectsEfficiently")}
             </p>
           </div>
           <Button onClick={logout} variant="outline">
-            Logout
+            {t("auth.logout")}
           </Button>
         </div>
 
         {/* User Info Card */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Account Information</CardTitle>
-            <CardDescription>Your profile details</CardDescription>
+            <CardTitle>{t("dashboard.accountInformation")}</CardTitle>
+            <CardDescription>
+              {t("dashboard.yourProfileDetails")}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm font-medium text-gray-500">Email</p>
+                <p className="text-sm font-medium text-gray-500">
+                  {t("dashboard.email")}
+                </p>
                 <p className="text-gray-900">{user.email}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Full Name</p>
-                <p className="text-gray-900">{user.fullname || "Not set"}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Public Name</p>
-                <p className="text-gray-900">{user.publicName || "Not set"}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Job Title</p>
-                <p className="text-gray-900">{user.jobTitle || "Not set"}</p>
-              </div>
-              <div>
                 <p className="text-sm font-medium text-gray-500">
-                  Organization
+                  {t("dashboard.fullName")}
                 </p>
                 <p className="text-gray-900">
-                  {user.organization || "Not set"}
+                  {user.fullname || t("common.notSet")}
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Location</p>
-                <p className="text-gray-900">{user.location || "Not set"}</p>
+                <p className="text-sm font-medium text-gray-500">
+                  {t("dashboard.publicName")}
+                </p>
+                <p className="text-gray-900">
+                  {user.publicName || t("common.notSet")}
+                </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">
-                  Email Verified
+                  {t("dashboard.jobTitle")}
+                </p>
+                <p className="text-gray-900">
+                  {user.jobTitle || t("common.notSet")}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">
+                  {t("dashboard.organization")}
+                </p>
+                <p className="text-gray-900">
+                  {user.organization || t("common.notSet")}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">
+                  {t("dashboard.location")}
+                </p>
+                <p className="text-gray-900">
+                  {user.location || t("common.notSet")}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">
+                  {t("dashboard.emailVerified")}
                 </p>
                 <p
                   className={`${user.emailVerify ? "text-green-600" : "text-red-600"}`}
                 >
-                  {user.emailVerify ? "Yes" : "No"}
+                  {user.emailVerify ? t("common.yes") : t("common.no")}
                 </p>
               </div>
             </div>
@@ -115,36 +137,42 @@ export default function DashboardPage(): JSX.Element {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Create Workspace</CardTitle>
-              <CardDescription>Start a new project workspace</CardDescription>
+              <CardTitle>{t("dashboard.createWorkspace")}</CardTitle>
+              <CardDescription>
+                {t("dashboard.startNewProject")}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Button className="w-full" disabled>
-                Coming Soon
+                {t("common.comingSoon")}
               </Button>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Join Workspace</CardTitle>
-              <CardDescription>Join an existing workspace</CardDescription>
+              <CardTitle>{t("dashboard.joinWorkspace")}</CardTitle>
+              <CardDescription>
+                {t("dashboard.joinExistingWorkspace")}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Button className="w-full" disabled>
-                Coming Soon
+                {t("common.comingSoon")}
               </Button>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>View Profile</CardTitle>
-              <CardDescription>Edit your profile settings</CardDescription>
+              <CardTitle>{t("dashboard.viewProfile")}</CardTitle>
+              <CardDescription>
+                {t("dashboard.editProfileSettings")}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Button className="w-full" disabled>
-                Coming Soon
+                {t("common.comingSoon")}
               </Button>
             </CardContent>
           </Card>

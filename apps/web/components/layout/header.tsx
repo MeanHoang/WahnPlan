@@ -5,8 +5,10 @@ import { Search, Bell, HelpCircle, Grid3X3, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
+import { useTranslation } from "@/contexts/language-context";
 import { UserDropdown } from "@/components/layout/user-dropdown";
 import { CreateWorkspaceModal } from "@/components/workspaces/create-workspace-modal";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -20,6 +22,7 @@ export function Header({
   onSidebarToggle,
 }: HeaderProps): JSX.Element {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -68,7 +71,7 @@ export function Header({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="text"
-                placeholder="Search"
+                placeholder={t("common.search")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-blue-500"
@@ -80,6 +83,7 @@ export function Header({
 
         {/* Right side icons */}
         <div className="flex items-center space-x-2">
+          <LanguageSwitcher />
           <Button variant="ghost" size="sm" className="p-2">
             <HelpCircle className="h-5 w-5 text-gray-600" />
           </Button>

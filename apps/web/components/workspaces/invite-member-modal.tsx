@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCreateApi } from "@/hooks/use-create-api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/contexts/language-context";
 
 interface InviteMemberModalProps {
   isOpen: boolean;
@@ -23,14 +24,15 @@ export function InviteMemberModal({
   const [email, setEmail] = useState("");
   const [isCreatingLink, setIsCreatingLink] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const { mutate: inviteMember, loading } = useCreateApi(
     `/workspaces/${workspaceId}/members/invite`,
     {
       onSuccess: () => {
         toast({
-          title: "Success",
-          description: "Member invited successfully",
+          title: t("common.success"),
+          description: t("inviteMember.memberInvitedSuccess"),
         });
         setEmail("");
         onClose();
@@ -38,8 +40,8 @@ export function InviteMemberModal({
       },
       onError: () => {
         toast({
-          title: "Error",
-          description: "Failed to invite member",
+          title: t("common.error"),
+          description: t("inviteMember.failedToInviteMember"),
           variant: "destructive",
         });
       },
@@ -68,7 +70,7 @@ export function InviteMemberModal({
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-gray-900">
-            Invite to Workspace
+            {t("inviteMember.title")}
           </h2>
           <Button variant="ghost" size="sm" onClick={onClose} className="p-2">
             <X className="h-4 w-4" />
@@ -79,7 +81,7 @@ export function InviteMemberModal({
         <div className="mb-6">
           <Input
             type="email"
-            placeholder="Email address or name"
+            placeholder={t("inviteMember.emailPlaceholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full text-sm"
@@ -94,7 +96,7 @@ export function InviteMemberModal({
         {/* Invite by Link Section */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-600">
-            Invite someone to this Workspace with a link:
+            {t("inviteMember.inviteWithLinkDescription")}
           </p>
           <Button
             variant="outline"
@@ -104,14 +106,16 @@ export function InviteMemberModal({
             className="text-sm"
           >
             <Link className="h-4 w-4 mr-2" />
-            {isCreatingLink ? "Creating..." : "Create link"}
+            {isCreatingLink
+              ? t("inviteMember.creating")
+              : t("inviteMember.createLink")}
           </Button>
         </div>
 
         {/* Action Buttons */}
         <div className="flex justify-end space-x-3 mt-6">
           <Button variant="outline" onClick={onClose} className="text-sm">
-            Cancel
+            {t("inviteMember.cancel")}
           </Button>
           <Button
             onClick={handleInvite}
@@ -119,7 +123,7 @@ export function InviteMemberModal({
             className="bg-blue-600 hover:bg-blue-700 text-sm"
           >
             <UserPlus className="h-4 w-4 mr-2" />
-            {loading ? "Inviting..." : "Invite"}
+            {loading ? t("inviteMember.inviting") : t("inviteMember.invite")}
           </Button>
         </div>
       </div>
