@@ -22,7 +22,10 @@ interface BoardBasicInfoProps {
   onBoardUpdate?: (updatedBoard: Board) => void;
 }
 
-export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
+export function BoardBasicInfo({
+  board,
+  onBoardUpdate,
+}: BoardBasicInfoProps): JSX.Element {
   const { toast } = useToast();
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
@@ -191,10 +194,10 @@ export function BoardBasicInfo({ board, onBoardUpdate }: BoardBasicInfoProps) {
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <div className="text-2xl font-bold text-purple-600">
-                {board._count?.members || 0}
+                {board._count?.taskPriorities || 0}
               </div>
               <div className="text-sm text-purple-600 font-medium">
-                {t("board.basicInfo.members")}
+                {t("board.basicInfo.priorities")}
               </div>
             </div>
           </div>

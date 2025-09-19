@@ -42,7 +42,9 @@ interface TaskAttributesManagerProps {
   boardId: string;
 }
 
-export function TaskAttributesManager({ boardId }: TaskAttributesManagerProps) {
+export function TaskAttributesManager({
+  boardId,
+}: TaskAttributesManagerProps): JSX.Element {
   const { t } = useTranslation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"create" | "edit">("create");
