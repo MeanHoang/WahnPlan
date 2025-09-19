@@ -252,6 +252,7 @@ export default function TaskDetailPage(): JSX.Element {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <TaskHeader
+          task={task}
           hasChanges={hasChanges}
           isUpdating={isUpdating}
           onBack={handleBackToBoard}

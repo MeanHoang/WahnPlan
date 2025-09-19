@@ -207,7 +207,13 @@
     "comments": "Bình luận",
     "addComment": "Thêm bình luận",
     "editTask": "Sửa nhiệm vụ",
-    "deleteTask": "Xóa nhiệm vụ"
+    "deleteTask": "Xóa nhiệm vụ",
+    "delete": {
+      "deleteTask": "Xóa Nhiệm vụ",
+      "warningMessage": "Hành động này sẽ xóa vĩnh viễn nhiệm vụ. Hành động này không thể hoàn tác.",
+      "deletedSuccessfully": "Nhiệm vụ đã được xóa thành công",
+      "deleteFailed": "Không thể xóa nhiệm vụ. Vui lòng thử lại."
+    }
   },
   "priority": {
     "low": "Thấp",

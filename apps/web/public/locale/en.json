@@ -207,7 +207,13 @@
     "comments": "Comments",
     "addComment": "Add Comment",
     "editTask": "Edit Task",
-    "deleteTask": "Delete Task"
+    "deleteTask": "Delete Task",
+    "delete": {
+      "deleteTask": "Delete Task",
+      "warningMessage": "This action will permanently delete the task. This action cannot be undone.",
+      "deletedSuccessfully": "Task has been deleted successfully",
+      "deleteFailed": "Failed to delete task. Please try again."
+    }
   },
   "priority": {
     "low": "Low",
