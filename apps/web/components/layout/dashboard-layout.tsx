@@ -10,12 +10,14 @@ interface DashboardLayoutProps {
   children: ReactNode;
   onSearch?: (query: string) => void;
   onCreateClick?: () => void;
+  currentWorkspaceId?: string;
 }
 
 export function DashboardLayout({
   children,
   onSearch,
   onCreateClick,
+  currentWorkspaceId,
 }: DashboardLayoutProps): JSX.Element {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -33,6 +35,7 @@ export function DashboardLayout({
         onSearch={onSearch}
         onCreateClick={onCreateClick}
         onSidebarToggle={toggleSidebar}
+        currentWorkspaceId={currentWorkspaceId}
       />
 
       <div className="flex">

@@ -564,7 +564,7 @@
     "logOut": "Đăng xuất"
   },
   "sidebar": {
-    "workspaces": "Không gian làm việc",
+    "workspaces": "Nơi làm việc",
     "loadingWorkspaces": "Đang tải không gian làm việc...",
     "failedToLoadWorkspaces": "Không thể tải không gian làm việc",
     "noWorkspacesFound": "Không tìm thấy không gian làm việc nào",

@@ -9,22 +9,34 @@ import { useTranslation } from "@/contexts/language-context";
 import { UserDropdown } from "@/components/layout/user-dropdown";
 import { CreateWorkspaceModal } from "@/components/workspaces/create-workspace-modal";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { NotificationDropdown } from "@/components/layout/notification-dropdown";
+import { useFetchApi } from "@/hooks";
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
   onCreateClick?: () => void;
   onSidebarToggle?: () => void;
+  currentWorkspaceId?: string;
 }
 
 export function Header({
   onSearch,
   onCreateClick,
   onSidebarToggle,
+  currentWorkspaceId,
 }: HeaderProps): JSX.Element {
   const { user } = useAuth();
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+  // Fetch unread count
+  const { data: unreadData } = useFetchApi<{
+    unreadCount: number;
+  }>("/notifications/unread-count");
+
+  const unreadCount = unreadData?.unreadCount || 0;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +96,33 @@ export function Header({
         {/* Right side icons */}
         <div className="flex items-center space-x-2">
           <LanguageSwitcher />
+
+          {/* Notifications */}
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="p-2 hover:bg-blue-50 relative"
+              onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+            >
+              <Bell className="h-5 w-5 text-gray-600 hover:text-blue-600" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </Button>
+            <NotificationDropdown
+              isOpen={isNotificationOpen}
+              onClose={() => setIsNotificationOpen(false)}
+              currentWorkspaceId={currentWorkspaceId}
+              onUnreadCountChange={() => {
+                // Trigger refetch of unread count
+                window.location.reload();
+              }}
+            />
+          </div>
+
           <Button variant="ghost" size="sm" className="p-2">
             <HelpCircle className="h-5 w-5 text-gray-600" />
           </Button>
