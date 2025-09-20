@@ -13,6 +13,9 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { EmailVerificationResponseDto } from './dto/email-verification.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -207,6 +210,107 @@ export class AuthService {
     return { message: 'Verification email sent successfully' };
   }
 
+  async forgotPassword(
+    forgotPasswordDto: ForgotPasswordDto,
+  ): Promise<{ message: string }> {
+    const { email } = forgotPasswordDto;
+
+    // Check if user exists
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, enable: true },
+    });
+
+    if (!user || !user.enable) {
+      // Don't reveal if user exists or not for security
+      return {
+        message: 'If the email exists, a password reset link has been sent',
+      };
+    }
+
+    // Generate password reset token
+    const resetToken = await this.generatePasswordResetToken(user.id);
+
+    // Send password reset email
+    try {
+      await this.emailService.sendPasswordResetEmail(email, resetToken);
+      console.log('Password reset email sent successfully to:', email);
+    } catch (error) {
+      console.error('Failed to send password reset email:', error);
+      throw new BadRequestException('Failed to send password reset email');
+    }
+
+    return {
+      message: 'If the email exists, a password reset link has been sent',
+    };
+  }
+
+  async resetPassword(
+    resetPasswordDto: ResetPasswordDto,
+  ): Promise<{ message: string }> {
+    const { token, password } = resetPasswordDto;
+
+    try {
+      // Verify the reset token
+      const payload = this.jwtService.verify(token, {
+        secret: this.configService.get<string>('JWT_PASSWORD_RESET_SECRET'),
+      });
+
+      // Hash the new password
+      const saltRounds = 12;
+      const passwordHash = await bcrypt.hash(password, saltRounds);
+
+      // Update user password
+      await this.prisma.user.update({
+        where: { id: payload.sub },
+        data: { passwordHash },
+      });
+
+      return { message: 'Password reset successfully' };
+    } catch (error) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+  }
+
+  async changePassword(
+    userId: string,
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<{ message: string }> {
+    const { currentPassword, newPassword } = changePasswordDto;
+
+    // Get user with current password hash
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, passwordHash: true },
+    });
+
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.passwordHash,
+    );
+
+    if (!isCurrentPasswordValid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    // Hash the new password
+    const saltRounds = 12;
+    const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update user password
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: newPasswordHash },
+    });
+
+    return { message: 'Password changed successfully' };
+  }
+
   private async generateTokens(userId: string) {
     const payload = { sub: userId };
 
@@ -242,6 +346,15 @@ export class AuthService {
     return this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_EMAIL_VERIFICATION_SECRET'),
       expiresIn: '24h',
+    });
+  }
+
+  async generatePasswordResetToken(userId: string): Promise<string> {
+    const payload = { sub: userId };
+
+    return this.jwtService.signAsync(payload, {
+      secret: this.configService.get<string>('JWT_PASSWORD_RESET_SECRET'),
+      expiresIn: '1h', // Password reset tokens expire in 1 hour
     });
   }
 

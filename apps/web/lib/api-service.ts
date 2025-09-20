@@ -48,6 +48,33 @@ class ApiService {
     });
   }
 
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    return apiRequest<{ message: string }>("/auth/forgot-password", {
+      method: "POST",
+      body: { email },
+    });
+  }
+
+  async resetPassword(
+    token: string,
+    password: string
+  ): Promise<{ message: string }> {
+    return apiRequest<{ message: string }>("/auth/reset-password", {
+      method: "POST",
+      body: { token, password },
+    });
+  }
+
+  async changePassword(
+    currentPassword: string,
+    newPassword: string
+  ): Promise<{ message: string }> {
+    return apiRequest<{ message: string }>("/auth/change-password", {
+      method: "POST",
+      body: { currentPassword, newPassword },
+    });
+  }
+
   // Profile APIs
   async getProfile(): Promise<User> {
     return apiRequest<User>("/users/profile");

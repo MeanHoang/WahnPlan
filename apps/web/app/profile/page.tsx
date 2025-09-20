@@ -19,6 +19,7 @@ import { useTranslation } from "@/contexts/language-context";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { AvatarUpload } from "@/components/ui/upload";
 import { useAvatarUpload } from "@/hooks/use-upload-api";
+import { ChangePasswordDialog } from "@/components/profile/change-password-dialog";
 import {
   User,
   Mail,
@@ -27,6 +28,7 @@ import {
   Briefcase,
   Globe,
   Clock,
+  Key,
 } from "lucide-react";
 
 interface ProfileUpdateData {
@@ -44,6 +46,8 @@ export default function ProfilePage(): JSX.Element {
   const { toast } = useToast();
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
+  const [showChangePasswordDialog, setShowChangePasswordDialog] =
+    useState(false);
   const { uploadAvatar, deleteAvatar } = useAvatarUpload();
   const [formData, setFormData] = useState<ProfileUpdateData>({
     fullname: user?.fullname || "",
@@ -233,6 +237,22 @@ export default function ProfilePage(): JSX.Element {
                       </span>
                     </div>
                   </div>
+
+                  {/* Security Section */}
+                  <div className="pt-4 border-t">
+                    <h4 className="text-sm font-medium text-gray-900 mb-3">
+                      {t("profile.security")}
+                    </h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowChangePasswordDialog(true)}
+                      className="w-full"
+                    >
+                      <Key className="w-4 h-4 mr-2" />
+                      {t("auth.changePassword")}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -418,6 +438,12 @@ export default function ProfilePage(): JSX.Element {
           </div>
         </div>
       </div>
+
+      {/* Change Password Dialog */}
+      <ChangePasswordDialog
+        isOpen={showChangePasswordDialog}
+        onClose={() => setShowChangePasswordDialog(false)}
+      />
     </DashboardLayout>
   );
 }

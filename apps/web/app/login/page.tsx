@@ -158,6 +158,16 @@ export default function LoginPage(): JSX.Element {
               )}
             </Button>
 
+            {/* Forgot Password Link */}
+            <div className="text-center text-sm">
+              <Link
+                href="/forgot-password"
+                className="text-blue-600 hover:text-blue-800 font-medium"
+              >
+                {t("auth.forgotPassword")}
+              </Link>
+            </div>
+
             {/* Register Link */}
             <div className="text-center text-sm">
               {t("auth.dontHaveAccount")}{" "}
