@@ -164,11 +164,6 @@ export function BoardViewRenderer({
     return `/tasks?${params.toString()}`;
   };
 
-  // Fetch current user's tasks for Mine view using auth context
-  const { data: userTasks, loading: userTasksLoading } = useFetchApi<Task[]>(
-    user?.id ? buildTasksQuery({ assigneeId: user.id }) : buildTasksQuery()
-  );
-
   const handleFiltersChange = (filters: {
     statusIds: string[];
     priorityIds: string[];
@@ -253,18 +248,23 @@ export function BoardViewRenderer({
 
       case "mine":
         // Show current user's tasks in table view
-        if (userTasksLoading) {
-          return (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Loading your tasks...</p>
-              </div>
-            </div>
-          );
-        }
         return (
-          <TaskTableView tasks={userTasks || []} onTaskClick={onTaskClick} />
+          <TaskTableView
+            tasks={[]}
+            onTaskClick={onTaskClick}
+            boardId={boardId}
+            filters={{
+              statusIds: selectedStatusIds,
+              priorityIds: selectedPriorityIds,
+              initiativeIds: selectedInitiativeIds,
+              assigneeIds: user?.id ? [user.id] : [], // Filter for current user
+              reviewerIds: selectedReviewerIds,
+              baIds: selectedBaIds,
+              memberIds: selectedMemberIds,
+              dueDateRange: selectedDueDateRange,
+              createdAtRange: selectedCreatedAtRange,
+            }}
+          />
         );
 
       case "table":
