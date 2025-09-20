@@ -11,6 +11,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Globe } from "lucide-react";
 
+// Type assertion to fix React types conflict
+const GlobeIcon = Globe as any;
+
 // Định nghĩa các ngôn ngữ với tên hiển thị và cờ
 const languages = [
   {
@@ -38,11 +41,13 @@ export const LanguageSwitcher: React.FC = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="flex items-center gap-2">
-          <Globe className="h-4 w-4" />
+          <GlobeIcon className="h-4 w-4" />
           <span className="hidden sm:inline">
-            {currentLanguage?.flag} {currentLanguage?.name}
+            {currentLanguage?.code.toUpperCase()}
           </span>
-          <span className="sm:hidden">{currentLanguage?.flag}</span>
+          <span className="sm:hidden">
+            {currentLanguage?.code.toUpperCase()}
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -52,8 +57,7 @@ export const LanguageSwitcher: React.FC = () => {
             onClick={() => handleLanguageChange(lang.code)}
             className="flex items-center gap-2 cursor-pointer"
           >
-            <span>{lang.flag}</span>
-            <span>{lang.name}</span>
+            <span>{lang.code.toUpperCase()}</span>
             {language === lang.code && (
               <span className="ml-auto text-green-600">✓</span>
             )}
@@ -79,8 +83,8 @@ export const SimpleLanguageSwitcher: React.FC = () => {
       onClick={toggleLanguage}
       className="flex items-center gap-1"
     >
-      <Globe className="h-4 w-4" />
-      <span className="text-xs">{language === "en" ? "🇺🇸" : "🇻🇳"}</span>
+      <GlobeIcon className="h-4 w-4" />
+      <span className="text-xs">{language === "en" ? "EN" : "VI"}</span>
     </Button>
   );
 };

@@ -22,6 +22,7 @@ import { loginSchema, type LoginFormData } from "@/lib/validations";
 import { useAuth } from "@/contexts/auth-context";
 import { useTranslation } from "@/contexts/language-context";
 import { EmailVerificationModal } from "@/components/auth/email-verification-modal";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 export default function LoginPage(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
@@ -82,6 +83,11 @@ export default function LoginPage(): JSX.Element {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
+
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
