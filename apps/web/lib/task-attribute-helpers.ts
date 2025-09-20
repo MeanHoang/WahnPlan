@@ -129,32 +129,48 @@ export const getDueDateStatus = (dueDate?: Date | string) => {
 };
 
 /**
- * Get background color classes for task based on due date status
+ * Get background color classes for task based on due date status and completion
  */
-export const getDueDateBackgroundClasses = (dueDate?: Date | string) => {
+export const getDueDateBackgroundClasses = (
+  dueDate?: Date | string,
+  isDone?: boolean
+) => {
+  // If task is done, always show green regardless of due date
+  if (isDone) {
+    return "bg-green-100 border-green-300 hover:bg-green-200";
+  }
+
   const status = getDueDateStatus(dueDate);
 
   switch (status) {
     case "overdue":
-      return "bg-red-50 border-red-200 hover:bg-red-100";
+      return "bg-red-100 border-red-300 hover:bg-red-200";
     case "due-soon":
-      return "bg-yellow-50 border-yellow-200 hover:bg-yellow-100";
+      return "bg-yellow-100 border-yellow-300 hover:bg-yellow-200";
     default:
       return "bg-white border-gray-200 hover:bg-gray-50";
   }
 };
 
 /**
- * Get background color classes for table row based on due date status
+ * Get background color classes for table row based on due date status and completion
  */
-export const getDueDateTableRowClasses = (dueDate?: Date | string) => {
+export const getDueDateTableRowClasses = (
+  dueDate?: Date | string,
+  isDone?: boolean
+) => {
+  // If task is done, always show green regardless of due date
+  if (isDone) {
+    return "bg-green-100 hover:bg-green-200";
+  }
+
   const status = getDueDateStatus(dueDate);
 
   switch (status) {
     case "overdue":
-      return "bg-red-50 hover:bg-red-100";
+      return "bg-red-100 hover:bg-red-200";
     case "due-soon":
-      return "bg-yellow-50 hover:bg-yellow-100";
+      return "bg-yellow-100 hover:bg-yellow-200";
     default:
       return "hover:bg-gray-50";
   }

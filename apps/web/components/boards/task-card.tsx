@@ -1,6 +1,12 @@
 "use client";
 
-import { MessageCircle, Calendar, User, GripVertical } from "lucide-react";
+import {
+  MessageCircle,
+  Calendar,
+  User,
+  GripVertical,
+  CheckCircle,
+} from "lucide-react";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { Task, TaskPriority, TaskInitiative } from "@/types/task";
@@ -46,7 +52,8 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
       className={`group rounded-2xl border-2 p-5 shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 ${
         isDragging
           ? "border-blue-400 shadow-xl opacity-50 bg-white"
-          : getDueDateBackgroundClasses(task.dueDate) + " hover:shadow-lg"
+          : getDueDateBackgroundClasses(task.dueDate, task.isDone) +
+            " hover:shadow-lg"
       }`}
       onClick={() => onClick?.(task)}
     >
@@ -60,9 +67,14 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
         <GripVertical className="w-4 h-4 text-gray-400" />
       </div>
       {/* Title */}
-      <h3 className="font-medium text-gray-900 mb-3 line-clamp-2 text-sm leading-5">
-        {task.title}
-      </h3>
+      <div className="flex items-center gap-2 mb-3">
+        <h3 className="font-medium text-gray-900 line-clamp-2 text-sm leading-5 flex-1">
+          {task.title}
+        </h3>
+        {task.isDone && (
+          <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+        )}
+      </div>
 
       {/* Tags */}
       <div className="flex flex-wrap gap-2 mb-4">
