@@ -391,6 +391,7 @@ export default function BoardDetailPage(): JSX.Element {
         onTaskClick={handleTaskClick}
         onAddTask={handleAddTask}
         onToggleFilters={(fn) => setToggleFilters(() => fn)}
+        workspaceId={workspaceId}
       />
 
       {/* Create Task Modal */}

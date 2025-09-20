@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
+import { Settings } from "lucide-react";
 import { StatusColumn } from "@/components/boards/status-column";
 import { AssigneeColumn } from "@/components/boards/assignee-column";
 import { TaskTableView } from "@/components/boards/task-table-view";
 import { TaskFilterBar } from "@/components/boards/task-filter-bar";
 import { TaskCard } from "@/components/boards/task-card";
 import { Task, TaskStatus, TaskPriority, TaskInitiative } from "@/types/task";
+import { useTranslation } from "@/contexts/language-context";
 
 interface DateRange {
   from?: Date;
@@ -33,6 +35,7 @@ interface BoardViewRendererProps {
   onTaskClick: (task: Task) => void;
   onAddTask: (id: string) => void;
   onToggleFilters?: (toggleFn: () => void) => void;
+  workspaceId?: string;
 }
 
 export function BoardViewRenderer({
@@ -46,8 +49,10 @@ export function BoardViewRenderer({
   onTaskClick,
   onAddTask,
   onToggleFilters,
+  workspaceId,
 }: BoardViewRendererProps): JSX.Element {
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   // Drag and drop functionality
   const {
@@ -188,6 +193,25 @@ export function BoardViewRenderer({
   const renderView = () => {
     switch (view) {
       case "by-status":
+        // Check if no statuses exist
+        if (!statuses || statuses.length === 0) {
+          return (
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="text-center max-w-md">
+                <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <Settings className="h-8 w-8 text-slate-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-800 mb-2">
+                  {t("boardView.noStatusesTitle")}
+                </h3>
+                <p className="text-slate-600 leading-relaxed">
+                  {t("boardView.noStatusesDescription")}
+                </p>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <>
             {statuses.map((status) => (

@@ -32,6 +32,10 @@
   "header": {
     "searchWorkspaces": "Search workspaces..."
   },
+  "boardView": {
+    "noStatusesTitle": "No Task Statuses Found",
+    "noStatusesDescription": "This board doesn't have any task statuses configured yet. You need to set up task statuses in the workspace settings before you can organize your tasks."
+  },
   "auth": {
     "login": "Login",
     "logout": "Logout",

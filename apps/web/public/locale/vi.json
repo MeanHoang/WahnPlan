@@ -32,6 +32,10 @@
   "header": {
     "searchWorkspaces": "Tìm kiếm workspace..."
   },
+  "boardView": {
+    "noStatusesTitle": "Chưa có trạng thái nhiệm vụ",
+    "noStatusesDescription": "Board này chưa được cấu hình trạng thái nhiệm vụ. Bạn cần thiết lập trạng thái nhiệm vụ trong cài đặt workspace trước khi có thể tổ chức các nhiệm vụ."
+  },
   "auth": {
     "login": "Đăng nhập",
     "logout": "Đăng xuất",
