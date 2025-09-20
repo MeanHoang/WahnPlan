@@ -8,6 +8,7 @@ import {
   Layout,
   Plus,
 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { Workspace } from "@/types/workspace-core";
 import { useTranslation } from "@/contexts/language-context";
 
@@ -28,6 +29,14 @@ export function WorkspaceItems({
 }: WorkspaceItemsProps): JSX.Element {
   const { t } = useTranslation();
 
+  // Get the icon component if workspace has an icon
+  const IconComponent =
+    workspace.icon &&
+    workspace.icon in LucideIcons &&
+    (LucideIcons[
+      workspace.icon as keyof typeof LucideIcons
+    ] as React.ComponentType<any>);
+
   return (
     <div className="group">
       {/* Workspace Header */}
@@ -37,11 +46,9 @@ export function WorkspaceItems({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            {workspace.icon ? (
+            {workspace.icon && IconComponent ? (
               <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow duration-200">
-                <span className="text-white text-sm font-bold">
-                  {workspace.icon}
-                </span>
+                <IconComponent className="h-5 w-5 text-white" />
               </div>
             ) : (
               <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow duration-200">

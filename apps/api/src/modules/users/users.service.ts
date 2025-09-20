@@ -174,6 +174,7 @@ export class UsersService {
             name: true,
             description: true,
             visibility: true,
+            icon: true,
             createdAt: true,
             _count: {
               select: {

@@ -24,6 +24,7 @@ import {
   TrendingUp,
   Activity,
 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 
 export default function DashboardPage(): JSX.Element {
   const { user, isLoading, logout } = useAuth();
@@ -222,13 +223,6 @@ export default function DashboardPage(): JSX.Element {
                     {dashboardStats?.recentActivities || 0}
                   </span>
                 </div>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => router.push("/notifications")}
-                >
-                  {t("dashboard.viewAllNotifications")}
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -255,39 +249,102 @@ export default function DashboardPage(): JSX.Element {
               </div>
             ) : recentActivities && recentActivities.length > 0 ? (
               <div className="space-y-4">
-                {recentActivities.slice(0, 5).map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50"
-                  >
+                {recentActivities.slice(0, 5).map((activity) => {
+                  // Handle notification click similar to NotificationDropdown
+                  const handleActivityClick = async (activity: any) => {
+                    console.log("Activity clicked:", activity);
+
+                    // Check if this is a task-related notification
+                    const taskRelatedTypes = [
+                      "task_created",
+                      "task_assigned",
+                      "task_updated",
+                      "task_completed",
+                      "task_status_changed",
+                      "task_priority_changed",
+                      "task_due_soon",
+                      "task_overdue",
+                      "comment_added",
+                      "mention",
+                    ];
+
+                    console.log("Activity type:", activity.type);
+                    console.log(
+                      "Is task related:",
+                      taskRelatedTypes.includes(activity.type)
+                    );
+                    console.log("Activity data:", activity.data);
+
+                    if (
+                      taskRelatedTypes.includes(activity.type) &&
+                      activity.data?.taskId
+                    ) {
+                      try {
+                        console.log(
+                          "Fetching task details for taskId:",
+                          activity.data.taskId
+                        );
+
+                        // Import apiRequest dynamically
+                        const { apiRequest } = await import(
+                          "@/lib/api-request"
+                        );
+                        const task = await apiRequest<any>(
+                          `/tasks/${activity.data.taskId}`
+                        );
+                        console.log("Task details:", task);
+
+                        const workspaceId = task?.board?.workspace?.id;
+
+                        if (workspaceId) {
+                          const url = `/workspace/${workspaceId}/task/${activity.data.taskId}`;
+                          console.log("Navigating to:", url);
+                          router.push(url);
+                          return;
+                        } else {
+                          console.log("WorkspaceId not found");
+                        }
+                      } catch (error) {
+                        console.error("Error fetching task details:", error);
+                      }
+                    }
+                  };
+
+                  return (
                     <div
-                      className={`p-2 rounded-full ${
-                        activity.isRead ? "bg-gray-100" : "bg-blue-100"
-                      }`}
+                      key={activity.id}
+                      className="flex items-start gap-3 p-3 rounded-lg transition-colors hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleActivityClick(activity)}
                     >
-                      <Bell
-                        className={`h-4 w-4 ${
-                          activity.isRead ? "text-gray-500" : "text-blue-600"
-                        }`}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={`text-sm font-medium ${
-                          activity.isRead ? "text-gray-700" : "text-gray-900"
+                      <div
+                        className={`p-2 rounded-full ${
+                          activity.isRead ? "bg-gray-100" : "bg-blue-100"
                         }`}
                       >
-                        {activity.title}
-                      </p>
-                      <p className="text-sm text-gray-500 truncate">
-                        {activity.message}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {new Date(activity.createdAt).toLocaleDateString()}
-                      </p>
+                        <Bell
+                          className={`h-4 w-4 ${
+                            activity.isRead ? "text-gray-500" : "text-blue-600"
+                          }`}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`text-sm font-medium ${
+                            activity.isRead ? "text-gray-700" : "text-gray-900"
+                          }`}
+                        >
+                          {activity.title}
+                        </p>
+                        <p className="text-sm text-gray-500 truncate">
+                          {activity.message}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(activity.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
@@ -319,37 +376,64 @@ export default function DashboardPage(): JSX.Element {
               </div>
             ) : workspaceSummary && workspaceSummary.length > 0 ? (
               <div className="space-y-4">
-                {workspaceSummary.map((workspace) => (
-                  <div
-                    key={workspace.id}
-                    className="p-4 border rounded-lg hover:bg-gray-50"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
-                          {workspace.name}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {workspace.description}
-                        </p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                          <span>{workspace._count.boards} boards</span>
-                          <span>{workspace._count.members} members</span>
-                          <span className="capitalize">{workspace.role}</span>
+                {workspaceSummary.map((workspace) => {
+                  const IconComponent =
+                    workspace.icon &&
+                    workspace.icon in LucideIcons &&
+                    (LucideIcons[
+                      workspace.icon as keyof typeof LucideIcons
+                    ] as React.ComponentType<any>);
+
+                  return (
+                    <div
+                      key={workspace.id}
+                      className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() =>
+                        router.push(`/workspace/${workspace.id}/boards`)
+                      }
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-start space-x-3">
+                          {workspace.icon && IconComponent ? (
+                            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                              <IconComponent className="h-5 w-5 text-white" />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                              <span className="text-white text-sm font-bold">
+                                {workspace.name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                          <div>
+                            <h3 className="font-semibold text-gray-900">
+                              {workspace.name}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              {workspace.description}
+                            </p>
+                            <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                              <span>{workspace._count.boards} boards</span>
+                              <span>{workspace._count.members} members</span>
+                              <span className="capitalize">
+                                {workspace.role}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-gray-600">
-                          {workspace.myTasks} {t("dashboard.tasks")}
-                        </div>
-                        <div className="text-sm text-green-600">
-                          {workspace.myCompletedTasks}{" "}
-                          {t("dashboard.completed")}
+                        <div className="text-right">
+                          <div className="text-sm text-gray-600">
+                            {workspace.myTasks} {t("dashboard.tasks")}
+                          </div>
+                          <div className="text-sm text-green-600">
+                            {workspace.myCompletedTasks}{" "}
+                            {t("dashboard.completed")}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">

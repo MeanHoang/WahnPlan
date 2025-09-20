@@ -41,6 +41,7 @@ import { useTranslation } from "@/contexts/language-context";
 import { Workspace } from "@/types/workspace-core";
 import { TransferOwnershipModal } from "./transfer-ownership-modal";
 import { DeleteWorkspaceDialog } from "./delete-workspace-dialog";
+import { IconPicker } from "@/components/ui/icon-picker";
 
 interface WorkspaceSettingsProps {
   workspaceId: string;
@@ -55,6 +56,7 @@ export function WorkspaceSettings({
     name: "",
     description: "",
     visibility: "private",
+    icon: "",
   });
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -108,6 +110,7 @@ export function WorkspaceSettings({
         name: workspace.name || "",
         description: workspace.description || "",
         visibility: workspace.visibility || "private",
+        icon: workspace.icon || "",
       });
     }
   }, [workspace]);
@@ -129,6 +132,7 @@ export function WorkspaceSettings({
         name: workspace.name || "",
         description: workspace.description || "",
         visibility: workspace.visibility || "private",
+        icon: workspace.icon || "",
       });
     }
     setIsEditing(false);
@@ -247,7 +251,17 @@ export function WorkspaceSettings({
                   }
                   disabled={!isEditing || !isOwner}
                   placeholder={t("workspaceSettings.describeWorkspace")}
-                  rows={3}
+                  rows={2}
+                />
+              </div>
+              <div>
+                <Label htmlFor="icon">Workspace Icon</Label>
+                <IconPicker
+                  selectedIcon={formData.icon}
+                  onIconSelect={(iconName) =>
+                    handleInputChange("icon", iconName)
+                  }
+                  disabled={!isEditing || !isOwner}
                 />
               </div>
             </CardContent>

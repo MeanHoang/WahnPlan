@@ -25,6 +25,7 @@ import { useTranslation } from "@/contexts/language-context";
 import { useCreateApi } from "@/hooks/use-create-api";
 import { CreateWorkspaceData } from "@/types/workspace-requests";
 import { Workspace } from "@/types/workspace-core";
+import { IconPicker } from "@/components/ui/icon-picker";
 
 interface CreateWorkspaceModalProps {
   onWorkspaceCreated?: () => void;
@@ -34,6 +35,7 @@ interface WorkspaceFormData {
   name: string;
   description: string;
   visibility: "public" | "private";
+  icon: string;
 }
 
 export function CreateWorkspaceModal({
@@ -44,6 +46,7 @@ export function CreateWorkspaceModal({
     name: "",
     description: "",
     visibility: "private",
+    icon: "",
   });
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -76,6 +79,7 @@ export function CreateWorkspaceModal({
         name: "",
         description: "",
         visibility: "private",
+        icon: "",
       });
 
       setOpen(false);
@@ -131,7 +135,15 @@ export function CreateWorkspaceModal({
               placeholder={t("modals.createWorkspace.describeWorkspace")}
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
-              rows={3}
+              rows={2}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="icon">Workspace Icon</Label>
+            <IconPicker
+              selectedIcon={formData.icon}
+              onIconSelect={(iconName) => handleInputChange("icon", iconName)}
             />
           </div>
 
