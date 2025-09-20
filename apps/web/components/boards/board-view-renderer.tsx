@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
 import { Settings } from "lucide-react";
 import { StatusColumn } from "@/components/boards/status-column";
@@ -18,6 +18,104 @@ interface DateRange {
 import { useFetchApi } from "@/hooks/use-fetch-api";
 import { useAuth } from "@/contexts/auth-context";
 import { useTaskDragDrop } from "@/hooks/use-task-drag-drop";
+
+// Wrapper component to handle column registration
+interface StatusColumnWrapperProps {
+  status: TaskStatus;
+  boardId: string;
+  onTaskClick: (task: Task) => void;
+  onAddTask: (id: string) => void;
+  selectedStatusIds: string[];
+  selectedPriorityIds: string[];
+  selectedInitiativeIds: string[];
+  selectedAssigneeIds: string[];
+  selectedReviewerIds: string[];
+  selectedBaIds: string[];
+  selectedMemberIds: string[];
+  selectedDueDateRange?: DateRange;
+  selectedCreatedAtRange?: DateRange;
+  refreshTrigger: number;
+  columnHandlers: React.MutableRefObject<
+    Map<
+      string,
+      {
+        onTaskMove: (
+          taskId: string,
+          newStatusId: string,
+          originalTask: Task
+        ) => void;
+        onTaskMoveError: (
+          taskId: string,
+          originalStatusId: string,
+          error: any
+        ) => void;
+      }
+    >
+  >;
+}
+
+function StatusColumnWrapper({
+  status,
+  boardId,
+  onTaskClick,
+  onAddTask,
+  selectedStatusIds,
+  selectedPriorityIds,
+  selectedInitiativeIds,
+  selectedAssigneeIds,
+  selectedReviewerIds,
+  selectedBaIds,
+  selectedMemberIds,
+  selectedDueDateRange,
+  selectedCreatedAtRange,
+  refreshTrigger,
+  columnHandlers,
+}: StatusColumnWrapperProps) {
+  const [handlers, setHandlers] = useState<{
+    onTaskMove: (
+      taskId: string,
+      newStatusId: string,
+      originalTask: Task
+    ) => void;
+    onTaskMoveError: (
+      taskId: string,
+      originalStatusId: string,
+      error: any
+    ) => void;
+  } | null>(null);
+
+  useEffect(() => {
+    if (handlers) {
+      columnHandlers.current.set(status.id, handlers);
+    }
+
+    return () => {
+      columnHandlers.current.delete(status.id);
+    };
+  }, [handlers, status.id, columnHandlers]);
+
+  return (
+    <StatusColumn
+      status={status}
+      boardId={boardId}
+      onTaskClick={onTaskClick}
+      onAddTask={onAddTask}
+      selectedStatusIds={selectedStatusIds}
+      selectedPriorityIds={selectedPriorityIds}
+      selectedInitiativeIds={selectedInitiativeIds}
+      selectedAssigneeIds={selectedAssigneeIds}
+      selectedReviewerIds={selectedReviewerIds}
+      selectedBaIds={selectedBaIds}
+      selectedMemberIds={selectedMemberIds}
+      selectedDueDateRange={selectedDueDateRange}
+      selectedCreatedAtRange={selectedCreatedAtRange}
+      refreshTrigger={refreshTrigger}
+      onTaskMove={handlers?.onTaskMove}
+      onTaskMoveError={handlers?.onTaskMoveError}
+      onRegisterHandlers={setHandlers}
+    />
+  );
+}
 
 interface BoardViewRendererProps {
   view: string;
@@ -54,6 +152,25 @@ export function BoardViewRenderer({
   const { user } = useAuth();
   const { t } = useTranslation();
 
+  // Store column handlers for optimistic updates
+  const columnHandlers = useRef<
+    Map<
+      string,
+      {
+        onTaskMove: (
+          taskId: string,
+          newStatusId: string,
+          originalTask: Task
+        ) => void;
+        onTaskMoveError: (
+          taskId: string,
+          originalStatusId: string,
+          error: any
+        ) => void;
+      }
+    >
+  >(new Map());
+
   // Drag and drop functionality
   const {
     activeTask,
@@ -62,13 +179,17 @@ export function BoardViewRenderer({
     handleDragOver,
     handleDragEnd,
   } = useTaskDragDrop({
-    onTaskMove: (taskId, newStatusId) => {
-      // This will be called for optimistic updates
-      console.log(`Task ${taskId} moved to status ${newStatusId}`);
+    onTaskMove: (taskId, newStatusId, originalTask) => {
+      // Call all column handlers for optimistic updates
+      columnHandlers.current.forEach((handler) => {
+        handler.onTaskMove(taskId, newStatusId, originalTask);
+      });
     },
-    onTaskMoveEnd: () => {
-      // Trigger refresh of all columns after task move
-      setRefreshTrigger((prev) => prev + 1);
+    onTaskMoveError: (taskId, originalStatusId, error) => {
+      // Call all column handlers for error rollback
+      columnHandlers.current.forEach((handler) => {
+        handler.onTaskMoveError(taskId, originalStatusId, error);
+      });
     },
   });
 
@@ -210,7 +331,7 @@ export function BoardViewRenderer({
         return (
           <>
             {statuses.map((status) => (
-              <StatusColumn
+              <StatusColumnWrapper
                 key={status.id}
                 status={status}
                 boardId={boardId}
@@ -226,6 +347,7 @@ export function BoardViewRenderer({
                 selectedDueDateRange={selectedDueDateRange}
                 selectedCreatedAtRange={selectedCreatedAtRange}
                 refreshTrigger={refreshTrigger}
+                columnHandlers={columnHandlers}
               />
             ))}
           </>

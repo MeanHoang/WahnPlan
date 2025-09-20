@@ -24,6 +24,7 @@ import {
   getStatusDotStyle,
   getTaskAttributeClasses,
   getStatusDotClasses,
+  getDueDateTableRowClasses,
 } from "@/lib/task-attribute-helpers";
 
 interface TaskTableViewProps {
@@ -340,7 +341,7 @@ export function TaskTableView({
           sortedTasks.map((task) => (
             <div
               key={task.id}
-              className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors w-full"
+              className={`flex items-center gap-4 px-6 py-4 cursor-pointer transition-colors w-full ${getDueDateTableRowClasses(task.dueDate)}`}
               onClick={() => onTaskClick(task)}
             >
               {/* Task Name */}

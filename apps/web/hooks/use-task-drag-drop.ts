@@ -5,15 +5,25 @@ import { useUpdateApi } from "./use-update-api";
 import { useToast } from "./use-toast";
 
 interface UseTaskDragDropProps {
-  onTaskMove?: (taskId: string, newStatusId: string) => void;
+  onTaskMove?: (
+    taskId: string,
+    newStatusId: string,
+    originalTask: Task
+  ) => void;
   onTaskMoveStart?: (task: Task) => void;
   onTaskMoveEnd?: () => void;
+  onTaskMoveError?: (
+    taskId: string,
+    originalStatusId: string,
+    error: any
+  ) => void;
 }
 
 export function useTaskDragDrop({
   onTaskMove,
   onTaskMoveStart,
   onTaskMoveEnd,
+  onTaskMoveError,
 }: UseTaskDragDropProps = {}) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const { toast } = useToast();
@@ -66,12 +76,15 @@ export function useTaskDragDrop({
         return; // No change needed
       }
 
-      try {
-        // Optimistic update - call callback immediately
-        onTaskMove?.(taskData.task.id, statusId);
+      const originalTask = { ...taskData.task };
+      const originalStatusId = originalTask.taskStatusId || "";
 
-        // Update task status via API
-        await updateTask(
+      try {
+        // Optimistic update - call callback immediately with original task for rollback
+        onTaskMove?.(taskData.task.id, statusId, originalTask);
+
+        // Update task status via API (fire and forget)
+        updateTask(
           { taskStatusId: statusId },
           {
             endpoint: `/tasks/${taskData.task.id}`,
@@ -79,27 +92,27 @@ export function useTaskDragDrop({
           }
         );
 
+        // Show success toast immediately for better UX
         toast({
           title: "Task moved successfully",
           description: `Task moved to new status`,
         });
 
-        // Call onTaskMoveEnd after successful API call
-        onTaskMoveEnd?.();
+        // Don't call onTaskMoveEnd to avoid refresh - let optimistic update handle it
       } catch (error) {
         console.error("Failed to move task:", error);
+
+        // Rollback optimistic update
+        onTaskMoveError?.(taskData.task.id, originalStatusId, error);
+
         toast({
           title: "Failed to move task",
-          description: "Please try again",
+          description: "Task moved back to original position",
           variant: "destructive",
         });
-
-        // Still call onTaskMoveEnd to trigger refresh even on error
-        // This ensures UI stays in sync with server state
-        onTaskMoveEnd?.();
       }
     },
-    [onTaskMove, onTaskMoveEnd, updateTask, toast]
+    [onTaskMove, onTaskMoveError, updateTask, toast]
   );
 
   return {

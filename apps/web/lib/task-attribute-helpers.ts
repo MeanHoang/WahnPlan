@@ -99,3 +99,63 @@ export const getTaskAttributeClasses = () => {
 export const getStatusDotClasses = () => {
   return "w-2 h-2 rounded-full mr-2";
 };
+
+/**
+ * Determine the due date status of a task
+ */
+export const getDueDateStatus = (dueDate?: Date | string) => {
+  if (!dueDate) return "normal";
+
+  const due = new Date(dueDate);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dueDateOnly = new Date(
+    due.getFullYear(),
+    due.getMonth(),
+    due.getDate()
+  );
+
+  // Calculate difference in days
+  const diffTime = dueDateOnly.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return "overdue";
+  } else if (diffDays <= 3) {
+    return "due-soon";
+  } else {
+    return "normal";
+  }
+};
+
+/**
+ * Get background color classes for task based on due date status
+ */
+export const getDueDateBackgroundClasses = (dueDate?: Date | string) => {
+  const status = getDueDateStatus(dueDate);
+
+  switch (status) {
+    case "overdue":
+      return "bg-red-50 border-red-200 hover:bg-red-100";
+    case "due-soon":
+      return "bg-yellow-50 border-yellow-200 hover:bg-yellow-100";
+    default:
+      return "bg-white border-gray-200 hover:bg-gray-50";
+  }
+};
+
+/**
+ * Get background color classes for table row based on due date status
+ */
+export const getDueDateTableRowClasses = (dueDate?: Date | string) => {
+  const status = getDueDateStatus(dueDate);
+
+  switch (status) {
+    case "overdue":
+      return "bg-red-50 hover:bg-red-100";
+    case "due-soon":
+      return "bg-yellow-50 hover:bg-yellow-100";
+    default:
+      return "hover:bg-gray-50";
+  }
+};

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, ChevronDown } from "lucide-react";
 import { useDroppable } from "@dnd-kit/core";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,28 @@ interface StatusColumnProps {
   selectedDueDateRange?: DateRange;
   selectedCreatedAtRange?: DateRange;
   refreshTrigger?: number; // Add refresh trigger prop
+  onTaskMove?: (
+    taskId: string,
+    newStatusId: string,
+    originalTask: Task
+  ) => void;
+  onTaskMoveError?: (
+    taskId: string,
+    originalStatusId: string,
+    error: any
+  ) => void;
+  onRegisterHandlers?: (handlers: {
+    onTaskMove: (
+      taskId: string,
+      newStatusId: string,
+      originalTask: Task
+    ) => void;
+    onTaskMoveError: (
+      taskId: string,
+      originalStatusId: string,
+      error: any
+    ) => void;
+  }) => void;
 }
 
 export function StatusColumn({
@@ -46,6 +68,9 @@ export function StatusColumn({
   selectedDueDateRange,
   selectedCreatedAtRange,
   refreshTrigger,
+  onTaskMove,
+  onTaskMoveError,
+  onRegisterHandlers,
 }: StatusColumnProps): JSX.Element {
   const { t } = useTranslation();
   const [allTasks, setAllTasks] = useState<Task[]>([]);
@@ -158,6 +183,65 @@ export function StatusColumn({
       setPagination(tasksResponse.pagination);
     }
   }, [tasksResponse, currentPage]);
+
+  // Handle optimistic task moves - this will be called by parent component
+  const handleOptimisticMove = useCallback(
+    (taskId: string, newStatusId: string, originalTask: Task) => {
+      // If task is moving TO this column
+      if (newStatusId === status.id) {
+        setAllTasks((prev) => {
+          // Check if task already exists in this column (shouldn't happen)
+          const existingIndex = prev.findIndex((task) => task.id === taskId);
+          if (existingIndex !== -1) {
+            return prev; // Already exists, don't add
+          }
+
+          // Add the task with updated status
+          const updatedTask = { ...originalTask, taskStatusId: newStatusId };
+          return [updatedTask, ...prev];
+        });
+      }
+      // If task is moving FROM this column
+      else if (originalTask.taskStatusId === status.id) {
+        setAllTasks((prev) => prev.filter((task) => task.id !== taskId));
+      }
+    },
+    [status.id]
+  );
+
+  const handleMoveError = useCallback(
+    (taskId: string, originalStatusId: string, error: any) => {
+      // If task should rollback TO this column
+      if (originalStatusId === status.id) {
+        setAllTasks((prev) => {
+          // Check if task already exists (shouldn't happen after error)
+          const existingIndex = prev.findIndex((task) => task.id === taskId);
+          if (existingIndex !== -1) {
+            return prev; // Already exists
+          }
+
+          // For rollback, we'll trigger a refetch to ensure consistency
+          refetch();
+          return prev;
+        });
+      }
+      // If task should be removed from this column (rollback from here)
+      else if (status.id !== originalStatusId) {
+        setAllTasks((prev) => prev.filter((task) => task.id !== taskId));
+      }
+    },
+    [status.id, refetch]
+  );
+
+  // Register handlers with parent component
+  useEffect(() => {
+    if (onRegisterHandlers) {
+      onRegisterHandlers({
+        onTaskMove: handleOptimisticMove,
+        onTaskMoveError: handleMoveError,
+      });
+    }
+  }, [handleOptimisticMove, handleMoveError, onRegisterHandlers]);
 
   const hasMoreTasks = pagination?.hasNext || false;
   const remainingTasks = pagination ? pagination.total - allTasks.length : 0;

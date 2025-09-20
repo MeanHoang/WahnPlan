@@ -8,6 +8,7 @@ import {
   getPriorityStyle,
   getInitiativeStyle,
   getTaskAttributeClasses,
+  getDueDateBackgroundClasses,
 } from "@/lib/task-attribute-helpers";
 
 interface TaskCardProps {
@@ -42,10 +43,10 @@ export function TaskCard({ task, onClick }: TaskCardProps): JSX.Element {
     <div
       ref={setNodeRef}
       style={style}
-      className={`group bg-white rounded-2xl border-2 p-5 shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 ${
+      className={`group rounded-2xl border-2 p-5 shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 ${
         isDragging
-          ? "border-blue-400 shadow-xl opacity-50"
-          : "border-gray-200 hover:shadow-lg hover:border-gray-300"
+          ? "border-blue-400 shadow-xl opacity-50 bg-white"
+          : getDueDateBackgroundClasses(task.dueDate) + " hover:shadow-lg"
       }`}
       onClick={() => onClick?.(task)}
     >
