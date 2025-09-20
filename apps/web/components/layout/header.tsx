@@ -120,7 +120,10 @@ export function Header({
             <Menu className="h-5 w-5 text-slate-700" />
           </Button>
 
-          <div className="flex items-center space-x-3">
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="flex items-center space-x-3 hover:opacity-80 transition-opacity duration-200"
+          >
             {/* Logo */}
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
               <span className="text-white text-lg font-bold">W</span>
@@ -128,7 +131,7 @@ export function Header({
             <span className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
               WahnPlan
             </span>
-          </div>
+          </button>
         </div>
 
         {/* Search Bar */}

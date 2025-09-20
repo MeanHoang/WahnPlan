@@ -16,4 +16,19 @@ export class UsersController {
   async updateProfile(@Req() req: any, @Body() updateData: any) {
     return this.usersService.updateProfile(req.user.id, updateData);
   }
+
+  @Get('stats')
+  async getStats(@Req() req: any) {
+    return this.usersService.getStats(req.user.id);
+  }
+
+  @Get('recent-activities')
+  async getRecentActivities(@Req() req: any) {
+    return this.usersService.getRecentActivities(req.user.id);
+  }
+
+  @Get('workspace-summary')
+  async getWorkspaceSummary(@Req() req: any) {
+    return this.usersService.getWorkspaceSummary(req.user.id);
+  }
 }

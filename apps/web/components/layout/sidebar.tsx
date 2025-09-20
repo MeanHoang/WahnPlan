@@ -8,6 +8,8 @@ import {
   ChevronLeft,
   ChevronRight as ChevronRightIcon,
   Layout,
+  Home,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFetchApi } from "@/hooks/use-fetch-api";
@@ -83,6 +85,12 @@ export function Sidebar({
     setExpandedWorkspaces(newExpanded);
   };
 
+  const handleDashboardClick = () => {
+    // Close sidebar on mobile after navigation
+    onClose();
+    router.push("/dashboard");
+  };
+
   const handleWorkspaceItemClick = (workspaceId: string, item: string) => {
     // Close sidebar on mobile after navigation
     onClose();
@@ -122,44 +130,68 @@ export function Sidebar({
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="p-6 border-b-2 border-slate-200 bg-slate-50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <h2 className="text-xl font-bold text-slate-800">
-                  {t("sidebar.workspaces")}
-                </h2>
+            {/* Navigation Items */}
+            <div className="space-y-3">
+              {/* Dashboard Button */}
+              <div className="flex items-center justify-between p-3 hover:bg-blue-100 hover:text-blue-900 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200 hover:shadow-md group">
+                <div
+                  className="flex items-center space-x-3 cursor-pointer flex-1"
+                  onClick={handleDashboardClick}
+                >
+                  <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-sm group-hover:shadow-md transition-shadow duration-200">
+                    <Home className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="font-semibold text-slate-800 group-hover:text-blue-900">
+                    {t("sidebar.dashboard")}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onClose}
+                    className="p-2 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors duration-200 lg:hidden"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onToggle}
+                    className="p-2 hover:bg-slate-200 rounded-lg transition-colors duration-200 hidden lg:flex"
+                  >
+                    {isOpen ? (
+                      <ChevronLeft className="h-4 w-4 text-slate-700" />
+                    ) : (
+                      <ChevronRightIcon className="h-4 w-4 text-slate-700" />
+                    )}
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center space-x-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    refetch();
-                    onRefresh?.();
-                  }}
-                  className="p-2 hover:bg-blue-100 rounded-lg transition-colors duration-200"
-                >
-                  <RefreshCw className="h-4 w-4 text-slate-700" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onClose}
-                  className="p-2 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors duration-200 lg:hidden"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onToggle}
-                  className="p-2 hover:bg-slate-200 rounded-lg transition-colors duration-200 hidden lg:flex"
-                >
-                  {isOpen ? (
-                    <ChevronLeft className="h-4 w-4 text-slate-700" />
-                  ) : (
-                    <ChevronRightIcon className="h-4 w-4 text-slate-700" />
-                  )}
-                </Button>
+
+              {/* Workspaces Section */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-100/50 border border-slate-200">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-sm">
+                    <Building2 className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="font-semibold text-slate-800">
+                    {t("sidebar.workspaces")}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      refetch();
+                      onRefresh?.();
+                    }}
+                    className="p-2 hover:bg-slate-200 rounded-lg transition-colors duration-200"
+                  >
+                    <RefreshCw className="h-4 w-4 text-slate-600" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
