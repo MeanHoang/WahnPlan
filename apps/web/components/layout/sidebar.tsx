@@ -115,7 +115,7 @@ export function Sidebar({
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white border-r-2 border-slate-300 z-40 transform transition-all duration-300 ease-in-out shadow-2xl ${
+        className={`fixed left-0 top-20 h-[calc(100vh-5rem)] bg-white border-r-2 border-slate-300 z-40 transform transition-all duration-300 ease-in-out shadow-2xl ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } lg:${isOpen ? "translate-x-0" : "-translate-x-full"} w-80 sm:w-72 lg:w-80`}
       >

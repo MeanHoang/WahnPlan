@@ -29,6 +29,9 @@
     "loadMore": "Load More",
     "new": "New"
   },
+  "header": {
+    "searchWorkspaces": "Search workspaces..."
+  },
   "auth": {
     "login": "Login",
     "logout": "Logout",

@@ -29,6 +29,9 @@
     "loadMore": "Tải thêm",
     "new": "Mới"
   },
+  "header": {
+    "searchWorkspaces": "Tìm kiếm workspace..."
+  },
   "auth": {
     "login": "Đăng nhập",
     "logout": "Đăng xuất",

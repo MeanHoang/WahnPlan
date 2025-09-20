@@ -55,14 +55,14 @@ export function DashboardLayout({
         >
           {/* Sidebar Toggle Button when closed */}
           {!isSidebarOpen && (
-            <div className="fixed left-4 top-20 z-40 hidden lg:block">
+            <div className="fixed left-4 top-24 z-40 hidden lg:block">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleSidebar}
-                className="p-2 bg-white shadow-md border border-gray-200"
+                className="p-2 bg-white shadow-lg border-2 border-slate-300 hover:bg-slate-50 rounded-lg transition-colors duration-200"
               >
-                <ChevronRightIcon className="h-4 w-4 text-gray-600" />
+                <ChevronRightIcon className="h-4 w-4 text-slate-700" />
               </Button>
             </div>
           )}
