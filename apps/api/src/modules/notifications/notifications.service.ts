@@ -65,7 +65,7 @@ export class NotificationsService {
       const userName =
         notification.user.publicName || notification.user.fullname || 'User';
       const emailSubject = `WahnPlan Notification: ${notification.title}`;
-      const emailHtml = this.generateEmailTemplate(
+      const emailHtml = await this.generateEmailTemplate(
         userName,
         notification.title,
         notification.message,
@@ -86,16 +86,32 @@ export class NotificationsService {
   /**
    * Generate HTML email template for notifications
    */
-  private generateEmailTemplate(
+  private async generateEmailTemplate(
     userName: string,
     title: string,
     message: string,
     type: string,
     data?: any,
-  ): string {
-    const taskUrl = data?.taskId
-      ? `${process.env.FRONTEND_URL}/task/${data.taskId}`
-      : '';
+  ): Promise<string> {
+    let taskUrl = '';
+    if (data?.taskId) {
+      // Get workspace ID from task through board relationship
+      const task = await this.prisma.task.findUnique({
+        where: { id: data.taskId },
+        include: {
+          board: {
+            include: {
+              workspace: true,
+            },
+          },
+        },
+      });
+
+      if (task?.board?.workspace) {
+        taskUrl = `${process.env.FRONTEND_URL}/workspace/${task.board.workspace.id}/task/${data.taskId}`;
+      }
+    }
+
     const actionButton = taskUrl
       ? `
       <div style="text-align: center; margin: 30px 0;">
@@ -449,7 +465,7 @@ export class NotificationsService {
         try {
           const userName = user.publicName || user.fullname || 'User';
           const emailSubject = `WahnPlan Notification: ${notification.title}`;
-          const emailHtml = this.generateEmailTemplate(
+          const emailHtml = await this.generateEmailTemplate(
             userName,
             notification.title,
             notification.message,

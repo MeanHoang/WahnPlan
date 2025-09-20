@@ -70,7 +70,7 @@ export class NotificationHelperService {
 
       // Create email content based on notification type
       const emailSubject = `WahnPlan Notification: ${title}`;
-      const emailHtml = this.generateEmailTemplate(
+      const emailHtml = await this.generateEmailTemplate(
         userName,
         title,
         message,
@@ -91,16 +91,32 @@ export class NotificationHelperService {
   /**
    * Generate HTML email template for notifications
    */
-  private generateEmailTemplate(
+  private async generateEmailTemplate(
     userName: string,
     title: string,
     message: string,
     type: NotificationType,
     data?: any,
-  ): string {
-    const taskUrl = data?.taskId
-      ? `${process.env.FRONTEND_URL}/task/${data.taskId}`
-      : '';
+  ): Promise<string> {
+    let taskUrl = '';
+    if (data?.taskId) {
+      // Get workspace ID from task through board relationship
+      const task = await this.prisma.task.findUnique({
+        where: { id: data.taskId },
+        include: {
+          board: {
+            include: {
+              workspace: true,
+            },
+          },
+        },
+      });
+
+      if (task?.board?.workspace) {
+        taskUrl = `${process.env.FRONTEND_URL}/workspace/${task.board.workspace.id}/task/${data.taskId}`;
+      }
+    }
+
     const actionButton = taskUrl
       ? `
       <div style="text-align: center; margin: 30px 0;">
