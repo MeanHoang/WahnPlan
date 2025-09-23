@@ -53,12 +53,6 @@ export default function DevZonePage(): JSX.Element {
     }
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setPassword("");
-    setError("");
-  };
-
   // Show loading while checking authentication
   if (isLoading) {
     return (
@@ -126,11 +120,7 @@ export default function DevZonePage(): JSX.Element {
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <Button onClick={handleLogout} variant="outline" size="sm">
-              Logout
-            </Button>
-          </div>
+          <div className="flex items-center space-x-2"></div>
         </div>
       </div>
 

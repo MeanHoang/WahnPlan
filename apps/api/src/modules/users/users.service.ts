@@ -1,5 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import csv from 'csv-parser';
+import * as fs from 'fs';
+import { promisify } from 'util';
+import { createReadStream } from 'fs';
 
 @Injectable()
 export class UsersService {
@@ -220,5 +228,292 @@ export class UsersService {
     );
 
     return workspaceStats;
+  }
+
+  async getAllUsers(page: number = 1, limit: number = 5, search: string = '') {
+    const skip = (page - 1) * limit;
+
+    // Build where clause for search
+    const where = search
+      ? {
+          OR: [
+            { email: { contains: search, mode: 'insensitive' as const } },
+            { fullname: { contains: search, mode: 'insensitive' as const } },
+            { publicName: { contains: search, mode: 'insensitive' as const } },
+            {
+              organization: { contains: search, mode: 'insensitive' as const },
+            },
+          ],
+        }
+      : {};
+
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          email: true,
+          fullname: true,
+          publicName: true,
+          jobTitle: true,
+          organization: true,
+          location: true,
+          avatarUrl: true,
+          emailVerify: true,
+          enable: true,
+          language: true,
+          timezone: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+
+    return {
+      users,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page < Math.ceil(total / limit),
+        hasPrev: page > 1,
+      },
+    };
+  }
+
+  async updateUser(id: string, updateData: any) {
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        fullname: true,
+        publicName: true,
+        jobTitle: true,
+        organization: true,
+        location: true,
+        avatarUrl: true,
+        emailVerify: true,
+        enable: true,
+        language: true,
+        timezone: true,
+        updatedAt: true,
+      },
+    });
+
+    return user;
+  }
+
+  async deleteUser(id: string) {
+    const user = await this.prisma.user.delete({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        fullname: true,
+      },
+    });
+
+    return { message: 'User deleted successfully', user };
+  }
+
+  async exportUsers(): Promise<string> {
+    const users = await this.prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        fullname: true,
+        publicName: true,
+        jobTitle: true,
+        organization: true,
+        location: true,
+        avatarUrl: true,
+        emailVerify: true,
+        enable: true,
+        language: true,
+        timezone: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Create CSV headers
+    const headers = [
+      'ID',
+      'Email',
+      'Full Name',
+      'Public Name',
+      'Job Title',
+      'Organization',
+      'Location',
+      'Avatar URL',
+      'Email Verified',
+      'Enabled',
+      'Language',
+      'Timezone',
+      'Created At',
+      'Updated At',
+    ];
+
+    // Create CSV rows
+    const rows = users.map((user) => [
+      user.id,
+      user.email,
+      user.fullname || '',
+      user.publicName || '',
+      user.jobTitle || '',
+      user.organization || '',
+      user.location || '',
+      user.avatarUrl || '',
+      user.emailVerify ? 'true' : 'false',
+      user.enable ? 'true' : 'false',
+      user.language || '',
+      user.timezone || '',
+      user.createdAt.toISOString(),
+      user.updatedAt.toISOString(),
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((field) => `"${field}"`).join(','))
+      .join('\n');
+
+    return csvContent;
+  }
+
+  async importUsers(file: Express.Multer.File): Promise<any> {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    if (!file.originalname.endsWith('.csv')) {
+      throw new BadRequestException('Only CSV files are supported');
+    }
+
+    if (!file.path) {
+      throw new BadRequestException('File path is missing');
+    }
+
+    const results = {
+      successful: 0,
+      failed: 0,
+      skipped: 0,
+      total: 0,
+      errors: [] as any[],
+    };
+
+    try {
+      const users: any[] = [];
+
+      // Parse CSV file (only editable fields)
+      await new Promise((resolve, reject) => {
+        createReadStream(file.path)
+          .pipe(
+            csv({
+              headers: [
+                'email',
+                'fullname',
+                'publicName',
+                'jobTitle',
+                'organization',
+                'location',
+                'emailVerify',
+                'enable',
+                'language',
+                'timezone',
+              ],
+            }),
+          )
+          .on('data', (data: any) => users.push(data))
+          .on('end', resolve)
+          .on('error', reject);
+      });
+
+      results.total = users.length;
+
+      // Process each user
+      for (let i = 0; i < users.length; i++) {
+        const userData = users[i];
+        const rowNumber = i + 2; // +2 because CSV is 1-indexed and we have headers
+
+        try {
+          // Validate required fields
+          if (!userData.email) {
+            throw new Error('Email is required');
+          }
+
+          // Check if user already exists
+          const existingUser = await this.prisma.user.findUnique({
+            where: { email: userData.email },
+          });
+
+          if (existingUser) {
+            results.skipped++;
+            results.errors.push({
+              row: rowNumber,
+              message: `User with email ${userData.email} already exists`,
+            });
+            continue;
+          }
+
+          // Prepare user data (excluding non-editable fields)
+          const newUserData = {
+            email: userData.email,
+            fullname: userData.fullname || null,
+            publicName: userData.publicName || null,
+            jobTitle: userData.jobTitle || null,
+            organization: userData.organization || null,
+            location: userData.location || null,
+            // avatarUrl: NOT IMPORTED - will be set to null by default
+            emailVerify:
+              userData.emailVerify === 'true' || userData.emailVerify === true,
+            enable: userData.enable === 'true' || userData.enable === true,
+            language: userData.language || 'en',
+            timezone: userData.timezone || 'UTC',
+            // Note: We don't import passwordHash, avatarUrl, createdAt, updatedAt for security/consistency reasons
+            passwordHash: 'imported-user-needs-password-reset', // Placeholder
+          };
+
+          // Create user
+          await this.prisma.user.create({
+            data: newUserData,
+          });
+
+          results.successful++;
+        } catch (error) {
+          results.failed++;
+          results.errors.push({
+            row: rowNumber,
+            message: error.message || 'Unknown error occurred',
+          });
+        }
+      }
+
+      // Clean up uploaded file
+      if (fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+
+      return results;
+    } catch (error) {
+      // Clean up uploaded file in case of error
+      if (file && file.path && fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+      throw new BadRequestException(
+        `Failed to process CSV file: ${error.message}`,
+      );
+    }
   }
 }

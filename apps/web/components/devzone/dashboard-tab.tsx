@@ -163,18 +163,6 @@ export function DashboardTab(): JSX.Element {
 
   return (
     <div className="space-y-6">
-      {/* Data Source Indicator */}
-      <Card className="bg-green-50 border-green-200">
-        <CardContent className="pt-4">
-          <div className="flex items-center space-x-2 text-green-700">
-            <Shield className="h-4 w-4" />
-            <span className="text-sm font-medium">
-              Live Data - Authenticated as {user?.email}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Overview Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
