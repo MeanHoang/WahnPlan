@@ -47,39 +47,95 @@ export class WorkspacesService {
     });
   }
 
-  async findAll(userId: string) {
-    return this.prisma.workspace.findMany({
-      where: {
-        members: {
-          some: {
-            userId,
+  async findAll(
+    userId: string,
+    page: number = 1,
+    limit: number = 5,
+    search: string = '',
+  ) {
+    console.log(
+      'Finding workspaces for user:',
+      userId,
+      'page:',
+      page,
+      'limit:',
+      limit,
+      'search:',
+      search,
+    );
+    const skip = (page - 1) * limit;
+
+    // Build search conditions
+    const searchConditions = search
+      ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' as const } },
+            { description: { contains: search, mode: 'insensitive' as const } },
+          ],
+        }
+      : {};
+
+    const [workspaces, total] = await Promise.all([
+      this.prisma.workspace.findMany({
+        where: {
+          members: {
+            some: {
+              userId,
+            },
           },
+          ...searchConditions,
         },
-      },
-      include: {
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
-                fullname: true,
-                publicName: true,
-                avatarUrl: true,
+        include: {
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  fullname: true,
+                  publicName: true,
+                  avatarUrl: true,
+                },
               },
             },
           },
-        },
-        _count: {
-          select: {
-            boards: true,
+          _count: {
+            select: {
+              boards: true,
+            },
           },
         },
+        orderBy: {
+          updatedAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.workspace.count({
+        where: {
+          members: {
+            some: {
+              userId,
+            },
+          },
+          ...searchConditions,
+        },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      workspaces,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
       },
-      orderBy: {
-        updatedAt: 'desc',
-      },
-    });
+    };
   }
 
   async findOne(id: string, userId: string) {
@@ -204,6 +260,56 @@ export class WorkspacesService {
     });
 
     return { message: 'Workspace deleted successfully' };
+  }
+
+  async getAllWorkspaceStats(userId: string) {
+    console.log('Getting workspace stats for user:', userId);
+    const [totalWorkspaces, totalMembers, totalBoards, totalTasks] =
+      await Promise.all([
+        this.prisma.workspace.count({
+          where: {
+            members: {
+              some: { userId },
+            },
+          },
+        }),
+        this.prisma.workspaceMember.count({
+          where: {
+            workspace: {
+              members: {
+                some: { userId },
+              },
+            },
+          },
+        }),
+        this.prisma.board.count({
+          where: {
+            workspace: {
+              members: {
+                some: { userId },
+              },
+            },
+          },
+        }),
+        this.prisma.task.count({
+          where: {
+            board: {
+              workspace: {
+                members: {
+                  some: { userId },
+                },
+              },
+            },
+          },
+        }),
+      ]);
+
+    return {
+      totalWorkspaces,
+      totalMembers,
+      totalBoards,
+      totalTasks,
+    };
   }
 
   async getWorkspaceStats(workspaceId: string, userId: string) {

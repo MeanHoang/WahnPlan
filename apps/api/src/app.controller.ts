@@ -9,4 +9,16 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  @Get('test-workspaces')
+  testWorkspaces() {
+    return {
+      message: 'API is working!',
+      timestamp: new Date().toISOString(),
+      endpoints: {
+        workspaces: '/api/workspaces',
+        workspaceStats: '/api/workspaces/stats',
+      },
+    };
+  }
 }

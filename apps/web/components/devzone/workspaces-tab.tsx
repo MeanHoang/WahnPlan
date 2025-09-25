@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,7 +10,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { useFetchApi } from "@/hooks";
+import { apiRequest } from "@/lib/api-request";
 import { useAuth } from "@/contexts/auth-context";
 import {
   Plus,
@@ -20,22 +30,208 @@ import {
   Users,
   Activity,
   Settings,
+  Trash2,
+  Edit,
+  ChevronLeft,
+  ChevronRight,
+  Lock,
 } from "lucide-react";
 
 export function WorkspacesTab(): JSX.Element {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const { user } = useAuth();
 
-  // Try to get real workspace data if authenticated
+  // Debounce search term to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm]);
+
+  // Try to get real workspace stats if authenticated
+  const {
+    data: workspaceStats,
+    loading: statsLoading,
+    error: statsError,
+  } = useFetchApi("/workspaces/stats", {}, { enabled: !!user }) as {
+    data: {
+      totalWorkspaces: number;
+      totalMembers: number;
+      totalBoards: number;
+      totalTasks: number;
+    } | null;
+    loading: boolean;
+    error: any;
+  };
+
+  // Fetch all workspaces for the table with pagination
   const {
     data: workspacesData,
     loading: workspaceLoading,
     error: workspaceError,
-  } = useFetchApi("/workspaces", {}, { enabled: !!user });
+    refetch: refetchWorkspaces,
+  } = useFetchApi(
+    `/workspaces?page=${currentPage}&limit=${pageSize}&search=${encodeURIComponent(debouncedSearchTerm)}`,
+    {},
+    { enabled: !!user }
+  );
+
+  // Fetch all workspaces for statistics (no pagination)
+  const {
+    data: allWorkspacesData,
+    loading: allWorkspacesLoading,
+    error: allWorkspacesError,
+    refetch: refetchAllWorkspaces,
+  } = useFetchApi(
+    `/workspaces?page=1&limit=1000&search=`, // Get all workspaces for stats
+    {},
+    { enabled: !!user }
+  );
 
   // Only show loading if user is authenticated and data is actually loading
-  const loading = user && workspaceLoading;
-  const error = workspaceError;
+  const loading = user && (workspaceLoading || statsLoading);
+  const error = workspaceError || statsError;
+
+  // Mock workspace data for demonstration (replace with real data from API)
+  const mockWorkspaces = [
+    {
+      id: "1",
+      name: "Development Team",
+      description: "Main development workspace",
+      visibility: "private",
+      members: [{ user: { fullname: "John Doe" } }],
+      _count: { boards: 5 },
+      createdAt: "2024-01-15T10:30:00Z",
+      updatedAt: "2024-01-20T14:45:00Z",
+    },
+    {
+      id: "2",
+      name: "Marketing Campaign",
+      description: "Marketing and campaign management",
+      visibility: "public",
+      members: [{ user: { fullname: "Jane Smith" } }],
+      _count: { boards: 3 },
+      createdAt: "2024-01-10T09:15:00Z",
+      updatedAt: "2024-01-18T16:20:00Z",
+    },
+  ];
+
+  // Use real data if available, otherwise use mock data
+  const apiResponse = workspacesData as any;
+  const workspaces = apiResponse?.workspaces || mockWorkspaces;
+  const pagination = apiResponse?.pagination || {
+    page: 1,
+    limit: 10,
+    total: mockWorkspaces.length,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false,
+  };
+
+  // Get all workspaces for statistics
+  const allWorkspacesApiResponse = allWorkspacesData as any;
+  const allWorkspaces = allWorkspacesApiResponse?.workspaces || mockWorkspaces;
+
+  // For mock data, filter based on search term
+  const filteredWorkspaces = apiResponse?.workspaces
+    ? workspaces // API already handles search
+    : workspaces.filter(
+        (workspace: any) =>
+          workspace.name
+            .toLowerCase()
+            .includes(debouncedSearchTerm.toLowerCase()) ||
+          workspace.description
+            ?.toLowerCase()
+            .includes(debouncedSearchTerm.toLowerCase())
+      );
+
+  const handleDeleteWorkspace = async (workspaceId: string) => {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this workspace? This action cannot be undone."
+      )
+    ) {
+      try {
+        await apiRequest(`/workspaces/${workspaceId}`, {
+          method: "DELETE",
+        });
+        // Refresh the data after deletion
+        refetchWorkspaces();
+        refetchAllWorkspaces();
+      } catch (error) {
+        console.error("Error deleting workspace:", error);
+      }
+    }
+  };
+
+  const handleSearch = useCallback((value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page when searching
+  }, []);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading workspaces...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-red-600">
+              Error loading workspace data: {error.message}
+            </div>
+            <div className="mt-4 text-center text-sm text-gray-600">
+              <p>This usually means the API server is not running.</p>
+              <p className="mt-2">
+                <strong>To fix this:</strong>
+              </p>
+              <p className="mt-1">
+                1. Start the API server:{" "}
+                <code className="bg-gray-100 px-2 py-1 rounded">
+                  cd apps/api && pnpm run start:dev
+                </code>
+              </p>
+              <p className="mt-1">
+                2. Make sure the API is running on port 3002
+              </p>
+              <p className="mt-2 text-blue-600">
+                Using mock data for demonstration below.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -43,45 +239,22 @@ export function WorkspacesTab(): JSX.Element {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex items-center space-x-2">
           <h2 className="text-2xl font-bold">Workspace Management</h2>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Workspace
-          </Button>
-          <Button variant="outline">
-            <Settings className="h-4 w-4 mr-2" />
-            Bulk Operations
-          </Button>
+          <Badge variant="secondary">{pagination.total} workspaces</Badge>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Search & Filter</CardTitle>
-          <CardDescription>Find and manage workspaces</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search workspaces by name..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Search */}
+      <div className="flex-1">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Search workspaces by name or description..."
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
 
       {/* Workspace Statistics */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -94,23 +267,10 @@ export function WorkspacesTab(): JSX.Element {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {Array.isArray(workspacesData) ? workspacesData.length : 89}
+              {workspaceStats?.totalWorkspaces || allWorkspaces.length}
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-600">+5</span> this month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Today</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">67</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-blue-600">75%</span> activity rate
             </p>
           </CardContent>
         </Card>
@@ -121,180 +281,200 @@ export function WorkspacesTab(): JSX.Element {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">374</div>
+            <div className="text-2xl font-bold">
+              {workspaceStats?.totalMembers ||
+                allWorkspaces.reduce(
+                  (acc: number, ws: any) => acc + ws.members?.length || 0,
+                  0
+                )}
+            </div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">4.2</span> avg per workspace
+              <span className="text-green-600">
+                {allWorkspaces.length > 0
+                  ? (workspaceStats?.totalMembers ||
+                      allWorkspaces.reduce(
+                        (acc: number, ws: any) => acc + ws.members?.length || 0,
+                        0
+                      )) / allWorkspaces.length
+                  : 0}
+              </span>{" "}
+              avg per workspace
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Storage Used</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Boards</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {workspaceStats?.totalBoards ||
+                allWorkspaces.reduce(
+                  (acc: number, ws: any) => acc + (ws._count?.boards || 0),
+                  0
+                )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              <span className="text-blue-600">Active</span> workspaces
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
             <Building className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2.3 TB</div>
+            <div className="text-2xl font-bold">
+              {workspaceStats?.totalTasks || 0}
+            </div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-yellow-600">78%</span> of capacity
+              <span className="text-yellow-600">Across all</span> workspaces
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Workspace List */}
+      {/* Workspace Management Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Workspace Overview</CardTitle>
+          <CardTitle>Workspace Management</CardTitle>
           <CardDescription>
-            Recent workspace activities and statistics
+            Manage all workspace accounts and their information
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {loading ? (
-              <div className="space-y-3">
-                {[...Array(3)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center space-x-4 p-4 border rounded-lg"
-                  >
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg animate-pulse"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                      <div className="h-3 bg-gray-200 rounded animate-pulse w-2/3"></div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
-                      <div className="h-3 bg-gray-200 rounded animate-pulse w-12"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {/* Mock workspace data */}
-                {[
-                  {
-                    name: "Development Team",
-                    members: 12,
-                    boards: 5,
-                    lastActivity: "2 hours ago",
-                    status: "Active",
-                  },
-                  {
-                    name: "Marketing Campaign",
-                    members: 8,
-                    boards: 3,
-                    lastActivity: "5 hours ago",
-                    status: "Active",
-                  },
-                  {
-                    name: "Product Research",
-                    members: 6,
-                    boards: 2,
-                    lastActivity: "1 day ago",
-                    status: "Inactive",
-                  },
-                  {
-                    name: "Customer Support",
-                    members: 15,
-                    boards: 4,
-                    lastActivity: "30 minutes ago",
-                    status: "Active",
-                  },
-                ].map((workspace, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center space-x-4 p-4 border rounded-lg hover:bg-gray-50"
-                  >
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Building className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900">
-                        {workspace.name}
-                      </h4>
-                      <p className="text-sm text-gray-500">
-                        {workspace.members} members • {workspace.boards} boards
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-500">
-                        {workspace.lastActivity}
-                      </p>
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                          workspace.status === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Workspace</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Visibility</TableHead>
+                  <TableHead>Members</TableHead>
+                  <TableHead>Boards</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredWorkspaces.map((workspace: any) => (
+                  <TableRow key={workspace.id}>
+                    <TableCell className="font-mono text-sm">
+                      {workspace.id}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      <div>
+                        <div className="font-semibold">
+                          {workspace.name || "N/A"}
+                        </div>
+                        {workspace.icon && (
+                          <div className="text-sm text-muted-foreground">
+                            {workspace.icon}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {workspace.description || "No description"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          workspace.visibility === "public"
+                            ? "default"
+                            : "secondary"
+                        }
                       >
-                        {workspace.status}
-                      </span>
-                    </div>
-                  </div>
+                        {workspace.visibility || "private"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{workspace.members?.length || 0}</TableCell>
+                    <TableCell>{workspace._count?.boards || 0}</TableCell>
+                    <TableCell>
+                      {new Date(workspace.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          title="Edit workspace"
+                        >
+                          <Edit className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteWorkspace(workspace.id)}
+                          title="Delete workspace"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </div>
-            )}
+              </TableBody>
+            </Table>
           </div>
+          {filteredWorkspaces.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              No workspaces found matching your search criteria.
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common workspace management tasks</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button variant="outline" className="w-full justify-start">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Test Workspace
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Users className="h-4 w-4 mr-2" />
-              Invite Members
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Settings className="h-4 w-4 mr-2" />
-              Workspace Settings
-            </Button>
-          </CardContent>
-        </Card>
+      {/* Pagination Controls */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Show</span>
+              <select
+                value={pageSize}
+                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                className="border rounded px-2 py-1 text-sm"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+              <span className="text-sm text-muted-foreground">per page</span>
+            </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Storage Management</CardTitle>
-            <CardDescription>
-              Monitor and manage workspace storage
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Total Storage</span>
-                <span className="text-sm font-bold">2.3 TB</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Used</span>
-                <span className="text-sm font-bold text-yellow-600">78%</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Available</span>
-                <span className="text-sm font-bold text-green-600">22%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-yellow-500 h-2 rounded-full"
-                  style={{ width: "78%" }}
-                ></div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                Page {pagination.page} of {pagination.totalPages}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={!pagination.hasPrev}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={!pagination.hasNext}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

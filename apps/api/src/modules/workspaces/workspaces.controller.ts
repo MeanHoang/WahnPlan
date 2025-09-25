@@ -26,8 +26,36 @@ export class WorkspacesController {
   }
 
   @Get()
-  findAll(@Req() req: any) {
-    return this.workspacesService.findAll(req.user.id);
+  findAll(
+    @Req() req: any,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '5',
+    @Query('search') search: string = '',
+  ) {
+    console.log(
+      'Workspace findAll request - User ID:',
+      req.user?.id,
+      'Page:',
+      page,
+      'Limit:',
+      limit,
+      'Search:',
+      search,
+    );
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 5;
+    return this.workspacesService.findAll(
+      req.user.id,
+      pageNum,
+      limitNum,
+      search,
+    );
+  }
+
+  @Get('stats')
+  getAllStats(@Req() req: any) {
+    console.log('Workspace stats request - User ID:', req.user?.id);
+    return this.workspacesService.getAllWorkspaceStats(req.user.id);
   }
 
   @Get(':id')
