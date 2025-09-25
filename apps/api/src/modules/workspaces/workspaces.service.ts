@@ -53,16 +53,6 @@ export class WorkspacesService {
     limit: number = 5,
     search: string = '',
   ) {
-    console.log(
-      'Finding workspaces for user:',
-      userId,
-      'page:',
-      page,
-      'limit:',
-      limit,
-      'search:',
-      search,
-    );
     const skip = (page - 1) * limit;
 
     // Build search conditions
@@ -263,7 +253,6 @@ export class WorkspacesService {
   }
 
   async getAllWorkspaceStats(userId: string) {
-    console.log('Getting workspace stats for user:', userId);
     const [totalWorkspaces, totalMembers, totalBoards, totalTasks] =
       await Promise.all([
         this.prisma.workspace.count({

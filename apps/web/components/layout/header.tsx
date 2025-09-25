@@ -51,8 +51,18 @@ export function Header({
   const unreadCount = unreadData?.unreadCount || 0;
 
   // Fetch workspaces for search
-  const { data: workspacesData } = useFetchApi<Workspace[]>("/workspaces");
-  const workspaces = workspacesData || [];
+  const { data: workspacesData } = useFetchApi<{
+    workspaces: Workspace[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>("/workspaces");
+  const workspaces = workspacesData?.workspaces || [];
 
   // Filter workspaces based on search query
   const filteredWorkspaces = workspaces.filter((workspace) =>

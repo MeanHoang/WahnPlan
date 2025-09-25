@@ -34,11 +34,23 @@ export function Sidebar({
   const router = useRouter();
   const { t } = useTranslation();
   const {
-    data: workspaces,
+    data: workspacesData,
     loading,
     error,
     refetch,
-  } = useFetchApi<Workspace[]>("/workspaces");
+  } = useFetchApi<{
+    workspaces: Workspace[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>("/workspaces");
+
+  const workspaces = workspacesData?.workspaces || [];
 
   // Get current user info
   const { data: currentUser } = useFetchApi<any>("/auth/me");

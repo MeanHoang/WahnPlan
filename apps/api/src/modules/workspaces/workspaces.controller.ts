@@ -32,16 +32,6 @@ export class WorkspacesController {
     @Query('limit') limit: string = '5',
     @Query('search') search: string = '',
   ) {
-    console.log(
-      'Workspace findAll request - User ID:',
-      req.user?.id,
-      'Page:',
-      page,
-      'Limit:',
-      limit,
-      'Search:',
-      search,
-    );
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 5;
     return this.workspacesService.findAll(
@@ -54,7 +44,6 @@ export class WorkspacesController {
 
   @Get('stats')
   getAllStats(@Req() req: any) {
-    console.log('Workspace stats request - User ID:', req.user?.id);
     return this.workspacesService.getAllWorkspaceStats(req.user.id);
   }
 
