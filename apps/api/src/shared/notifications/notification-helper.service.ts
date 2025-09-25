@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../../modules/notifications/notifications.service';
 import { EmailService } from '../email/email.service';
 import { NotificationType } from '@prisma/client';
+import { EmailTranslationsService } from './email-translations.service';
 
 @Injectable()
 export class NotificationHelperService {
@@ -10,6 +11,7 @@ export class NotificationHelperService {
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
     private emailService: EmailService,
+    private emailTranslations: EmailTranslationsService,
   ) {}
 
   /**
@@ -61,12 +63,18 @@ export class NotificationHelperService {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
-        select: { email: true, publicName: true, fullname: true },
+        select: {
+          email: true,
+          publicName: true,
+          fullname: true,
+          language: true,
+        },
       });
 
       if (!user || !user.email) return;
 
       const userName = user.publicName || user.fullname || 'User';
+      const userLanguage = (user.language as 'vi' | 'en') || 'en';
 
       // Create email content based on notification type
       const emailSubject = `WahnPlan Notification: ${title}`;
@@ -76,6 +84,7 @@ export class NotificationHelperService {
         message,
         type,
         data,
+        userLanguage,
       );
 
       await this.emailService.sendNotificationEmail(
@@ -97,6 +106,7 @@ export class NotificationHelperService {
     message: string,
     type: NotificationType,
     data?: any,
+    language: 'vi' | 'en' = 'en',
   ): Promise<string> {
     let taskUrl = '';
     if (data?.taskId) {
@@ -117,11 +127,35 @@ export class NotificationHelperService {
       }
     }
 
+    const viewTaskText = this.emailTranslations.getEmailTranslation(
+      'emailNotifications.viewTask',
+      {},
+      language,
+    );
+
+    const greeting = this.emailTranslations.getEmailTranslation(
+      'emailNotifications.greeting',
+      { userName },
+      language,
+    );
+
+    const bestRegards = this.emailTranslations.getEmailTranslation(
+      'emailNotifications.bestRegards',
+      {},
+      language,
+    );
+
+    const teamName = this.emailTranslations.getEmailTranslation(
+      'emailNotifications.wahnPlanTeam',
+      {},
+      language,
+    );
+
     const actionButton = taskUrl
       ? `
       <div style="text-align: center; margin: 30px 0;">
         <a href="${taskUrl}" style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
-          View Task
+          ${viewTaskText}
         </a>
       </div>
     `
@@ -134,7 +168,7 @@ export class NotificationHelperService {
         </div>
         
         <div style="padding: 30px; background: #f9f9f9;">
-          <h2 style="color: #333; margin-bottom: 20px;">Hello ${userName}!</h2>
+          <h2 style="color: #333; margin-bottom: 20px;">${greeting}</h2>
           
           <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
             <h3 style="color: #333; margin: 0 0 10px 0;">${title}</h3>
@@ -145,8 +179,8 @@ export class NotificationHelperService {
           
           <div style="text-align: center; margin-top: 30px;">
             <p style="color: #999; font-size: 14px;">
-              Best regards,<br>
-              The WahnPlan Team
+              ${bestRegards},<br>
+              ${teamName}
             </p>
           </div>
         </div>
@@ -240,8 +274,15 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.task_assigned,
-      'Task Assigned',
-      `${assigneeName} has been assigned to task "${task.title}" by ${assignedByName}`,
+      this.emailTranslations.getTranslation('emailNotifications.taskAssigned'),
+      this.emailTranslations.getEmailTranslation(
+        'emailNotifications.taskAssignedMessage',
+        {
+          assigneeName,
+          taskTitle: task.title,
+          assignedByName,
+        },
+      ),
       assignedBy,
       { assigneeId, assignedBy },
     );
@@ -279,8 +320,14 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.task_updated,
-      'Task Updated',
-      `Task "${task.title}" has been updated by ${updatedByName}.${changeText}`,
+      this.emailTranslations.getTranslation('emailNotifications.taskUpdated'),
+      this.emailTranslations.getEmailTranslation(
+        'emailNotifications.taskUpdatedMessage',
+        {
+          taskTitle: task.title,
+          updatedByName,
+        },
+      ) + changeText,
       updatedBy,
       { updatedBy, changes },
     );
@@ -314,8 +361,14 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.task_completed,
-      'Task Completed',
-      `Task "${task.title}" has been completed by ${completedByName}`,
+      this.emailTranslations.getTranslation('emailNotifications.taskCompleted'),
+      this.emailTranslations.getEmailTranslation(
+        'emailNotifications.taskCompletedMessage',
+        {
+          taskTitle: task.title,
+          completedByName,
+        },
+      ),
       completedBy,
       { completedBy },
     );
@@ -332,11 +385,21 @@ export class NotificationHelperService {
 
     if (!task) return;
 
+    const dueDateText = task.dueDate
+      ? ` (due: ${new Date(task.dueDate).toLocaleDateString()})`
+      : '';
+
     await this.createTaskNotification(
       taskId,
       NotificationType.task_overdue,
-      'Task Overdue',
-      `Task "${task.title}" is overdue${task.dueDate ? ` (due: ${new Date(task.dueDate).toLocaleDateString()})` : ''}`,
+      this.emailTranslations.getTranslation('emailNotifications.taskOverdue'),
+      this.emailTranslations.getEmailTranslation(
+        'emailNotifications.taskOverdueMessage',
+        {
+          taskTitle: task.title,
+          dueDate: dueDateText,
+        },
+      ),
       undefined,
       { dueDate: task.dueDate },
     );
@@ -371,8 +434,14 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.comment_added,
-      'New Comment',
-      `${commenterName} added a comment to task "${task.title}"`,
+      this.emailTranslations.getTranslation('emailNotifications.newComment'),
+      this.emailTranslations.getEmailTranslation(
+        'emailNotifications.newCommentMessage',
+        {
+          commenterName,
+          taskTitle: task.title,
+        },
+      ),
       commenterId,
       { commentId, commenterId },
     );
@@ -424,8 +493,17 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.task_status_changed,
-      'Task Status Changed',
-      `Task "${task.title}" status changed${statusChange} by ${changedByName}`,
+      this.emailTranslations.getTranslation(
+        'emailNotifications.taskStatusChanged',
+      ),
+      this.emailTranslations.getEmailTranslation(
+        'emailNotifications.taskStatusChangedMessage',
+        {
+          taskTitle: task.title,
+          statusChange,
+          changedByName,
+        },
+      ),
       changedBy,
       { oldStatusId, newStatusId, changedBy },
     );
@@ -477,8 +555,17 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.task_priority_changed,
-      'Task Priority Changed',
-      `Task "${task.title}" priority changed${priorityChange} by ${changedByName}`,
+      this.emailTranslations.getTranslation(
+        'emailNotifications.taskPriorityChanged',
+      ),
+      this.emailTranslations.getEmailTranslation(
+        'emailNotifications.taskPriorityChangedMessage',
+        {
+          taskTitle: task.title,
+          priorityChange,
+          changedByName,
+        },
+      ),
       changedBy,
       { oldPriorityId, newPriorityId, changedBy },
     );
@@ -520,8 +607,17 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.task_tester_assigned,
-      'Tester Assigned',
-      `${testerName} has been assigned as tester for task "${task.title}" by ${assignedByName}`,
+      this.emailTranslations.getTranslation(
+        'emailNotifications.testerAssigned',
+      ),
+      this.emailTranslations.getEmailTranslation(
+        'emailNotifications.testerAssignedMessage',
+        {
+          testerName,
+          taskTitle: task.title,
+          assignedByName,
+        },
+      ),
       assignedBy,
       { testerId, assignedBy },
     );
@@ -563,8 +659,17 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.task_reviewer_assigned,
-      'Reviewer Assigned',
-      `${reviewerName} has been assigned as reviewer for task "${task.title}" by ${assignedByName}`,
+      this.emailTranslations.getTranslation(
+        'emailNotifications.reviewerAssigned',
+      ),
+      this.emailTranslations.getEmailTranslation(
+        'emailNotifications.reviewerAssignedMessage',
+        {
+          reviewerName,
+          taskTitle: task.title,
+          assignedByName,
+        },
+      ),
       assignedBy,
       { reviewerId, assignedBy },
     );
