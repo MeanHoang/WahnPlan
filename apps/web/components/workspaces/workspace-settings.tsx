@@ -255,7 +255,9 @@ export function WorkspaceSettings({
                 />
               </div>
               <div>
-                <Label htmlFor="icon">Workspace Icon</Label>
+                <Label htmlFor="icon">
+                  {t("workspaceSettings.workspaceIcon")}
+                </Label>
                 <IconPicker
                   selectedIcon={formData.icon}
                   onIconSelect={(iconName) =>

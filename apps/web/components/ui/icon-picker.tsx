@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search, X } from "lucide-react";
 import * as LucideIcons from "lucide-react";
+import { useTranslation } from "@/contexts/language-context";
 
 // Curated list of popular workspace icons (verified to exist in Lucide React)
 const WORKSPACE_ICONS = [
@@ -131,6 +132,7 @@ export function IconPicker({
   onIconSelect,
   disabled,
 }: IconPickerProps): JSX.Element {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -164,16 +166,18 @@ export function IconPicker({
               </div>
             )}
             <span className="text-sm">
-              {selectedIcon ? selectedIcon : "Select an icon"}
+              {selectedIcon ? selectedIcon : t("workspaceSettings.selectIcon")}
             </span>
           </div>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Choose Workspace Icon</DialogTitle>
+          <DialogTitle>
+            {t("workspaceSettings.chooseWorkspaceIcon")}
+          </DialogTitle>
           <DialogDescription>
-            Select an icon to represent your workspace
+            {t("workspaceSettings.selectIconDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -182,7 +186,7 @@ export function IconPicker({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="Search icons..."
+              placeholder={t("workspaceSettings.searchIcons")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -241,7 +245,7 @@ export function IconPicker({
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
                 <X className="h-4 w-4 mr-2" />
-                Clear Selection
+                {t("workspaceSettings.clearSelection")}
               </Button>
             </div>
           )}

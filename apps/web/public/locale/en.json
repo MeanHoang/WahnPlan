@@ -519,6 +519,12 @@
     "workspaceName": "Workspace Name",
     "enterWorkspaceName": "Enter workspace name",
     "describeWorkspace": "Describe your workspace",
+    "workspaceIcon": "Workspace Icon",
+    "selectIcon": "Select Icon",
+    "chooseWorkspaceIcon": "Choose Workspace Icon",
+    "selectIconDescription": "Select an icon to represent your workspace",
+    "searchIcons": "Search icons...",
+    "clearSelection": "Clear Selection",
     "visibility": "Visibility",
     "privateDescription": "Private - Only invited members",
     "publicDescription": "Public - Anyone can join",
@@ -607,10 +613,17 @@
   "sidebar": {
     "workspaces": "Workspaces",
     "dashboard": "Dashboard",
+    "boardManagement": "Board Management",
     "loadingWorkspaces": "Loading workspaces...",
     "failedToLoadWorkspaces": "Failed to load workspaces",
     "noWorkspacesFound": "No workspaces found",
-    "createFirstWorkspace": "Create your first workspace to get started"
+    "createFirstWorkspace": "Create your first workspace to get started",
+    "loadingRecentBoards": "Loading recent boards...",
+    "failedToLoadRecentBoards": "Failed to load recent boards",
+    "noRecentBoardsFound": "No recent boards found",
+    "recentBoards": "Recent Boards",
+    "searchBoards": "Search by board name or workspace...",
+    "noBoardsFound": "No boards found matching your search"
   },
   "workspaceItems": {
     "boards": "Boards",

@@ -562,4 +562,51 @@ export class BoardsService {
       totalTasks: tasks.length,
     };
   }
+
+  async findRecentBoards(userId: string) {
+    // Get all boards from workspaces where user is a member
+    // Sort by most recent activity (based on updatedAt and task activity)
+    return this.prisma.board.findMany({
+      where: {
+        workspace: {
+          members: {
+            some: {
+              userId,
+            },
+          },
+        },
+      },
+      include: {
+        workspace: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        _count: {
+          select: {
+            tasks: true,
+            taskStatuses: true,
+            taskPriorities: true,
+            taskInitiatives: true,
+          },
+        },
+        tasks: {
+          select: {
+            id: true,
+            updatedAt: true,
+            createdAt: true,
+          },
+          orderBy: {
+            updatedAt: 'desc',
+          },
+          take: 1,
+        },
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+      take: 20, // Limit to 20 most recent boards
+    });
+  }
 }

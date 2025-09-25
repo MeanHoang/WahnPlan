@@ -33,6 +33,11 @@ export class BoardsController {
     return this.boardsService.findAll(workspaceId, req.user.id);
   }
 
+  @Get('recent')
+  findRecentBoards(@Req() req: any) {
+    return this.boardsService.findRecentBoards(req.user.id);
+  }
+
   @Get(':id/stats')
   getStats(@Param('id') id: string, @Req() req: any) {
     return this.boardsService.getBoardStats(id, req.user.id);

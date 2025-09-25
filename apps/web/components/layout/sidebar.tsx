@@ -10,6 +10,7 @@ import {
   Layout,
   Home,
   Building2,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFetchApi } from "@/hooks/use-fetch-api";
@@ -128,32 +129,32 @@ export function Sidebar({
       {/* Overlay for mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden animate-in fade-in duration-300"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 lg:hidden animate-in fade-in duration-200"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-20 h-[calc(100vh-5rem)] bg-white border-r-2 border-slate-300 z-40 transform transition-all duration-300 ease-in-out shadow-2xl ${
+        className={`fixed left-0 top-20 h-[calc(100vh-5rem)] bg-white border-r border-slate-200 z-40 transform transition-all duration-200 ease-in-out shadow-lg ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } lg:${isOpen ? "translate-x-0" : "-translate-x-full"} w-80 sm:w-72 lg:w-80`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-6 border-b-2 border-slate-200 bg-slate-50">
+          <div className="p-4 border-b border-slate-200 bg-slate-50">
             {/* Navigation Items */}
             <div className="space-y-3">
               {/* Dashboard Button */}
-              <div className="flex items-center justify-between p-3 hover:bg-blue-100 hover:text-blue-900 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200 hover:shadow-md group">
+              <div className="flex items-center justify-between p-2 hover:bg-slate-100 rounded-lg transition-colors duration-150 border border-transparent group">
                 <div
                   className="flex items-center space-x-3 cursor-pointer flex-1"
                   onClick={handleDashboardClick}
                 >
-                  <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-sm group-hover:shadow-md transition-shadow duration-200">
-                    <Home className="h-4 w-4 text-white" />
+                  <div className="p-1.5 bg-slate-200 rounded-md">
+                    <Home className="h-3.5 w-3.5 text-slate-700" />
                   </div>
-                  <span className="font-semibold text-slate-800 group-hover:text-blue-900">
+                  <span className="font-medium text-slate-800 group-hover:text-slate-900">
                     {t("sidebar.dashboard")}
                   </span>
                 </div>
@@ -162,15 +163,15 @@ export function Sidebar({
                     variant="ghost"
                     size="sm"
                     onClick={onClose}
-                    className="p-2 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors duration-200 lg:hidden"
+                    className="p-2 hover:bg-slate-100 rounded-md transition-colors duration-150 lg:hidden"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-4 w-4 text-slate-700" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={onToggle}
-                    className="p-2 hover:bg-slate-200 rounded-lg transition-colors duration-200 hidden lg:flex"
+                    className="p-2 hover:bg-slate-100 rounded-md transition-colors duration-150 hidden lg:flex"
                   >
                     {isOpen ? (
                       <ChevronLeft className="h-4 w-4 text-slate-700" />
@@ -181,13 +182,31 @@ export function Sidebar({
                 </div>
               </div>
 
-              {/* Workspaces Section */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-100/50 border border-slate-200">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-sm">
-                    <Building2 className="h-4 w-4 text-white" />
+              {/* Project Management Button */}
+              <div className="flex items-center justify-between p-2 hover:bg-slate-100 rounded-lg transition-colors duration-150 border border-transparent group">
+                <div
+                  className="flex items-center space-x-3 cursor-pointer flex-1"
+                  onClick={() => {
+                    onClose();
+                    router.push("/board-management");
+                  }}
+                >
+                  <div className="p-1.5 bg-slate-200 rounded-md">
+                    <Clock className="h-3.5 w-3.5 text-slate-700" />
                   </div>
-                  <span className="font-semibold text-slate-800">
+                  <span className="font-medium text-slate-800 group-hover:text-slate-900">
+                    {t("sidebar.boardManagement")}
+                  </span>
+                </div>
+              </div>
+
+              {/* Workspaces Section */}
+              <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200">
+                <div className="flex items-center space-x-3">
+                  <div className="p-1.5 bg-slate-200 rounded-md">
+                    <Building2 className="h-3.5 w-3.5 text-slate-700" />
+                  </div>
+                  <span className="font-medium text-slate-800">
                     {t("sidebar.workspaces")}
                   </span>
                 </div>
@@ -199,9 +218,9 @@ export function Sidebar({
                       refetch();
                       onRefresh?.();
                     }}
-                    className="p-2 hover:bg-slate-200 rounded-lg transition-colors duration-200"
+                    className="p-2 hover:bg-slate-100 rounded-md transition-colors duration-150"
                   >
-                    <RefreshCw className="h-4 w-4 text-slate-600" />
+                    <RefreshCw className="h-4 w-4 text-slate-700" />
                   </Button>
                 </div>
               </div>
@@ -213,14 +232,7 @@ export function Sidebar({
             {loading && (
               <div className="text-center py-12">
                 <div className="relative">
-                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-slate-200 border-t-blue-500 mx-auto"></div>
-                  <div
-                    className="absolute inset-0 rounded-full h-10 w-10 border-4 border-transparent border-r-purple-500 animate-spin mx-auto"
-                    style={{
-                      animationDirection: "reverse",
-                      animationDuration: "1.5s",
-                    }}
-                  ></div>
+                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-slate-200 border-t-slate-500 mx-auto"></div>
                 </div>
                 <p className="mt-4 text-sm font-medium text-slate-600">
                   {t("sidebar.loadingWorkspaces")}
@@ -230,10 +242,10 @@ export function Sidebar({
 
             {error && (
               <div className="text-center py-12">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <X className="h-6 w-6 text-red-600" />
+                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <X className="h-6 w-6 text-slate-700" />
                 </div>
-                <p className="text-sm font-semibold text-red-700">
+                <p className="text-sm font-semibold text-slate-700">
                   {t("sidebar.failedToLoadWorkspaces")}
                 </p>
               </div>
