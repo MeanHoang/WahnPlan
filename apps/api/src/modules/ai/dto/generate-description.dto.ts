@@ -12,4 +12,8 @@ export class GenerateDescriptionDto {
   @IsOptional()
   @IsString()
   boardSubtitle?: string;
+
+  @IsOptional()
+  @IsString()
+  taskNotes?: string;
 }

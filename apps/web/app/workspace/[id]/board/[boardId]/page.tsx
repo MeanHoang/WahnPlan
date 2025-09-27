@@ -243,12 +243,20 @@ export default function BoardDetailPage(): JSX.Element {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-700 flex items-center gap-2">
+              <h1
+                className="text-2xl font-bold text-gray-700 flex items-center gap-2"
+                data-board-title={board.title}
+              >
                 <BarChart3 className="h-6 w-6 text-blue-600" />
                 {board.title}
               </h1>
               {board.subtitle && (
-                <p className="text-gray-600 mt-1">{board.subtitle}</p>
+                <p
+                  className="text-gray-600 mt-1"
+                  data-board-subtitle={board.subtitle}
+                >
+                  {board.subtitle}
+                </p>
               )}
             </div>
           </div>

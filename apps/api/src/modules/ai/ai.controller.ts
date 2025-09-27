@@ -19,6 +19,7 @@ export class AiController {
         body.taskTitle,
         body.boardTitle,
         body.boardSubtitle,
+        body.taskNotes,
       );
       return { description };
     } catch (error: any) {

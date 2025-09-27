@@ -644,13 +644,34 @@ export function RichTextEditor({
                 )?.value ||
                 editor.getText().split("\n")[0] ||
                 "Task";
+
+              // Optional board context via data attributes
+              const boardTitleEl = document.querySelector(
+                "[data-board-title]"
+              ) as HTMLElement | null;
+              const boardSubtitleEl = document.querySelector(
+                "[data-board-subtitle]"
+              ) as HTMLElement | null;
+              const boardTitleAttr =
+                boardTitleEl?.getAttribute("data-board-title") ||
+                (boardTitleEl as HTMLInputElement | null)?.value ||
+                undefined;
+              const boardSubtitleAttr =
+                boardSubtitleEl?.getAttribute("data-board-subtitle") ||
+                (boardSubtitleEl as HTMLInputElement | null)?.value ||
+                undefined;
+
               setIsGenerating(true);
               try {
                 const res = await apiRequest<{ description: string }>(
                   `/ai/generate-description`,
                   {
                     method: "POST",
-                    body: { taskTitle: currentTitle },
+                    body: {
+                      taskTitle: currentTitle,
+                      boardTitle: boardTitleAttr,
+                      boardSubtitle: boardSubtitleAttr,
+                    },
                   }
                 );
                 const text = res.description || "";
