@@ -70,7 +70,7 @@ export function BoardBasicInfo({
 
       const updatedBoard = await updateBoard({
         title: formData.title.trim(),
-        description: formData.description.trim(),
+        subtitle: formData.description.trim(),
       });
 
       if (updatedBoard) {

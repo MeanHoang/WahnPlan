@@ -45,7 +45,6 @@ interface ExportFilters {
   createdAtFrom: string;
   createdAtTo: string;
   statusIds: string[];
-  isDone: boolean | null; // null = all, true = done only, false = not done only
 }
 
 interface ExportData {
@@ -65,7 +64,6 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
     createdAtFrom: "",
     createdAtTo: "",
     statusIds: [],
-    isDone: null, // null = all tasks
   });
 
   // For export, we don't need to fetch all tasks upfront
@@ -175,13 +173,17 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
   const downloadExcel = (data: ExportData) => {
     const excelData = generateExcelData(data);
 
-    // Create CSV content
+    // Create CSV content with proper UTF-8 encoding for Vietnamese text
     const csvContent = excelData
       .map((row) => row.map((cell) => `"${cell}"`).join(","))
       .join("\n");
 
-    // Create and download file
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    // Add UTF-8 BOM for proper Vietnamese character display
+    const BOM = "\uFEFF";
+    const csvWithBOM = BOM + csvContent;
+
+    // Create and download file with UTF-8 BOM
+    const blob = new Blob([csvWithBOM], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
@@ -210,8 +212,6 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
               filters.statusIds.length > 0
                 ? filters.statusIds.join(",")
                 : undefined,
-            isDone:
-              filters.isDone !== null ? filters.isDone.toString() : undefined,
           },
         }
       );
@@ -286,48 +286,6 @@ export function ExportManager({ boardId }: ExportManagerProps): JSX.Element {
                   handleFilterChange("createdAtTo", e.target.value)
                 }
               />
-            </div>
-          </div>
-
-          {/* Is Done Filter */}
-          <div className="space-y-3">
-            <Label>{t("export.taskCompletionStatus")}</Label>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  id="isDoneAll"
-                  name="isDone"
-                  checked={filters.isDone === null}
-                  onChange={() => handleFilterChange("isDone", null)}
-                  className="rounded border-gray-300"
-                />
-                <Label htmlFor="isDoneAll">{t("export.allTasks")}</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  id="isDoneTrue"
-                  name="isDone"
-                  checked={filters.isDone === true}
-                  onChange={() => handleFilterChange("isDone", true)}
-                  className="rounded border-gray-300"
-                />
-                <Label htmlFor="isDoneTrue">{t("export.completedOnly")}</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  id="isDoneFalse"
-                  name="isDone"
-                  checked={filters.isDone === false}
-                  onChange={() => handleFilterChange("isDone", false)}
-                  className="rounded border-gray-300"
-                />
-                <Label htmlFor="isDoneFalse">
-                  {t("export.notCompletedOnly")}
-                </Label>
-              </div>
             </div>
           </div>
 
