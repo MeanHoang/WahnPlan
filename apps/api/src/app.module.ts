@@ -19,6 +19,7 @@ import { TaskCommentsModule } from './modules/task-comments/task-comments.module
 import { CommentReactionsModule } from './modules/comment-reactions/comment-reactions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     CommentReactionsModule,
     NotificationsModule,
     AnalyticsModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

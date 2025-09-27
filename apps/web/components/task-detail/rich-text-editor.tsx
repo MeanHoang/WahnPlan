@@ -18,9 +18,11 @@ import {
   Paperclip,
   Video,
   Save,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
+import { apiRequest } from "@/lib/api-request";
 
 interface RichTextEditorProps {
   content?: any;
@@ -38,6 +40,7 @@ export function RichTextEditor({
   const [isEditing, setIsEditing] = useState(true); // Always start in editing mode
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const initialContentRef = useRef<any>(content);
   const editorContentRef = useRef<any>(content);
 
@@ -626,8 +629,54 @@ export function RichTextEditor({
 
         <div className="flex-1" />
 
-        {/* Save/Cancel */}
+        {/* AI Generate + Save/Cancel */}
         <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={async () => {
+              if (!editor) return;
+              const currentTitle =
+                (
+                  document.querySelector(
+                    "[data-task-title]"
+                  ) as HTMLInputElement | null
+                )?.value ||
+                editor.getText().split("\n")[0] ||
+                "Task";
+              setIsGenerating(true);
+              try {
+                const res = await apiRequest<{ description: string }>(
+                  `/ai/generate-description`,
+                  {
+                    method: "POST",
+                    body: { taskTitle: currentTitle },
+                  }
+                );
+                const text = res.description || "";
+                if (text) {
+                  editor.chain().focus().insertContent(text).run();
+                }
+              } catch (e: any) {
+                // Optional: you can surface a toast via a lightweight inline alert
+                const message = e?.message || "AI generation failed";
+                editor
+                  .chain()
+                  .focus()
+                  .insertContent(`\n[AI Error] ${message}\n`)
+                  .run();
+              } finally {
+                setIsGenerating(false);
+              }
+            }}
+            disabled={isGenerating}
+            className="h-8 px-3 text-sm"
+            title="Generate with AI"
+          >
+            <Sparkles className="h-3 w-3 mr-2" />
+            {isGenerating ? "Generating..." : "Generate with AI"}
+          </Button>
+
           <Button
             variant="outline"
             size="sm"
