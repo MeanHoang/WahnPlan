@@ -97,20 +97,20 @@ export function TaskAttributeDialog({
   const getDialogTitle = () => {
     const type =
       activeTab === "status"
-        ? "Status"
+        ? t("taskAttributesManager.status")
         : activeTab === "priority"
-          ? "Priority"
-          : "Initiative";
+          ? t("taskAttributesManager.priority")
+          : t("taskAttributesManager.initiative");
     return `${dialogType === "create" ? t("taskAttributeDialog.create") : t("taskAttributeDialog.edit")} ${type}`;
   };
 
   const getDialogDescription = () => {
     const type =
       activeTab === "status"
-        ? "task status"
+        ? t("taskAttributesManager.taskStatuses").toLowerCase()
         : activeTab === "priority"
-          ? "task priority"
-          : "task initiative";
+          ? t("taskAttributesManager.taskPriorities").toLowerCase()
+          : t("taskAttributesManager.taskInitiatives").toLowerCase();
     return `${dialogType === "create" ? t("taskAttributeDialog.addNew") : t("taskAttributeDialog.updateThe")} ${type} ${t("taskAttributeDialog.forThisBoard")}.`;
   };
 

@@ -392,7 +392,7 @@ export function TaskFilterBar({
             />
             <MultiSelectDisplay
               options={initiatives.map((i) => ({
-                label: `Initiative: ${i.name}`,
+                label: `${t("taskAttributesManager.initiative")}: ${i.name}`,
                 value: i.id,
                 color: i.color || "#6B7280",
               }))}
