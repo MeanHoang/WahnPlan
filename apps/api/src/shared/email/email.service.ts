@@ -138,6 +138,11 @@ export class EmailService {
     subject: string,
     htmlContent: string,
   ): Promise<void> {
+    console.log(
+      `[EmailService.sendNotificationEmail] Starting to send email to: ${email}`,
+    );
+    const smtpStartTime = Date.now();
+
     const mailOptions = {
       from: this.configService.get('SMTP_FROM', 'noreply@wahnplan.com'),
       to: email,
@@ -147,8 +152,14 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail(mailOptions);
+      console.log(
+        `[EmailService.sendNotificationEmail] Email sent successfully in ${Date.now() - smtpStartTime}ms`,
+      );
     } catch (error) {
-      console.error('Failed to send notification email:', error);
+      console.error(
+        `[EmailService.sendNotificationEmail] Failed to send notification email after ${Date.now() - smtpStartTime}ms:`,
+        error,
+      );
       throw new Error('Failed to send notification email');
     }
   }

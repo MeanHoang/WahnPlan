@@ -1,60 +1,81 @@
 import { Injectable } from '@nestjs/common';
-import * as fs from 'fs';
-import * as path from 'path';
+import { translations, TranslationLanguage } from './translations';
 
 @Injectable()
 export class EmailTranslationsService {
-  private translations: {
-    vi: any;
-    en: any;
-  } = {
-    vi: null,
-    en: null,
-  };
+  private translations = translations;
 
   constructor() {
-    this.loadTranslations();
-  }
-
-  private loadTranslations() {
-    try {
-      // Load Vietnamese translations
-      const viPath = path.join(process.cwd(), 'apps/web/public/locale/vi.json');
-      const viTranslations = JSON.parse(fs.readFileSync(viPath, 'utf8'));
-      this.translations.vi = viTranslations;
-
-      // Load English translations
-      const enPath = path.join(process.cwd(), 'apps/web/public/locale/en.json');
-      const enTranslations = JSON.parse(fs.readFileSync(enPath, 'utf8'));
-      this.translations.en = enTranslations;
-    } catch (error) {
-      console.error('Error loading email translations:', error);
-    }
+    console.log(
+      `[EmailTranslations] Constructor called - Using built-in translations`,
+    );
+    console.log(`[EmailTranslations] Translations structure:`, {
+      hasVi: !!this.translations.vi,
+      hasEn: !!this.translations.en,
+      viKeys: this.translations.vi ? Object.keys(this.translations.vi) : [],
+      enKeys: this.translations.en ? Object.keys(this.translations.en) : [],
+      viEmailNotifications: this.translations.vi?.emailNotifications
+        ? Object.keys(this.translations.vi.emailNotifications)
+        : [],
+      enEmailNotifications: this.translations.en?.emailNotifications
+        ? Object.keys(this.translations.en.emailNotifications)
+        : [],
+    });
   }
 
   /**
    * Get translation for a specific key and language
    */
-  getTranslation(key: string, language: 'vi' | 'en' = 'en'): string {
+  getTranslation(key: string, language: TranslationLanguage = 'en'): string {
+    console.log(
+      `[EmailTranslations.getTranslation] Key: ${key}, Language: ${language}`,
+    );
     try {
       const keys = key.split('.');
       let result: any = this.translations[language];
 
+      console.log(`[EmailTranslations.getTranslation] Translations loaded:`, {
+        vi: !!this.translations.vi,
+        en: !!this.translations.en,
+      });
+
       for (const k of keys) {
+        console.log(
+          `[EmailTranslations.getTranslation] Looking for key: ${k}, result before:`,
+          result,
+        );
         if (result && typeof result === 'object' && k in result) {
           result = result[k];
+          console.log(
+            `[EmailTranslations.getTranslation] Found key: ${k}, result after:`,
+            result,
+          );
         } else {
+          console.log(`[EmailTranslations.getTranslation] Key not found: ${k}`);
           // Fallback to English if key not found in target language
           if (language !== 'en') {
+            console.log(
+              `[EmailTranslations.getTranslation] Falling back to English`,
+            );
             return this.getTranslation(key, 'en');
           }
+          console.log(
+            `[EmailTranslations.getTranslation] Returning key as-is: ${key}`,
+          );
           return key; // Return key if not found in English either
         }
       }
 
-      return typeof result === 'string' ? result : key;
+      const finalResult = typeof result === 'string' ? result : key;
+      console.log(
+        `[EmailTranslations.getTranslation] Final result: ${finalResult}`,
+      );
+      return finalResult;
     } catch (error) {
-      console.error('Error getting translation:', error);
+      console.error(
+        '[EmailTranslations.getTranslation] Error getting translation:',
+        error,
+      );
       return key;
     }
   }
@@ -79,9 +100,23 @@ export class EmailTranslationsService {
   getEmailTranslation(
     key: string,
     placeholders: Record<string, string | number> = {},
-    language: 'vi' | 'en' = 'en',
+    language: TranslationLanguage = 'en',
   ): string {
+    console.log(
+      `[EmailTranslations.getEmailTranslation] Key: ${key}, Language: ${language}, Placeholders:`,
+      placeholders,
+    );
     const translation = this.getTranslation(key, language);
-    return this.replacePlaceholders(translation, placeholders);
+    console.log(
+      `[EmailTranslations.getEmailTranslation] Raw translation: ${translation}`,
+    );
+    const finalTranslation = this.replacePlaceholders(
+      translation,
+      placeholders,
+    );
+    console.log(
+      `[EmailTranslations.getEmailTranslation] Final translation: ${finalTranslation}`,
+    );
+    return finalTranslation;
   }
 }

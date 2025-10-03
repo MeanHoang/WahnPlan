@@ -128,6 +128,9 @@ export default function TaskDetailPage(): JSX.Element {
   const handleSaveChanges = async () => {
     if (!task || isUpdating || !hasChanges) return;
 
+    console.log("[TaskDetail] Starting save changes...");
+    const saveStartTime = Date.now();
+
     try {
       // Prepare update data - only include fields that are allowed by the API
       const updateData: any = {};
@@ -184,7 +187,12 @@ export default function TaskDetailPage(): JSX.Element {
 
       // Update task fields first
       if (Object.keys(updateData).length > 0) {
+        console.log("[TaskDetail] Calling updateTask API...");
+        const apiStartTime = Date.now();
         await updateTask(updateData);
+        console.log(
+          `[TaskDetail] updateTask API completed in ${Date.now() - apiStartTime}ms`
+        );
       }
 
       // Update members separately if needed
@@ -227,8 +235,15 @@ export default function TaskDetailPage(): JSX.Element {
       }
     } catch (error) {
       // Error handling is done in the useUpdateApi hook
-      console.error("Failed to update task:", error);
+      console.error(
+        `[TaskDetail] Failed to update task after ${Date.now() - saveStartTime}ms:`,
+        error
+      );
     }
+
+    console.log(
+      `[TaskDetail] Total save operation completed in ${Date.now() - saveStartTime}ms`
+    );
   };
 
   if (authLoading || taskLoading) {

@@ -51,6 +51,157 @@ export class NotificationHelperService {
   }
 
   /**
+   * Get translated title for notification type
+   */
+  private getTitleForType(
+    type: NotificationType,
+    language: 'vi' | 'en',
+    data?: any,
+  ): string {
+    console.log(
+      `[NotificationHelper.getTitleForType] Type: ${type}, Language: ${language}`,
+    );
+
+    const titleMap: Record<NotificationType, string> = {
+      [NotificationType.task_assigned]: 'emailNotifications.taskAssigned',
+      [NotificationType.task_updated]: 'emailNotifications.taskUpdated',
+      [NotificationType.task_completed]: 'emailNotifications.taskCompleted',
+      [NotificationType.task_due_soon]: 'emailNotifications.taskDueSoon',
+      [NotificationType.task_overdue]: 'emailNotifications.taskOverdue',
+      [NotificationType.comment_added]: 'emailNotifications.newComment',
+      [NotificationType.mention]: 'emailNotifications.mention',
+      [NotificationType.workspace_invite]: 'emailNotifications.workspaceInvite',
+      [NotificationType.workspace_role_changed]:
+        'emailNotifications.workspaceRoleChanged',
+      [NotificationType.board_created]: 'emailNotifications.boardCreated',
+      [NotificationType.task_status_changed]:
+        'emailNotifications.taskStatusChanged',
+      [NotificationType.task_priority_changed]:
+        'emailNotifications.taskPriorityChanged',
+      [NotificationType.task_tester_assigned]:
+        'emailNotifications.testerAssigned',
+      [NotificationType.task_reviewer_assigned]:
+        'emailNotifications.reviewerAssigned',
+    };
+
+    const key = titleMap[type];
+    console.log(`[NotificationHelper.getTitleForType] Key: ${key}`);
+
+    if (!key) {
+      console.log(
+        `[NotificationHelper.getTitleForType] No key found, returning default`,
+      );
+      return 'Notification';
+    }
+
+    const result = this.emailTranslations.getEmailTranslation(
+      key,
+      {},
+      language,
+    );
+    console.log(`[NotificationHelper.getTitleForType] Result: ${result}`);
+
+    // Debug: Check if result is still a key (translation failed)
+    if (result === key) {
+      console.error(
+        `[NotificationHelper.getTitleForType] Translation failed - result same as key: ${result}`,
+      );
+    }
+
+    return result;
+  }
+
+  /**
+   * Get translated message for notification type
+   */
+  private getTranslatedMessage(
+    type: NotificationType,
+    language: 'vi' | 'en',
+    data?: any,
+  ): string {
+    console.log(
+      `[NotificationHelper.getTranslatedMessage] Type: ${type}, Language: ${language}, Data:`,
+      data,
+    );
+
+    const messageMap: Record<NotificationType, string> = {
+      [NotificationType.task_assigned]:
+        'emailNotifications.taskAssignedMessage',
+      [NotificationType.task_updated]: 'emailNotifications.taskUpdatedMessage',
+      [NotificationType.task_completed]:
+        'emailNotifications.taskCompletedMessage',
+      [NotificationType.task_due_soon]: 'emailNotifications.taskDueSoonMessage',
+      [NotificationType.task_overdue]: 'emailNotifications.taskOverdueMessage',
+      [NotificationType.comment_added]: 'emailNotifications.newCommentMessage',
+      [NotificationType.mention]: 'emailNotifications.mentionMessage',
+      [NotificationType.workspace_invite]:
+        'emailNotifications.workspaceInviteMessage',
+      [NotificationType.workspace_role_changed]:
+        'emailNotifications.workspaceRoleChangedMessage',
+      [NotificationType.board_created]:
+        'emailNotifications.boardCreatedMessage',
+      [NotificationType.task_status_changed]:
+        'emailNotifications.taskStatusChangedMessage',
+      [NotificationType.task_priority_changed]:
+        'emailNotifications.taskPriorityChangedMessage',
+      [NotificationType.task_tester_assigned]:
+        'emailNotifications.testerAssignedMessage',
+      [NotificationType.task_reviewer_assigned]:
+        'emailNotifications.reviewerAssignedMessage',
+    };
+
+    const key = messageMap[type];
+    console.log(`[NotificationHelper.getTranslatedMessage] Key: ${key}`);
+
+    if (!key) {
+      console.log(
+        `[NotificationHelper.getTranslatedMessage] No key found, returning default`,
+      );
+      return 'Notification message';
+    }
+
+    // Get placeholders from data
+    const placeholders = data || {};
+    console.log(
+      `[NotificationHelper.getTranslatedMessage] Placeholders:`,
+      placeholders,
+    );
+
+    // Add change text for task_updated
+    let translatedMessage = this.emailTranslations.getEmailTranslation(
+      key,
+      placeholders,
+      language,
+    );
+    console.log(
+      `[NotificationHelper.getTranslatedMessage] Translated message: ${translatedMessage}`,
+    );
+
+    if (type === NotificationType.task_updated && data?.changes) {
+      const changes = data.changes;
+      const changeText =
+        changes && changes.length > 0 ? ` Changes: ${changes.join(', ')}` : '';
+      translatedMessage += changeText;
+      console.log(
+        `[NotificationHelper.getTranslatedMessage] Added change text: ${changeText}`,
+      );
+    }
+
+    console.log(
+      `[NotificationHelper.getTranslatedMessage] Final message: ${translatedMessage}`,
+    );
+
+    // Debug: Check if result is still a key (translation failed)
+    if (translatedMessage === key) {
+      console.error(
+        `[NotificationHelper.getTranslatedMessage] Translation failed - result same as key: ${translatedMessage}`,
+      );
+    }
+
+    return translatedMessage;
+  }
+
+  /**
    * Send email notification to user
    */
   async sendEmailNotification(
@@ -60,6 +211,11 @@ export class NotificationHelperService {
     message: string,
     data?: any,
   ): Promise<void> {
+    console.log(
+      `[NotificationHelper.sendEmailNotification] Starting email notification for userId: ${userId}, type: ${type}`,
+    );
+    const emailStartTime = Date.now();
+
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
@@ -76,12 +232,29 @@ export class NotificationHelperService {
       const userName = user.publicName || user.fullname || 'User';
       const userLanguage = (user.language as 'vi' | 'en') || 'en';
 
+      // Re-translate title and message with user's language
+      console.log(
+        `[NotificationHelper.sendEmailNotification] User language: ${userLanguage}`,
+      );
+      const translatedTitle = this.getTitleForType(type, userLanguage, data);
+      const translatedMessage = this.getTranslatedMessage(
+        type,
+        userLanguage,
+        data,
+      );
+      console.log(
+        `[NotificationHelper.sendEmailNotification] Translated title: ${translatedTitle}`,
+      );
+      console.log(
+        `[NotificationHelper.sendEmailNotification] Translated message: ${translatedMessage}`,
+      );
+
       // Create email content based on notification type
-      const emailSubject = `WahnPlan Notification: ${title}`;
+      const emailSubject = `WahnPlan Notification: ${translatedTitle}`;
       const emailHtml = await this.generateEmailTemplate(
         userName,
-        title,
-        message,
+        translatedTitle,
+        translatedMessage,
         type,
         data,
         userLanguage,
@@ -92,8 +265,14 @@ export class NotificationHelperService {
         emailSubject,
         emailHtml,
       );
+      console.log(
+        `[NotificationHelper.sendEmailNotification] Email sent successfully in ${Date.now() - emailStartTime}ms`,
+      );
     } catch (error) {
-      console.error('Error sending email notification:', error);
+      console.error(
+        `[NotificationHelper.sendEmailNotification] Error sending email notification after ${Date.now() - emailStartTime}ms:`,
+        error,
+      );
     }
   }
 
@@ -223,11 +402,19 @@ export class NotificationHelperService {
 
       await this.notificationsService.createBulkNotifications(notifications);
 
-      // Send email notifications to all target users
+      // Send email notifications to all target users (async, don't wait)
       for (const userId of targetUserIds) {
-        await this.sendEmailNotification(userId, type, title, message, {
+        console.log(
+          `[NotificationHelper.createTaskNotification] Sending email to userId: ${userId}, type: ${type}, title: ${title}`,
+        );
+        this.sendEmailNotification(userId, type, title, message, {
           taskId,
           ...data,
+        }).catch((error) => {
+          console.error(
+            `[NotificationHelper.createTaskNotification] Email notification error for userId ${userId}:`,
+            error,
+          );
         });
       }
     } catch (error) {
@@ -274,17 +461,16 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.task_assigned,
-      this.emailTranslations.getTranslation('emailNotifications.taskAssigned'),
-      this.emailTranslations.getEmailTranslation(
-        'emailNotifications.taskAssignedMessage',
-        {
-          assigneeName,
-          taskTitle: task.title,
-          assignedByName,
-        },
-      ),
+      'emailNotifications.taskAssigned', // Pass key instead of translated text
+      'emailNotifications.taskAssignedMessage', // Pass key instead of translated text
       assignedBy,
-      { assigneeId, assignedBy },
+      {
+        assigneeId,
+        assignedBy,
+        assigneeName,
+        taskTitle: task.title,
+        assignedByName,
+      },
     );
   }
 
@@ -320,16 +506,15 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.task_updated,
-      this.emailTranslations.getTranslation('emailNotifications.taskUpdated'),
-      this.emailTranslations.getEmailTranslation(
-        'emailNotifications.taskUpdatedMessage',
-        {
-          taskTitle: task.title,
-          updatedByName,
-        },
-      ) + changeText,
+      'emailNotifications.taskUpdated', // Pass key instead of translated text
+      'emailNotifications.taskUpdatedMessage', // Pass key instead of translated text
       updatedBy,
-      { updatedBy, changes },
+      {
+        updatedBy,
+        changes,
+        taskTitle: task.title,
+        updatedByName,
+      },
     );
   }
 
@@ -361,16 +546,14 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.task_completed,
-      this.emailTranslations.getTranslation('emailNotifications.taskCompleted'),
-      this.emailTranslations.getEmailTranslation(
-        'emailNotifications.taskCompletedMessage',
-        {
-          taskTitle: task.title,
-          completedByName,
-        },
-      ),
+      'emailNotifications.taskCompleted', // Pass key instead of translated text
+      'emailNotifications.taskCompletedMessage', // Pass key instead of translated text
       completedBy,
-      { completedBy },
+      {
+        completedBy,
+        taskTitle: task.title,
+        completedByName,
+      },
     );
   }
 
@@ -392,16 +575,14 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.task_overdue,
-      this.emailTranslations.getTranslation('emailNotifications.taskOverdue'),
-      this.emailTranslations.getEmailTranslation(
-        'emailNotifications.taskOverdueMessage',
-        {
-          taskTitle: task.title,
-          dueDate: dueDateText,
-        },
-      ),
+      'emailNotifications.taskOverdue', // Pass key instead of translated text
+      'emailNotifications.taskOverdueMessage', // Pass key instead of translated text
       undefined,
-      { dueDate: task.dueDate },
+      {
+        dueDate: task.dueDate,
+        taskTitle: task.title,
+        dueDateText,
+      },
     );
   }
 
@@ -434,16 +615,15 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.comment_added,
-      this.emailTranslations.getTranslation('emailNotifications.newComment'),
-      this.emailTranslations.getEmailTranslation(
-        'emailNotifications.newCommentMessage',
-        {
-          commenterName,
-          taskTitle: task.title,
-        },
-      ),
+      'emailNotifications.newComment', // Pass key instead of translated text
+      'emailNotifications.newCommentMessage', // Pass key instead of translated text
       commenterId,
-      { commentId, commenterId },
+      {
+        commentId,
+        commenterId,
+        commenterName,
+        taskTitle: task.title,
+      },
     );
   }
 
@@ -493,19 +673,17 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.task_status_changed,
-      this.emailTranslations.getTranslation(
-        'emailNotifications.taskStatusChanged',
-      ),
-      this.emailTranslations.getEmailTranslation(
-        'emailNotifications.taskStatusChangedMessage',
-        {
-          taskTitle: task.title,
-          statusChange,
-          changedByName,
-        },
-      ),
+      'emailNotifications.taskStatusChanged', // Pass key instead of translated text
+      'emailNotifications.taskStatusChangedMessage', // Pass key instead of translated text
       changedBy,
-      { oldStatusId, newStatusId, changedBy },
+      {
+        oldStatusId,
+        newStatusId,
+        changedBy,
+        taskTitle: task.title,
+        statusChange,
+        changedByName,
+      },
     );
   }
 
@@ -555,19 +733,17 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.task_priority_changed,
-      this.emailTranslations.getTranslation(
-        'emailNotifications.taskPriorityChanged',
-      ),
-      this.emailTranslations.getEmailTranslation(
-        'emailNotifications.taskPriorityChangedMessage',
-        {
-          taskTitle: task.title,
-          priorityChange,
-          changedByName,
-        },
-      ),
+      'emailNotifications.taskPriorityChanged', // Pass key instead of translated text
+      'emailNotifications.taskPriorityChangedMessage', // Pass key instead of translated text
       changedBy,
-      { oldPriorityId, newPriorityId, changedBy },
+      {
+        oldPriorityId,
+        newPriorityId,
+        changedBy,
+        taskTitle: task.title,
+        priorityChange,
+        changedByName,
+      },
     );
   }
 
@@ -607,19 +783,16 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.task_tester_assigned,
-      this.emailTranslations.getTranslation(
-        'emailNotifications.testerAssigned',
-      ),
-      this.emailTranslations.getEmailTranslation(
-        'emailNotifications.testerAssignedMessage',
-        {
-          testerName,
-          taskTitle: task.title,
-          assignedByName,
-        },
-      ),
+      'emailNotifications.testerAssigned', // Pass key instead of translated text
+      'emailNotifications.testerAssignedMessage', // Pass key instead of translated text
       assignedBy,
-      { testerId, assignedBy },
+      {
+        testerId,
+        assignedBy,
+        testerName,
+        taskTitle: task.title,
+        assignedByName,
+      },
     );
   }
 
@@ -659,19 +832,16 @@ export class NotificationHelperService {
     await this.createTaskNotification(
       taskId,
       NotificationType.task_reviewer_assigned,
-      this.emailTranslations.getTranslation(
-        'emailNotifications.reviewerAssigned',
-      ),
-      this.emailTranslations.getEmailTranslation(
-        'emailNotifications.reviewerAssignedMessage',
-        {
-          reviewerName,
-          taskTitle: task.title,
-          assignedByName,
-        },
-      ),
+      'emailNotifications.reviewerAssigned', // Pass key instead of translated text
+      'emailNotifications.reviewerAssignedMessage', // Pass key instead of translated text
       assignedBy,
-      { reviewerId, assignedBy },
+      {
+        reviewerId,
+        assignedBy,
+        reviewerName,
+        taskTitle: task.title,
+        assignedByName,
+      },
     );
   }
 }

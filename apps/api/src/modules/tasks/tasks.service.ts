@@ -961,6 +961,11 @@ export class TasksService {
   }
 
   async update(id: string, updateTaskDto: UpdateTaskDto, userId: string) {
+    console.log(
+      `[TasksService.update] Starting task update for taskId: ${id}, userId: ${userId}`,
+    );
+    const startTime = Date.now();
+
     // First get the task to check board access
     const existingTask = await this.prisma.task.findFirst({
       where: {
@@ -1242,14 +1247,24 @@ export class TasksService {
       },
     });
 
-    // Create notifications for task updates
-    await this.handleTaskUpdateNotifications(
+    console.log(
+      `[TasksService.update] Task update completed in ${Date.now() - startTime}ms`,
+    );
+
+    // Create notifications for task updates (async, don't wait)
+    console.log(`[TasksService.update] Starting notifications (async)...`);
+    this.handleTaskUpdateNotifications(
       id,
       updateTaskDto,
       existingTask,
       userId,
-    );
+    ).catch((error) => {
+      console.error('[TasksService.update] Notification error:', error);
+    });
 
+    console.log(
+      `[TasksService.update] Total update time: ${Date.now() - startTime}ms`,
+    );
     return task;
   }
 
