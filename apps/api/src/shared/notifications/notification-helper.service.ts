@@ -388,29 +388,63 @@ export class NotificationHelperService {
 
       if (targetUserIds.length === 0) return;
 
-      // Create notifications for all target users
-      const notifications = targetUserIds.map((userId) => ({
-        userId,
-        type,
-        title,
-        message,
-        data: {
-          taskId,
-          ...data,
-        },
-      }));
+      // Get users with their language preferences for translation
+      const users = await this.prisma.user.findMany({
+        where: { id: { in: targetUserIds } },
+        select: { id: true, language: true },
+      });
+
+      // Create notifications for all target users with translated content
+      const notifications = targetUserIds.map((userId) => {
+        const user = users.find((u) => u.id === userId);
+        const userLanguage = (user?.language as 'vi' | 'en') || 'en';
+
+        // Translate title and message for each user
+        const translatedTitle = this.getTitleForType(type, userLanguage, data);
+        const translatedMessage = this.getTranslatedMessage(
+          type,
+          userLanguage,
+          data,
+        );
+
+        return {
+          userId,
+          type,
+          title: translatedTitle,
+          message: translatedMessage,
+          data: {
+            taskId,
+            ...data,
+          },
+        };
+      });
 
       await this.notificationsService.createBulkNotifications(notifications);
 
       // Send email notifications to all target users (async, don't wait)
       for (const userId of targetUserIds) {
-        console.log(
-          `[NotificationHelper.createTaskNotification] Sending email to userId: ${userId}, type: ${type}, title: ${title}`,
+        const user = users.find((u) => u.id === userId);
+        const userLanguage = (user?.language as 'vi' | 'en') || 'en';
+        const translatedTitle = this.getTitleForType(type, userLanguage, data);
+        const translatedMessage = this.getTranslatedMessage(
+          type,
+          userLanguage,
+          data,
         );
-        this.sendEmailNotification(userId, type, title, message, {
-          taskId,
-          ...data,
-        }).catch((error) => {
+
+        console.log(
+          `[NotificationHelper.createTaskNotification] Sending email to userId: ${userId}, type: ${type}, title: ${translatedTitle}`,
+        );
+        this.sendEmailNotification(
+          userId,
+          type,
+          translatedTitle,
+          translatedMessage,
+          {
+            taskId,
+            ...data,
+          },
+        ).catch((error) => {
           console.error(
             `[NotificationHelper.createTaskNotification] Email notification error for userId ${userId}:`,
             error,

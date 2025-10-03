@@ -133,7 +133,8 @@ export function NotificationDropdown({
     );
 
     if (diffInSeconds < 60) return t("notificationDropdown.justNow");
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}${t("notificationDropdown.mAgo")}`;
+    if (diffInSeconds < 3600)
+      return `${Math.floor(diffInSeconds / 60)}${t("notificationDropdown.mAgo")}`;
     if (diffInSeconds < 86400)
       return `${Math.floor(diffInSeconds / 3600)}${t("notificationDropdown.hAgo")}`;
     return `${Math.floor(diffInSeconds / 86400)}${t("notificationDropdown.dAgo")}`;
@@ -310,7 +311,9 @@ export function NotificationDropdown({
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">{t("notificationDropdown.notifications")}</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            {t("notificationDropdown.notifications")}
+          </h3>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
               <Button
@@ -359,12 +362,16 @@ export function NotificationDropdown({
         {loading ? (
           <div className="p-4 text-center text-gray-500">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2">{t("notificationDropdown.loadingNotifications")}</p>
+            <p className="mt-2">
+              {t("notificationDropdown.loadingNotifications")}
+            </p>
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             <Bell className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p className="text-lg font-medium">{t("notificationDropdown.noNotifications")}</p>
+            <p className="text-lg font-medium">
+              {t("notificationDropdown.noNotifications")}
+            </p>
             <p className="text-sm">
               {activeTab === "unread"
                 ? t("notificationDropdown.youAreAllCaughtUp")
